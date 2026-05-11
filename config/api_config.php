@@ -1,0 +1,83 @@
+<?php
+// Loads application configuration from a local .env file.
+//
+// Real API keys and passwords should live in .env only.
+// Commit .env.example to GitHub so other developers know which values to set.
+
+load_dotenv(__DIR__ . '/../.env');
+
+define('DB_HOST', config_value('DB_HOST', 'localhost'));
+define('DB_USER', config_value('DB_USER', 'root'));
+define('DB_PASSWORD', config_value('DB_PASSWORD', ''));
+define('DB_NAME', config_value('DB_NAME', 'sports_club_db'));
+
+define('CF_TURNSTILE_SITE_KEY', config_value('CF_TURNSTILE_SITE_KEY'));
+define('CF_TURNSTILE_SECRET_KEY', config_value('CF_TURNSTILE_SECRET_KEY'));
+
+define('BREVO_API_KEY', config_value('BREVO_API_KEY'));
+define('CLUB_EMAIL_FROM', config_value('CLUB_EMAIL_FROM', 'your_email@example.com'));
+define('CLUB_EMAIL_NAME', config_value('CLUB_EMAIL_NAME', 'Sports Club Management'));
+
+define('RECAPTCHA_SITE_KEY', config_value('RECAPTCHA_SITE_KEY'));
+define('RECAPTCHA_SECRET_KEY', config_value('RECAPTCHA_SECRET_KEY'));
+
+define('API_SPORTS_KEY', config_value('API_SPORTS_KEY'));
+
+define('PAYSTACK_SECRET_KEY', config_value('PAYSTACK_SECRET_KEY'));
+define('PAYSTACK_PUBLIC_KEY', config_value('PAYSTACK_PUBLIC_KEY'));
+define('PAYSTACK_CALLBACK_URL', config_value('PAYSTACK_CALLBACK_URL', 'http://localhost/sports_club_management/paystack_callback.php'));
+
+define('CLUB_LAT', (float) config_value('CLUB_LAT', '-1.286389'));
+define('CLUB_LNG', (float) config_value('CLUB_LNG', '36.817223'));
+define('CLUB_CITY', config_value('CLUB_CITY', 'Nairobi'));
+
+function config_value(string $name, string $default = ''): string
+{
+    $value = getenv($name);
+    if ($value !== false) {
+        return $value;
+    }
+
+    if (array_key_exists($name, $_ENV)) {
+        return $_ENV[$name];
+    }
+
+    if (array_key_exists($name, $_SERVER)) {
+        return $_SERVER[$name];
+    }
+
+    return $default;
+}
+
+function load_dotenv(string $path): void
+{
+    if (!file_exists($path) || !is_readable($path)) {
+        return;
+    }
+
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') {
+            continue;
+        }
+
+        [$name, $value] = array_map('trim', explode('=', $line, 2) + [1 => '']);
+        if ($name === '') {
+            continue;
+        }
+
+        if (
+            strlen($value) >= 2
+            && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))
+        ) {
+            $value = substr($value, 1, -1);
+        }
+
+        if (getenv($name) === false) {
+            putenv("{$name}={$value}");
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
+        }
+    }
+}

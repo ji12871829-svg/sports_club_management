@@ -1,0 +1,46 @@
+body {
+    padding-top: 56px; /* Space for fixed navbar */
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    margin-bottom: 20px;
+}
+
+.card {
+    margin-top: 20px;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,.05);
+}
+
+.card-header {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    color: #dc3545;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.footer {
+    padding: 20px;
+    text-align: center;
+    background-color: #343a40;
+    color: white;
+    margin-top: 40px;
+}
