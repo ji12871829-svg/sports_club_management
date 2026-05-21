@@ -1,0 +1,2 @@
+2026-05-20 21:28:40 — {"Body":{"stkCallback":{"MerchantRequestID":"9ab6-4c19-ac0c-2589a788f92a37487","CheckoutRequestID":"ws_CO_20052026222838944706719042","ResultCode":1037,"ResultDesc":"DS timeout user cannot be reached."}}}
+2026-05-20 21:28:43 — {"Body":{"stkCallback":{"MerchantRequestID":"c67b-4b6c-a94e-27e8c3d5621820311","CheckoutRequestID":"ws_CO_20052026222817824706719042","ResultCode":1037,"ResultDesc":"No response from user."}}}

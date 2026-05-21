@@ -11,7 +11,7 @@ include_once("../config/db_connect.php");
             </div>
             <div class="card-body">
                 <p>Welcome to the Admin Panel, <?php echo htmlspecialchars($_SESSION["admin_email"]); ?>!</p>
-                <p>Use the navigation bar above to manage different sections of the Sports Club Management System.</p>
+                <p>Use the navigation bar above to manage different sections of Apex Sports Club.</p>
                 <hr>
                 <h3>Quick Access</h3>
                 <div class="row">

@@ -15,8 +15,8 @@ define('CF_TURNSTILE_SITE_KEY', config_value('CF_TURNSTILE_SITE_KEY'));
 define('CF_TURNSTILE_SECRET_KEY', config_value('CF_TURNSTILE_SECRET_KEY'));
 
 define('BREVO_API_KEY', config_value('BREVO_API_KEY'));
-define('CLUB_EMAIL_FROM', config_value('CLUB_EMAIL_FROM', 'your_email@example.com'));
-define('CLUB_EMAIL_NAME', config_value('CLUB_EMAIL_NAME', 'Sports Club Management'));
+define('CLUB_EMAIL_FROM', config_value('CLUB_EMAIL_FROM', 'ji12871829@gmail.com'));
+define('CLUB_EMAIL_NAME', config_value('CLUB_EMAIL_NAME', 'Apex Sports Club'));
 
 define('RECAPTCHA_SITE_KEY', config_value('RECAPTCHA_SITE_KEY'));
 define('RECAPTCHA_SECRET_KEY', config_value('RECAPTCHA_SECRET_KEY'));
@@ -25,7 +25,15 @@ define('API_SPORTS_KEY', config_value('API_SPORTS_KEY'));
 
 define('PAYSTACK_SECRET_KEY', config_value('PAYSTACK_SECRET_KEY'));
 define('PAYSTACK_PUBLIC_KEY', config_value('PAYSTACK_PUBLIC_KEY'));
-define('PAYSTACK_CALLBACK_URL', config_value('PAYSTACK_CALLBACK_URL', 'http://localhost/sports_club_management/paystack_callback.php'));
+define('PAYSTACK_CALLBACK_URL', config_value('PAYSTACK_CALLBACK_URL', 'https://traverse-proofread-thirty.ngrok-free.dev/sports_club_management/admin/paystack_callback.php'));
+// --- MPESA DARAJA ---
+define('MPESA_CONSUMER_KEY', config_value('MPESA_CONSUMER_KEY'));
+define('MPESA_CONSUMER_SECRET', config_value('MPESA_CONSUMER_SECRET'));
+define('MPESA_SHORTCODE', config_value('MPESA_SHORTCODE', '174379'));  // sandbox shortcode
+define('MPESA_PASSKEY', config_value('MPESA_PASSKEY'));
+define('MPESA_CALLBACK_URL', config_value('MPESA_CALLBACK_URL', 'http://localhost/sports_club_management/mpesa_callback.php'));
+define('MPESA_ENV', config_value('MPESA_ENV', 'sandbox')); // change to 'production' when live
+
 
 define('CLUB_LAT', (float) config_value('CLUB_LAT', '-1.286389'));
 define('CLUB_LNG', (float) config_value('CLUB_LNG', '36.817223'));

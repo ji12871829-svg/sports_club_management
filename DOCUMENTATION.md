@@ -1,8 +1,8 @@
-# Sports Club Management System Documentation
+# Apex Sports Club Documentation
 
 ## Overview
 
-This project is a Sports Club Management System built with vanilla PHP, MySQL, and Bootstrap 5.
+This project is Apex Sports Club, built with vanilla PHP, MySQL, and Bootstrap 5.
 It supports both public member-facing pages and an admin dashboard for club staff.
 
 The system includes:
@@ -125,7 +125,7 @@ Required `.env` values:
 ```dotenv
 BREVO_API_KEY=
 CLUB_EMAIL_FROM=your-email@example.com
-CLUB_EMAIL_NAME=Sports Club Management
+CLUB_EMAIL_NAME=Apex Sports Club
 ```
 
 ### Google reCAPTCHA v2

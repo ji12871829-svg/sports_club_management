@@ -1,6 +1,6 @@
-# Sports Club Management System
+# Apex Sports Club
 
-A vanilla PHP and MySQL web application for managing sports club members, bookings, league teams, fixtures, standings, payments, and admin operations.
+A vanilla PHP and MySQL web application for managing sports members, bookings, league teams, fixtures, standings, payments, and admin operations.
 
 The project is designed for a local XAMPP-style setup, but it can also be deployed to any PHP/MySQL hosting environment.
 
@@ -109,7 +109,7 @@ CF_TURNSTILE_SECRET_KEY=
 
 BREVO_API_KEY=
 CLUB_EMAIL_FROM=your_email@example.com
-CLUB_EMAIL_NAME=Sports Club Management
+CLUB_EMAIL_NAME=Apex Sports Club
 
 RECAPTCHA_SITE_KEY=
 RECAPTCHA_SECRET_KEY=

@@ -4,8 +4,8 @@ include_once("../includes/header.php");
 ?>
 
 <div class="jumbotron text-center bg-light p-5 rounded">
-    <h1 class="display-4">Welcome to Sports Club Management!</h1>
-    <p class="lead">Your ultimate solution for managing sports club activities, members, bookings, and more.</p>
+    <h1 class="display-4">Welcome to Apex Sports Club!</h1>
+    <p class="lead">Your complete system for managing sports activities, members, bookings, and more.</p>
     <hr class="my-4">
     <p>Join our community today or log in to manage your activities.</p>
     <p class="lead">

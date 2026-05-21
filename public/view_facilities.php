@@ -138,7 +138,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // ── Club centre marker ────────────────────────────────────────
 var clubIcon = L.divIcon({
-    html: '<div style="background:#343a40;color:white;padding:6px 10px;border-radius:20px;font-size:12px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.4)">🏆 Sports Club HQ</div>',
+    html: '<div style="background:#343a40;color:white;padding:6px 10px;border-radius:20px;font-size:12px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.4)">🏆 Apex Sports Club HQ</div>',
     className: '',
     iconAnchor: [60, 20]
 });

@@ -47,7 +47,7 @@ if ($reference) {
                         sendEmail(
                             $member_email,
                             trim($member_fname . ' ' . $member_lname),
-                            '🧾 Payment Receipt — Sports Club',
+                            '🧾 Payment Receipt — Apex Sports Club',
                             emailPaymentReceipt($member_fname ?: 'Member', $amount, 'Paystack', $description)
                         );
                     }

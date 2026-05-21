@@ -78,7 +78,7 @@ function emailWelcome($firstName) {
     return "
     <div style='font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden'>
       <div style='background:#007bff;padding:24px;text-align:center'>
-        <h1 style='color:white;margin:0'>🏆 Welcome to Sports Club!</h1>
+        <h1 style='color:white;margin:0'>🏆 Welcome to Apex Sports Club!</h1>
       </div>
       <div style='padding:24px'>
         <p style='font-size:16px'>Hi <strong>" . htmlspecialchars($firstName) . "</strong>,</p>
@@ -95,7 +95,7 @@ function emailWelcome($firstName) {
         </a>
       </div>
       <div style='background:#f8f9fa;padding:12px;text-align:center;color:#888;font-size:12px'>
-        Sports Club Management System
+        Apex Sports Club
       </div>
     </div>";
 }
@@ -136,7 +136,7 @@ function emailBookingConfirmation($firstName, $sport, $facility, $date, $startTi
         </a>
       </div>
       <div style='background:#f8f9fa;padding:12px;text-align:center;color:#888;font-size:12px'>
-        Sports Club Management System
+        Apex Sports Club
       </div>
     </div>";
 }
@@ -160,7 +160,7 @@ function emailBookingStatusUpdate($firstName, $sport, $date, $status) {
         </a>
       </div>
       <div style='background:#f8f9fa;padding:12px;text-align:center;color:#888;font-size:12px'>
-        Sports Club Management System
+        Apex Sports Club
       </div>
     </div>";
 }
@@ -194,7 +194,7 @@ function emailPaymentReceipt($firstName, $amount, $method, $description) {
         <p style='margin-top:16px;color:#666;font-size:13px'>Thank you for your payment!</p>
       </div>
       <div style='background:#f8f9fa;padding:12px;text-align:center;color:#888;font-size:12px'>
-        Sports Club Management System
+        Apex Sports Club
       </div>
     </div>";
 }

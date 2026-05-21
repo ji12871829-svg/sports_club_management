@@ -3,12 +3,14 @@
 //  admin/manage_payments.php
 //  APIs Added:
 //    Paystack API     - checkout payments
+//    M-Pesa Daraja    - STK push payments
 //    Brevo Email API  - payment receipt email to member
 // ============================================================
 require_once "../config/db_connect.php";
 require_once "../config/api_config.php";
 
 require_once "../includes/paystack.php";
+require_once "../includes/mpesa.php";
 require_once "../includes/send_email.php";
 
 $message       = "";
@@ -44,19 +46,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
 
-    $member_email = $member_fname = $member_lname = "";
+    $member_email = $member_fname = $member_lname = $member_phone = "";
     if (empty($member_id_err)) {
-        $sql_member = "SELECT email, first_name, last_name FROM members WHERE member_id = ?";
+        $sql_member = "SELECT email, first_name, last_name, phone_number FROM members WHERE member_id = ?";
         if ($stmt_m = $conn->prepare($sql_member)) {
             $stmt_m->bind_param("i", $member_id);
             $stmt_m->execute();
-            $stmt_m->bind_result($member_email, $member_fname, $member_lname);
+            $stmt_m->bind_result($member_email, $member_fname, $member_lname, $member_phone);
             $stmt_m->fetch();
             $stmt_m->close();
         }
 
         if ($payment_method === "Paystack" && empty($member_email)) {
             $payment_method_err = "Please select a member with a valid email address for Paystack.";
+        }
+
+        if ($payment_method === "M-Pesa" && empty($member_phone)) {
+            $payment_method_err = "Please select a member with a valid phone number for M-Pesa.";
         }
     }
 
@@ -66,6 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($member_id_err) && empty($amount_err) && empty($payment_method_err)) {
 
         $payment_success = true;
+        $record_payment  = true;
 
         // ── Paystack ──────────────────────────────────────────
         if ($payment_method === "Paystack") {
@@ -75,7 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 PAYSTACK_CALLBACK_URL,
                 [
                     'member_id'   => $member_id,
-                    'description' => $description ?: 'Sports Club Payment'
+                    'description' => $description ?: 'Apex Sports Club Payment'
                 ]
             );
 
@@ -93,8 +100,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
+        // M-Pesa payments are recorded by mpesa_callback.php after Safaricom confirms success.
+        if ($payment_method === "M-Pesa") {
+            $mpesaPhone = formatMpesaPhone($member_phone);
+            $mpesaResult = mpesaSTKPush(
+                $mpesaPhone,
+                $amount,
+                $description ?: 'Apex Sports Club Payment'
+            );
+
+            if (($mpesaResult['ResponseCode'] ?? '') === '0') {
+                $record_payment = false;
+                $message = "
+                <div class='alert alert-success'>
+                    <i class='fas fa-mobile-alt me-2'></i>
+                    <strong>M-Pesa STK push sent.</strong>
+                    Ask the member to enter their M-Pesa PIN. The payment will be recorded automatically after Safaricom confirms it.
+                    <br><small>" . htmlspecialchars($mpesaResult['CustomerMessage'] ?? 'Check the member phone for the payment prompt.') . "</small>
+                </div>";
+
+                $member_id = $amount = $payment_method = $description = "";
+            } else {
+                $payment_success = false;
+                $errorMsg = $mpesaResult['error'] ?? $mpesaResult['errorMessage'] ?? $mpesaResult['ResponseDescription'] ?? 'Unable to initialize M-Pesa STK push.';
+                $message = "
+                <div class='alert alert-danger'>
+                    <i class='fas fa-times-circle me-2'></i>
+                    <strong>M-Pesa Failed:</strong> " . htmlspecialchars($errorMsg) . "
+                </div>";
+            }
+        }
+
         // ── Save Payment to Database ──────────────────────────
-        if ($payment_success) {
+        if ($payment_success && $record_payment) {
             $sql = "INSERT INTO payments (member_id, amount, payment_method, description) VALUES (?, ?, ?, ?)";
             if ($stmt = $conn->prepare($sql)) {
                 $stmt->bind_param("idss", $member_id, $amount, $payment_method, $description);
@@ -116,7 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $emailSent = sendEmail(
                             $member_email,
                             $member_fname . " " . $member_lname,
-                            "🧾 Payment Receipt — Sports Club",
+                            "🧾 Payment Receipt — Apex Sports Club",
                             emailPaymentReceipt($member_fname, $amount, $payment_method, $description)
                         );
                     }
@@ -167,6 +205,7 @@ if ($result_members = $conn->query($sql_members)) {
 // ── Payment totals ────────────────────────────────────────────
 $total_all      = array_sum(array_column($payments, 'amount'));
 $total_paystack = array_sum(array_map(fn($p) => $p['payment_method'] === 'Paystack' ? $p['amount'] : 0, $payments));
+$total_mpesa    = array_sum(array_map(fn($p) => $p['payment_method'] === 'M-Pesa'   ? $p['amount'] : 0, $payments));
 $total_cash     = array_sum(array_map(fn($p) => $p['payment_method'] === 'Cash'     ? $p['amount'] : 0, $payments));
 
 $conn->close();
@@ -174,7 +213,7 @@ $conn->close();
 
 <!-- ── Payment Summary Cards ───────────────────────────────── -->
 <div class="row mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-success text-center">
             <div class="card-body py-3">
                 <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
@@ -183,7 +222,7 @@ $conn->close();
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-primary text-center">
             <div class="card-body py-3">
                 <i class="fas fa-credit-card fa-2x mb-2"></i>
@@ -192,7 +231,16 @@ $conn->close();
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-success text-center">
+            <div class="card-body py-3">
+                <i class="fas fa-mobile-alt fa-2x mb-2"></i>
+                <h4 class="mb-0">KES <?php echo number_format($total_mpesa, 2); ?></h4>
+                <small>M-Pesa Payments</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
         <div class="card text-white bg-secondary text-center">
             <div class="card-body py-3">
                 <i class="fas fa-coins fa-2x mb-2"></i>
@@ -263,6 +311,7 @@ $conn->close();
                                 <option value="Cash"          <?php echo ($payment_method === 'Cash')          ? 'selected' : ''; ?>>💵 Cash</option>
                                 <option value="Credit Card"   <?php echo ($payment_method === 'Credit Card')   ? 'selected' : ''; ?>>💳 Credit Card</option>
                                 <option value="Bank Transfer" <?php echo ($payment_method === 'Bank Transfer') ? 'selected' : ''; ?>>🏦 Bank Transfer</option>
+                                <option value="M-Pesa"        <?php echo ($payment_method === 'M-Pesa')        ? 'selected' : ''; ?>>M-Pesa</option>
                             </select>
                             <span class="invalid-feedback"><?php echo $payment_method_err; ?></span>
                         </div>
@@ -287,6 +336,13 @@ $conn->close();
                         <i class="fas fa-credit-card me-2"></i>
                         <strong>Paystack:</strong> Member will be redirected to Paystack checkout.
                         Once the payment is completed, it will be recorded automatically.
+                    </div>
+
+                    <div id="mpesaBanner" class="alert alert-success py-2"
+                         style="display:<?php echo ($payment_method === 'M-Pesa') ? 'block' : 'none'; ?>">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        <strong>M-Pesa:</strong> An STK push will be sent to the member phone number.
+                        The payment is recorded after Safaricom confirms it through the callback.
                     </div>
 
                     <button type="submit" class="btn btn-primary" id="submitBtn">
@@ -340,6 +396,10 @@ $conn->close();
                                                 <span class="badge bg-primary">
                                                     <i class="fas fa-credit-card me-1"></i>Paystack
                                                 </span>
+                                            <?php elseif ($payment['payment_method'] === 'M-Pesa'): ?>
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-mobile-alt me-1"></i>M-Pesa
+                                                </span>
                                             <?php elseif ($payment['payment_method'] === 'Cash'): ?>
                                                 <span class="badge bg-secondary">
                                                     <i class="fas fa-coins me-1"></i>Cash
@@ -381,12 +441,22 @@ $conn->close();
 // ── Show/hide Paystack banner based on payment method ────────
 var paymentMethodSelect = document.getElementById('payment_method');
 var paystackBanner      = document.getElementById('paystackBanner');
+var mpesaBanner         = document.getElementById('mpesaBanner');
 var submitText          = document.getElementById('submitText');
 
 paymentMethodSelect.addEventListener('change', function () {
     var isPaystack = this.value === 'Paystack';
+    var isMpesa    = this.value === 'M-Pesa';
     paystackBanner.style.display = isPaystack ? 'block' : 'none';
-    submitText.textContent       = isPaystack ? 'Proceed to Paystack' : 'Record Payment';
+    mpesaBanner.style.display    = isMpesa ? 'block' : 'none';
+
+    if (isPaystack) {
+        submitText.textContent = 'Proceed to Paystack';
+    } else if (isMpesa) {
+        submitText.textContent = 'Send M-Pesa STK Push';
+    } else {
+        submitText.textContent = 'Record Payment';
+    }
 });
 
 // ── Search/filter payments table ──────────────────────────────

@@ -6,10 +6,10 @@ if (trim(BREVO_API_KEY) === '') {
 }
 
 $payload = [
-    "sender"      => ["name" => "Sports Club", "email" => CLUB_EMAIL_FROM],
+    "sender"      => ["name" => "Apex Sports Club", "email" => CLUB_EMAIL_FROM],
     "to"          => [["email" => "yourname@gmail.com", "name" => "Test User"]], // ← your email here
-    "subject"     => "Sports Club Test Email",
-    "htmlContent" => "<h2>Test email from Sports Club!</h2>"
+    "subject"     => "Apex Sports Club Test Email",
+    "htmlContent" => "<h2>Test email from Apex Sports Club!</h2>"
 ];
 
 $curl = curl_init();

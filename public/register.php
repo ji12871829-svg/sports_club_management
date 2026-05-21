@@ -104,7 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 sendEmail(
                     $email,
                     $first_name . ' ' . $last_name,
-                    'Welcome to Sports Club! 🏆',
+                    'Welcome to Apex Sports Club! 🏆',
                     emailWelcome($first_name)
                 );
 
