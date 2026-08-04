@@ -248,6 +248,24 @@ function activate_membership_for_payment(
 
     $stmt->close();
 
+    // Idempotency guard: if this exact payment already created a membership
+    // (e.g. a duplicate callback re-entering this path), do not insert again.
+    if ($paymentId !== null && $paymentId > 0) {
+        $guard = $conn->prepare(
+            "SELECT membership_id FROM member_memberships WHERE payment_id = ? LIMIT 1"
+        );
+        if ($guard) {
+            $guard->bind_param('i', $paymentId);
+            $guard->execute();
+            $guard->bind_result($existingMembershipId);
+            $alreadyActivated = $guard->fetch() && $existingMembershipId > 0;
+            $guard->close();
+            if ($alreadyActivated) {
+                return true; // already active from this payment — idempotent
+            }
+        }
+    }
+
     // Determine membership start date
     $currentMembership = get_active_membership($conn, $memberId);
 

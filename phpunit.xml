@@ -21,6 +21,9 @@
         <testsuite name="MpesaCallback">
             <file>tests/MpesaCallbackUrlTest.php</file>
         </testsuite>
+        <testsuite name="MpesaCycle">
+            <file>tests/MpesaCallbackCycleTest.php</file>
+        </testsuite>
     </testsuites>
     <coverage>
         <include>
