@@ -49,14 +49,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // ── Authenticate ──────────────────────────────────────────
     if (empty($email_err) && empty($password_err) && empty($login_err)) {
-        $sql = "SELECT member_id, first_name, email, password FROM members WHERE email = ?";
+        $sql = "SELECT member_id, first_name, last_name, email, password FROM members WHERE email = ?";
         if ($stmt = $conn->prepare($sql)) {
             $stmt->bind_param("s", $param_email);
             $param_email = $email;
             if ($stmt->execute()) {
                 $stmt->store_result();
                 if ($stmt->num_rows == 1) {
-                    $stmt->bind_result($member_id, $first_name, $email, $hashed_password);
+                    $stmt->bind_result($member_id, $first_name, $last_name, $email, $hashed_password);
                     if ($stmt->fetch()) {
                         if (password_verify($password, $hashed_password)) {
                             clear_login_attempts($conn, $email);
@@ -64,6 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             $_SESSION["loggedin"]   = true;
                             $_SESSION["member_id"]  = $member_id;
                             $_SESSION["first_name"] = $first_name;
+                            $_SESSION["last_name"]  = $last_name;
                             $_SESSION["email"]      = $email;
                             header("location: dashboard.php");
                             exit;

@@ -85,8 +85,8 @@ if ($stmt) {
             'type' => 'payment',
             'ts' => $ts,
             'date_label' => date('M j, Y', $ts),
-            'label' => 'Payment of KES ' . number_format((float)$row['amount'], 0),
-            'detail' => 'Via ' . ucfirst($row['payment_method'] ?? 'Unknown'),
+            'label' => 'Court Booking Payment',
+            'detail' => 'Payment of KES ' . number_format((float)$row['amount'], 2) . ' via ' . ucfirst($row['payment_method'] ?? 'card'),
             'status' => $row['payment_status'],
             'url' => 'payments.php',
         ];
@@ -112,8 +112,8 @@ if ($stmt) {
             'type' => 'ticket',
             'ts' => $ts,
             'date_label' => date('M j, Y', $ts),
-            'label' => $row['quantity'] . ' ticket(s) for Fixture #' . $row['fixture_id'],
-            'detail' => 'KES ' . number_format((float)$row['total_amount'], 0),
+            'label' => 'Ticket Order',
+            'detail' => $row['quantity'] . 'x ' . ($row['quantity'] > 1 ? 'tickets' : 'ticket') . ' — KES ' . number_format((float)$row['total_amount'], 2),
             'status' => $row['status'],
             'url' => 'my_tickets.php',
         ];
@@ -121,9 +121,9 @@ if ($stmt) {
     $stmt->close();
 }
 
-// Sort by timestamp descending, take top 10
+// Sort by timestamp descending, take top 6
 usort($recent_activities, fn($a, $b) => $b['ts'] - $a['ts']);
-$recent_activities = array_slice($recent_activities, 0, 10);
+$recent_activities = array_slice($recent_activities, 0, 6);
 
 // ── Today's Schedule ────────────────────────────────────────────
 $todays_sessions = [];
@@ -151,436 +151,369 @@ if ($stmt) {
 
 $conn->close();
 
+// Member display identity
+$member_first = $_SESSION["first_name"] ?? 'Member';
+$member_last  = $_SESSION["last_name"] ?? '';
+$member_name  = trim($member_first . ' ' . $member_last);
+$member_email = $_SESSION["email"] ?? '';
+
 include_once("../includes/header.php");
 ?>
 
-<!-- High-End Corporate Minimalist Design Token Layer -->
+<!-- Member Dashboard — reference-faithful design layer -->
 <style>
-    body { 
-        background-color: #f8fafc !important; 
-        color: #334155 !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    
-    /* Hero Workspace Interface */
-    .dash-hero-card {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        color: #ffffff;
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-    }
-    
-    .brand-accent-line {
-        width: 40px;
-        height: 4px;
-        background-color: #38bdf8;
-        border-radius: 2px;
-        margin-bottom: 1rem;
-    }
-
-    .profile-context-box {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 0.75rem 1.25rem;
-    }
-
-    /* Analytic Info Cards */
-    .stat-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        background: #ffffff;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-    }
-
-    .stat-label-text {
-        letter-spacing: 0.5px; 
-        font-size: 0.75rem; 
-        font-weight: 700;
-        color: #64748b;
-    }
-
-    .badge-plan {
-        background-color: #eff6ff;
-        color: #2563eb;
-        font-weight: 700;
-        font-size: 0.85rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 6px;
-        display: inline-block;
-        border: 1px solid #bfdbfe;
-    }
-
-    .currency-value {
-        font-size: 1.85rem; 
-        font-weight: 800; 
-        color: #16a34a !important;
-    }
-
-    /* Activity Feed Timeline */
-    .activity-timeline {
+    /* ── Palette / tokens (from reference) ─────────────────────────── */
+    .md-banner {
+        background: linear-gradient(120deg, #1e293b 0%, #3b0764 100%);
+        border-radius: 16px;
+        color: #fff;
+        padding: 2.25rem 2.5rem;
         position: relative;
-        padding-left: 2rem;
+        overflow: hidden;
     }
-    .activity-timeline::before {
+    .md-banner::after {
         content: '';
         position: absolute;
-        left: 8px;
-        top: 8px;
-        bottom: 8px;
-        width: 2px;
-        background: #e2e8f0;
-    }
-    .activity-item {
-        position: relative;
-        padding-bottom: 1.25rem;
-    }
-    .activity-item:last-child {
-        padding-bottom: 0;
-    }
-    .activity-dot {
-        position: absolute;
-        left: -2rem;
-        top: 4px;
-        width: 18px;
-        height: 18px;
+        right: -80px; top: -80px;
+        width: 260px; height: 260px;
         border-radius: 50%;
-        border: 3px solid #fff;
-        box-shadow: 0 0 0 2px #e2e8f0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.55rem;
+        background: radial-gradient(circle, rgba(129, 140, 248, 0.28) 0%, rgba(129, 140, 248, 0) 70%);
     }
-    .activity-dot.booking { background: #dbeafe; color: #2563eb; border-color: #bfdbfe; }
-    .activity-dot.payment { background: #dcfce7; color: #16a34a; border-color: #bbf7d0; }
-    .activity-dot.ticket { background: #fef3c7; color: #d97706; border-color: #fde68a; }
-    .activity-status {
-        font-size: 0.65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 0.1rem 0.45rem;
-        border-radius: 4px;
+    .md-banner::before {
+        content: '';
+        position: absolute;
+        left: 30%; bottom: -110px;
+        width: 220px; height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0) 70%);
     }
-    .activity-date-label {
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #94a3b8;
-        letter-spacing: 0.3px;
-    }
-    .activity-link {
-        color: inherit;
-        text-decoration: none;
-        transition: color 0.15s ease;
-    }
-    .activity-link:hover {
-        color: #2563eb !important;
-    }
-    .activity-link:hover .activity-label {
-        color: #2563eb;
-    }
+    .md-banner h1 { font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.25rem; }
+    .md-banner .md-banner-sub { color: #a5b4fc; font-size: 0.95rem; }
 
-    /* Workspace Action Hub Grid */
-    .hub-header-bar {
-        border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 1.25rem;
+    .md-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
     }
+    .md-card-head {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f1f3f5;
+        display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .md-card-title { font-size: 1.05rem; font-weight: 700; color: #111827; margin: 0; }
+    .md-card-title i { color: #6366f1; margin-right: 0.5rem; }
 
-    .section-title {
+    /* ── Summary stat cards ──────────────────────────────────────── */
+    .md-stat {
+        display: flex; align-items: center; gap: 1rem;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        height: 100%;
+    }
+    .md-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 24, 40, 0.07); }
+    .md-stat-icon {
+        width: 50px; height: 50px; flex-shrink: 0;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
         font-size: 1.25rem;
-        font-weight: 700;
-        color: #0f172a;
-        letter-spacing: -0.5px;
+    }
+    .md-stat-icon-blue   { background: #eff6ff; color: #2563eb; }
+    .md-stat-icon-amber  { background: #fffbeb; color: #d97706; }
+    .md-stat-icon-green  { background: #ecfdf5; color: #059669; }
+    .md-stat-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; color: #6b7280; text-transform: uppercase; }
+    .md-stat-value { font-size: 1.45rem; font-weight: 800; color: #111827; line-height: 1.2; }
+    .md-stat-sub { font-size: 0.82rem; color: #6b7280; }
+    .md-plan-badge {
+        display: inline-block;
+        background: #eff6ff; color: #2563eb;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 0.15rem 0.7rem;
+        font-weight: 700; font-size: 0.95rem;
     }
 
-    .action-category-title {
-        font-size: 0.72rem; 
-        font-weight: 700; 
-        letter-spacing: 0.5px;
-        color: #64748b;
+    /* ── Schedule table ──────────────────────────────────────────── */
+    .md-table th {
+        font-size: 0.72rem; font-weight: 700; letter-spacing: 0.07em;
+        text-transform: uppercase; color: #6b7280;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb !important;
+        padding: 0.75rem 1.5rem;
     }
-
-    .action-item {
-        border-radius: 6px !important;
-        margin-bottom: 8px;
-        border: 1px solid #e2e8f0 !important;
-        padding: 0.75rem 1rem;
-        transition: all 0.15s ease;
-        font-weight: 600;
+    .md-table td {
+        padding: 0.9rem 1.5rem;
+        border-bottom: 1px solid #f1f3f5;
         font-size: 0.9rem;
-        color: #334155 !important;
-        display: flex;
-        align-items: center;
-        background-color: #ffffff;
+        color: #374151;
+        vertical-align: middle;
+    }
+    .md-table tbody tr:last-child td { border-bottom: none; }
+    .md-table tbody tr:hover { background: #fafbfc; }
+    .md-time { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; color: #111827; }
+
+    .md-pill {
+        display: inline-block;
+        padding: 0.22rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.72rem; font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+    .md-pill-green { background: #dcfce7; color: #15803d; }
+    .md-pill-amber { background: #fef3c7; color: #b45309; }
+    .md-pill-red   { background: #fee2e2; color: #b91c1c; }
+    .md-pill-gray  { background: #f3f4f6; color: #6b7280; }
+
+    /* ── Activity timeline ───────────────────────────────────────── */
+    .md-timeline { position: relative; padding-left: 1.25rem; }
+    .md-timeline::before {
+        content: '';
+        position: absolute;
+        left: 25px; top: 12px; bottom: 12px;
+        width: 2px;
+        background: #e5e7eb;
+    }
+    .md-activity {
+        position: relative;
+        display: flex; gap: 1rem;
+        padding-bottom: 1.4rem;
+    }
+    .md-activity:last-child { padding-bottom: 0; }
+    .md-activity-icon {
+        width: 50px; height: 50px; flex-shrink: 0;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.05rem;
+        color: #6b7280;
+        position: relative; z-index: 1;
+    }
+    .md-activity.booking  .md-activity-icon { color: #2563eb; background: #eff6ff; border-color: #dbeafe; }
+    .md-activity.payment  .md-activity-icon { color: #059669; background: #ecfdf5; border-color: #d1fae5; }
+    .md-activity.ticket   .md-activity-icon { color: #d97706; background: #fffbeb; border-color: #fde68a; }
+    .md-activity-ts { font-size: 0.72rem; font-weight: 600; color: #9ca3af; }
+    .md-activity-title { font-weight: 700; color: #111827; font-size: 0.92rem; }
+    .md-activity-desc { font-size: 0.82rem; color: #6b7280; }
+
+    /* ── Quick actions hub ───────────────────────────────────────── */
+    .md-hub-group-label {
+        font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #6b7280;
+    }
+    .md-action {
+        display: flex; align-items: center; gap: 0.75rem;
+        width: 100%;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 0.7rem 1rem;
+        color: #374151;
+        font-weight: 600; font-size: 0.9rem;
+        text-decoration: none;
+        transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+    .md-action i { color: #6366f1; width: 18px; text-align: center; font-size: 0.95rem; }
+    .md-action:hover {
+        border-color: #c7d2fe;
+        color: #4f46e5;
+        background: #fafaff;
+        transform: translateX(3px);
         text-decoration: none;
     }
-    
-    .action-item:hover {
-        background-color: #f8fafc !important;
-        color: #2563eb !important;
-        border-color: #cbd5e1 !important;
-        transform: translateX(4px);
+
+    /* ── Empty states ────────────────────────────────────────────── */
+    .md-empty {
+        text-align: center;
+        color: #9ca3af;
+        padding: 2rem 1rem;
+        font-size: 0.9rem;
     }
-    
-    .action-logout {
-        border-color: #fee2e2 !important;
-        background-color: #fffdfd !important;
-    }
-    
-    .action-logout:hover {
-        background-color: #fee2e2 !important;
-        color: #dc2626 !important;
-        border-color: #fca5a5 !important;
-    }
+    .md-empty i { font-size: 1.6rem; margin-bottom: 0.5rem; display: block; color: #d1d5db; }
 </style>
 
-<div class="container py-4">
-    
-    <!-- Welcome-back alert -->
-    <?php if (!empty($_SESSION['last_login'])): 
-        $last_ts = strtotime($_SESSION['last_login']);
-        $days_since = floor((time() - $last_ts) / 86400);
-    ?>
-    <div class="alert d-flex align-items-center gap-3 mb-4 px-4 py-3" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;color:#166534;">
-        <div style="width:40px;height:40px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem;">
-            <i class="fas fa-hand-sparkles"></i>
-        </div>
-        <div>
-            <strong style="font-weight:700;">Welcome back, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</strong>
-            <?php if ($days_since > 0): ?>
-                <span class="ms-1" style="color:#15803d;">It's been <strong><?php echo $days_since; ?></strong> day<?php echo $days_since !== 1 ? 's' : ''; ?> since your last visit.</span>
-            <?php else: ?>
-                <span class="ms-1" style="color:#15803d;">Great to see you again today!</span>
-            <?php endif; ?>
-        </div>
-        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close" style="opacity:0.5;"></button>
-    </div>
-    <?php endif; ?>
+<div class="py-4">
 
-    <!-- Workspace Head Context Module -->
-    <div class="card dash-hero-card mb-4">
-        <div class="card-body p-4 p-md-5">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <div class="brand-accent-line"></div>
-                    <span class="text-uppercase small" style="color: #38bdf8; font-weight: 700; letter-spacing: 0.5px;">Member Dashboard</span>
-                    <h1 class="mt-1 mb-2" style="font-size: 2rem; font-weight: 800; letter-spacing: -0.5px;">Welcome, <?php echo htmlspecialchars($_SESSION["first_name"]); ?>!</h1>
-                    <p class="mb-0" style="font-size: 0.95rem; color: #94a3b8;">Manage your bookings, track your payments, and explore club facilities from one place.</p>
-                </div>
-                <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                    <div class="profile-context-box d-inline-block text-start">
-                        <small class="d-block text-uppercase" style="font-size: 0.65rem; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">Signed in as</small>
-                        <span style="font-size: 0.9rem; font-family: SFMono-Regular, monospace; font-weight: 600; color: #f8fafc;"><?php echo htmlspecialchars($_SESSION["email"]); ?></span>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Welcome banner -->
+    <div class="md-banner mb-4">
+        <h1 class="h3">Welcome back, <?php echo htmlspecialchars($member_name); ?></h1>
+        <?php if ($member_email !== ''): ?>
+            <div class="md-banner-sub"><?php echo htmlspecialchars($member_email); ?></div>
+        <?php endif; ?>
     </div>
 
-    <!-- Operational State Metrics Matrix -->
-    <div class="row mb-4 g-3">
-        
-        <!-- Parameter Card: Membership -->
+    <!-- Summary cards -->
+    <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h5 class="stat-label-text text-uppercase mb-0">Membership State</h5>
-                            <i class="fas fa-gem" style="font-size:1.25rem;color:#2563eb;"></i>
-                        </div>
-                        <?php if ($active_membership): ?>
-                            <div class="my-2">
-                                <span class="badge-plan"><?php echo htmlspecialchars($active_membership['plan_name']); ?></span>
-                            </div>
-                        <?php else: ?>
-                            <p class="h6 mb-0 my-2" style="font-weight: 600; color: #64748b;">No active plan</p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="pt-3">
-                        <?php if ($active_membership): ?>
-                            <small class="text-muted d-block" style="font-size:0.85rem;">Valid Until: <span class="text-dark" style="font-weight: 600;"><?php echo htmlspecialchars(date('d M Y', strtotime($active_membership['end_date']))); ?></span></small>
-                        <?php else: ?>
-                            <small class="text-muted d-block" style="font-size:0.85rem;">Subscribe to unlock club facilities</small>
-                        <?php endif; ?>
-                    </div>
+            <div class="md-stat">
+                <div class="md-stat-icon md-stat-icon-blue"><i class="fas fa-shield-halved"></i></div>
+                <div>
+                    <div class="md-stat-label">Membership Status</div>
+                    <?php if ($active_membership): ?>
+                        <div class="md-stat-value"><span class="md-plan-badge"><?php echo htmlspecialchars($active_membership['plan_name']); ?></span></div>
+                        <div class="md-stat-sub">Valid to <?php echo htmlspecialchars(date('M j, Y', strtotime($active_membership['end_date']))); ?></div>
+                    <?php else: ?>
+                        <div class="md-stat-value">No active plan</div>
+                        <div class="md-stat-sub"><a href="memberships.php" class="link-primary">View membership plans</a></div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
-
-        <!-- Parameter Card: Reservations -->
         <div class="col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h5 class="stat-label-text text-uppercase mb-0">Upcoming Bookings</h5>
-                            <i class="fas fa-calendar-check" style="font-size:1.25rem;color:#d97706;"></i>
-                        </div>
-                        <h2 class="my-2" style="font-size: 2.2rem; font-weight: 800; color: #0f172a;"><?php echo (int) $upcoming_bookings; ?></h2>
-                    </div>
-                    <div class="pt-3">
-                        <small class="text-muted d-block" style="font-size:0.85rem;">Active reservation segments matching filters</small>
-                    </div>
+            <div class="md-stat">
+                <div class="md-stat-icon md-stat-icon-amber"><i class="fas fa-calendar-check"></i></div>
+                <div>
+                    <div class="md-stat-label">Upcoming Bookings</div>
+                    <div class="md-stat-value"><?php echo (int) $upcoming_bookings; ?></div>
+                    <div class="md-stat-sub">Sessions booked ahead</div>
                 </div>
             </div>
         </div>
-
-        <!-- Parameter Card: Financials -->
         <div class="col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h5 class="stat-label-text text-uppercase mb-0">Total Paid</h5>
-                            <i class="fas fa-credit-card" style="font-size:1.25rem;color:#16a34a;"></i>
-                        </div>
-                        <h2 class="my-2 currency-value">KES <?php echo number_format((float) $total_paid, 2); ?></h2>
-                    </div>
-                    <div class="pt-3">
-                        <small class="text-muted d-block" style="font-size:0.85rem;">Aggregated settlement confirmations</small>
-                    </div>
+            <div class="md-stat">
+                <div class="md-stat-icon md-stat-icon-green"><i class="fas fa-wallet"></i></div>
+                <div>
+                    <div class="md-stat-label">Total Paid</div>
+                    <div class="md-stat-value">KES <?php echo number_format((float) $total_paid, 2); ?></div>
+                    <div class="md-stat-sub">Lifetime contributions</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Today's Schedule Widget -->
-    <?php if (!empty($todays_sessions)): ?>
-    <div class="card stat-card mb-4" style="border-color:#e0e7ff !important;">
-        <div class="card-header bg-white p-4 hub-header-bar border-bottom-0 d-flex align-items-center justify-content-between">
-            <div>
-                <h3 class="section-title mb-0"><i class="fas fa-calendar-day me-2" style="color:#6366f1;"></i>Today's Schedule</h3>
-                <p class="text-muted small mb-0 mt-1" style="font-size:0.88rem;">Your sessions booked for today</p>
+    <!-- Main grid: content (left) + quick actions (right) -->
+    <div class="row g-4">
+
+        <!-- ── Left column ────────────────────────────────────────── -->
+        <div class="col-lg-8">
+
+            <!-- Today's Schedule -->
+            <div class="md-card mb-4">
+                <div class="md-card-head">
+                    <div>
+                        <h4 class="md-card-title"><i class="fas fa-calendar-day"></i>Today's Schedule</h4>
+                        <small class="text-muted">Your sessions booked for today</small>
+                    </div>
+                    <span class="md-pill d-none d-md-inline-block" style="background:#eef2ff;color:#4f46e5;"><?php echo count($todays_sessions); ?> session<?php echo count($todays_sessions) === 1 ? '' : 's'; ?></span>
+                </div>
+                <?php if (empty($todays_sessions)): ?>
+                    <div class="md-empty"><i class="fas fa-calendar-day"></i>No sessions booked for today. Enjoy your day!</div>
+                <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table md-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Sport</th>
+                                <th>Facility</th>
+                                <th>Coach</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($todays_sessions as $s):
+                                $sc = strtolower($s['status']);
+                                $pill = in_array($sc, ['confirmed', 'approved']) ? 'md-pill-green'
+                                      : ($sc === 'pending' ? 'md-pill-amber'
+                                      : ($sc === 'cancelled' ? 'md-pill-red' : 'md-pill-gray'));
+                                $time = date('g:i A', strtotime($s['start_time']));
+                            ?>
+                            <tr>
+                                <td class="md-time"><?php echo $time; ?></td>
+                                <td class="fw-semibold"><?php echo htmlspecialchars($s['sport_name']); ?></td>
+                                <td><?php echo htmlspecialchars($s['facility_name']); ?></td>
+                                <td><?php echo htmlspecialchars($s['coach_name']); ?></td>
+                                <td><span class="md-pill <?php echo $pill; ?>"><?php echo htmlspecialchars($s['status']); ?></span></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
             </div>
-            <span class="badge" style="background:#eef2ff;color:#4f46e5;font-weight:700;"><?php echo count($todays_sessions); ?> session(s)</span>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table align-middle mb-0" style="font-size:0.85rem;">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Time</th>
-                            <th>Sport</th>
-                            <th>Facility</th>
-                            <th>Coach</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($todays_sessions as $s): 
-                            $sc = strtolower($s['status']);
-                            $sc_color = in_array($sc, ['approved','confirmed']) ? '#16a34a' : ($sc === 'pending' ? '#d97706' : ($sc === 'cancelled' ? '#dc2626' : '#64748b'));
+
+            <!-- Recent Activity -->
+            <div class="md-card">
+                <div class="md-card-head">
+                    <div>
+                        <h4 class="md-card-title"><i class="far fa-clock"></i>Recent Activity</h4>
+                        <small class="text-muted">Your latest bookings, payments, and ticket purchases</small>
+                    </div>
+                </div>
+                <?php if (empty($recent_activities)): ?>
+                    <div class="md-empty"><i class="fas fa-history"></i>No recent activity yet.</div>
+                <?php else: ?>
+                <div class="card-body p-4">
+                    <div class="md-timeline">
+                        <?php foreach ($recent_activities as $act):
+                            $sc = strtolower($act['status']);
+                            $pill = in_array($sc, ['completed', 'approved', 'confirmed', 'paid', 'successful']) ? 'md-pill-green'
+                                  : ($sc === 'pending' ? 'md-pill-amber'
+                                  : (in_array($sc, ['cancelled', 'rejected', 'failed']) ? 'md-pill-red' : 'md-pill-gray'));
+                            $icon = $act['type'] === 'booking' ? 'fa-calendar-check'
+                                  : ($act['type'] === 'payment' ? 'fa-credit-card' : 'fa-ticket');
                         ?>
-                        <tr>
-                            <td class="font-monospace fw-semibold"><?php echo $s['start_time']; ?> – <?php echo $s['end_time']; ?></td>
-                            <td><?php echo htmlspecialchars($s['sport_name']); ?></td>
-                            <td><?php echo htmlspecialchars($s['facility_name']); ?></td>
-                            <td><?php echo htmlspecialchars($s['coach_name']); ?></td>
-                            <td><span class="badge" style="background:<?php echo $sc_color; ?>15;color:<?php echo $sc_color; ?>;font-size:0.65rem;font-weight:700;"><?php echo htmlspecialchars($s['status']); ?></span></td>
-                        </tr>
+                        <div class="md-activity <?php echo $act['type']; ?>">
+                            <div class="md-activity-icon"><i class="fas <?php echo $icon; ?>"></i></div>
+                            <div class="flex-grow-1 min-width-0">
+                                <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+                                    <div>
+                                        <div class="md-activity-title">
+                                            <a href="<?php echo $act['url']; ?>" style="color:inherit;text-decoration:none;"><?php echo $act['label']; ?></a>
+                                        </div>
+                                        <div class="md-activity-desc"><?php echo $act['detail']; ?></div>
+                                        <div class="md-activity-ts mt-1"><?php echo $act['date_label']; ?></div>
+                                    </div>
+                                    <span class="md-pill <?php echo $pill; ?>"><?php echo htmlspecialchars($act['status']); ?></span>
+                                </div>
+                            </div>
+                        </div>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
-    </div>
-    <?php endif; ?>
 
-    <!-- Recent Activity Timeline -->
-    <?php if (!empty($recent_activities)): ?>
-    <div class="card stat-card mb-4">
-        <div class="card-header bg-white p-4 hub-header-bar border-bottom-0">
-            <h3 class="section-title mb-0"><i class="far fa-clock me-2" style="color:#64748b;"></i>Recent Activity</h3>
-            <p class="text-muted small mb-0 mt-1" style="font-size:0.88rem;">Your latest bookings, payments, and ticket purchases</p>
-        </div>
-        <div class="card-body p-4">
-            <div class="activity-timeline">
-                <?php foreach ($recent_activities as $act): 
-                    $s = strtolower($act['status']);
-                    $status_color = in_array($s, ['completed','approved','confirmed','paid','successful']) ? '#16a34a' : ($s === 'pending' ? '#d97706' : (in_array($s, ['cancelled','rejected','failed']) ? '#dc2626' : '#64748b'));
-                    $t = $act['type'];
-                    $icon_class = $t === 'booking' ? 'fa-calendar-check' : ($t === 'payment' ? 'fa-credit-card' : ($t === 'ticket' ? 'fa-ticket-alt' : 'fa-circle'));
-                ?>
-                <div class="activity-item d-flex align-items-start gap-3">
-                    <div class="activity-dot <?php echo $act['type']; ?>"></div>
-                    <div class="flex-grow-1 min-width-0">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <a href="<?php echo $act['url']; ?>" class="activity-link">
-                                <span class="fw-semibold small activity-label" style="color:#0f172a;">
-                                    <i class="fas <?php echo $icon_class; ?> me-1" style="color:#64748b;"></i><?php echo $act['label']; ?>
-                                </span>
-                            </a>
-                            <span class="activity-status" style="background:<?php echo $status_color; ?>15;color:<?php echo $status_color; ?>;">
-                                <?php echo htmlspecialchars($act['status']); ?>
-                            </span>
+        <!-- ── Right column: Quick Actions Hub ────────────────────── -->
+        <div class="col-lg-4">
+            <div class="md-card">
+                <div class="md-card-head">
+                    <div>
+                        <h4 class="md-card-title"><i class="fas fa-bolt"></i>Quick Actions Hub</h4>
+                        <small class="text-muted">Jump straight to what you need</small>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <div class="md-hub-group-label mb-2">Reservations Engine</div>
+                        <div class="d-flex flex-column gap-2">
+                            <a href="booking.php" class="md-action"><i class="fas fa-calendar-plus"></i>Book a Court</a>
+                            <a href="book_training.php" class="md-action"><i class="fas fa-person-chalkboard"></i>Schedule a Class</a>
+                            <a href="view_coaches.php" class="md-action"><i class="fas fa-user-tie"></i>Find a Coach</a>
                         </div>
-                        <div class="d-flex align-items-center gap-2 mt-1">
-                            <small class="activity-date-label"><?php echo $act['date_label']; ?></small>
-                            <small class="text-muted" style="font-size:0.7rem;">·</small>
-                            <small class="text-muted" style="font-size:0.7rem;"><?php echo htmlspecialchars($act['detail']); ?></small>
+                    </div>
+                    <div class="mb-4">
+                        <div class="md-hub-group-label mb-2">Ticketing &amp; Finances</div>
+                        <div class="d-flex flex-column gap-2">
+                            <a href="payments.php" class="md-action"><i class="fas fa-file-invoice-dollar"></i>View Invoices</a>
+                            <a href="tickets.php" class="md-action"><i class="fas fa-ticket"></i>Buy Event Tickets</a>
+                            <a href="payments.php" class="md-action"><i class="fas fa-wallet"></i>Payment Methods</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="md-hub-group-label mb-2">Profile</div>
+                        <div class="d-flex flex-column gap-2">
+                            <a href="update_profile.php" class="md-action"><i class="fas fa-user-pen"></i>Update Personal Details</a>
+                            <a href="memberships.php" class="md-action"><i class="fas fa-medal"></i>Manage Membership</a>
+                            <a href="fitness_dashboard.php" class="md-action"><i class="fas fa-heart-pulse"></i>Health Stats</a>
                         </div>
                     </div>
                 </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- Target Functional Workspace Hub -->
-    <div class="card stat-card mb-4">
-        <div class="card-header bg-white p-4 hub-header-bar border-bottom-0">
-            <h3 class="section-title mb-0">Quick Actions Hub</h3>
-            <p class="text-muted small mb-0 mt-1" style="font-size:0.88rem;">Select an active operational workspace destination parameter below</p>
-        </div>
-        <div class="card-body p-4">
-            <div class="row g-4">
-                
-                <!-- Navigation Column: Reservations -->
-                <div class="col-lg-4 col-md-6">
-                    <h6 class="action-category-title text-uppercase mb-3">Reservations Engine</h6>
-                    <div class="d-flex flex-column">
-                        <a href="booking.php" class="action-item"><i class="fas fa-wand-magic-sparkles me-2"></i>Make a New Booking</a>
-                        <a href="ai_booking_suggestions.php" class="action-item" style="border-color:#e9d5ff !important;background:#faf5ff !important;color:#7c3aed !important;"><i class="fas fa-robot me-2"></i>AI Booking Suggestions</a>
-                        <a href="view_bookings.php" class="action-item"><i class="fas fa-search me-2"></i>View My Bookings</a>
-                        <a href="booking_calendar.php" class="action-item"><i class="fas fa-calendar-alt me-2"></i>View Booking Calendar</a>
-                    </div>
-                </div>
-
-                <!-- Navigation Column: Financial Framework -->
-                <div class="col-lg-4 col-md-6">
-                    <h6 class="action-category-title text-uppercase mb-3">Ticketing & Finances</h6>
-                    <div class="d-flex flex-column">
-                        <a href="tickets.php" class="action-item"><i class="fas fa-ticket-alt me-2"></i>Buy Match Tickets</a>
-                        <a href="my_tickets.php" class="action-item"><i class="fas fa-ticket me-2"></i>View My Tickets</a>
-                        <a href="payments.php" class="action-item"><i class="fas fa-money-bill me-2"></i>Make a Payment</a>
-                    </div>
-                </div>
-
-                <!-- Navigation Column: Corporate Registries -->
-                <div class="col-lg-4 col-md-12">
-                    <h6 class="action-category-title text-uppercase mb-3">Directories & Profile</h6>
-                    <div class="d-flex flex-column">
-                        <a href="memberships.php" class="action-item"><i class="fas fa-medal me-2"></i>View Membership Plans</a>
-                        <a href="team_registration.php" class="action-item"><i class="fas fa-futbol me-2"></i>Join a League Team</a>
-                        <a href="view_sports.php" class="action-item"><i class="fas fa-basketball-ball me-2"></i>View Sports Directory</a>
-                        <a href="view_facilities.php" class="action-item"><i class="fas fa-building me-2"></i>View Facilities</a>
-                        <a href="view_coaches.php" class="action-item"><i class="fas fa-shoe-prints me-2"></i>View Certified Coaches</a>
-                        <a href="update_profile.php" class="action-item"><i class="fas fa-user me-2"></i>Update Account Profile</a>
-                        <a href="delete_account.php" class="action-item text-danger"><i class="fas fa-trash me-2"></i>Delete Account</a>
-                        <a href="logout.php" class="action-item action-logout text-danger"><i class="fas fa-stop-circle me-2"></i>Sign Out of Account</a>
-                    </div>
-                </div>
-                
             </div>
         </div>
     </div>
