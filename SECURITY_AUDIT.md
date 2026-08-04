@@ -131,6 +131,12 @@ Severity: **Critical / High / Medium / Low**. Status: **Fixed** / **Deferred** /
 - **Health endpoint with security state** — public/health.php now returns: migration version (59), rate-limit state (last 5 min counts per action_type), last 10 security events, slow pages (7-day count). Full JSON response at /public/health.php.
 - **Combined security diff summary** — ce2bd7d..a6a34c7: 337 files changed, 65,353 insertions, 1,174 deletions across 4 security-hardening commits.
 
+## Stage-5 round 8 (push, stale cleanup logging, table partitioning) — completed
+
+- **Pushed and verified** — commit 6e29cec pushed to `origin/main`; full git log shows 5 security-hardening commits on top of the original base.
+- **Stale event cleanup logging** — `cron_security_alert.php` now logs the weekly retention purge count to `admin_activity_log` (via `log_activity()`), reporting how many events were deleted and how many acknowledged events remain.
+- **Security events table partitioning** — migration `060_security_events_partition.sql` applies `PARTITION BY KEY(id) PARTITIONS 4` to the `security_events` table (MariaDB 10.4 compatible via `KEY` hashing, which is the only partition type that works with a TIMESTAMP + AUTO_INCREMENT PK). Data intact (22 rows), all SELECT queries work. Future-proofs the table for when it grows beyond thousands of rows.
+
 ## Remaining recommended next steps
 
 1. **Pen-test / red-team pass** on the live app (quarterly), tracking findings to closure in this register.

@@ -17,6 +17,7 @@
 
 require_once __DIR__ . '/config/db_connect.php';
 require_once __DIR__ . '/includes/send_email.php';
+require_once __DIR__ . '/includes/activity_log.php';
 
 // ── Retention cleanup (runs regardless of digest enablement) ────────────────
 // Keep events for ASC_SECURITY_RETENTION_DAYS (default 30). Runs once per week
@@ -45,6 +46,20 @@ if ((int) date('w') === 0) {
         $stmt2->close();
     }
     echo "Retention cleanup: purged {$deleted} event(s) older than {$retentionDays} days.\n";
+
+    // Also log acknowledged events that were up for cleanup (visibility for
+    // the admin review log).
+    $ackStmt = $conn->prepare("SELECT COUNT(*) FROM security_events WHERE acknowledged = 1 AND created_at < NOW() - INTERVAL ? DAY");
+    if ($ackStmt) {
+        $ackStmt->bind_param('i', $retentionDays);
+        $ackStmt->execute();
+        $ackStmt->bind_result($ackCount);
+        $ackStmt->fetch();
+        $ackStmt->close();
+    }
+    $ackCount = $ackCount ?? 0;
+    log_activity($conn, 'retention_cleanup', 'security_events', null,
+        "Purged {$deleted} events older than {$retentionDays} days; {$ackCount} acknowledged events still retained.");
 } else {
     echo "Retention cleanup: skipped (today is not Sunday).\n";
 }
