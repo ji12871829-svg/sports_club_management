@@ -1,8 +1,9 @@
 # Apex Sports Club — Production Readiness Review (PRR)
 
-**Last Audit:** August 4, 2026  
+**Last Audit:** August 5, 2026  
 **Status:** ⚠️ PASS-WITH-RISKS (3 Critical items closed, 5 High items closed)  
-**Next Review:** After any architectural or payment-system change
+**Next Review:** After any architectural or payment-system change  
+**Latest:** Full v2.0 re-audit in [AUDIT_REPORT.md](AUDIT_REPORT.md) — remaining sign-off blockers are operational (backup restore, load tests, env parity, staged deploy)
 
 ---
 
@@ -57,7 +58,7 @@
 | # | Principle | Status | Notes |
 |---|-----------|--------|-------|
 | 18 | **Maintainability & Extensibility** | ⚠️ | 116 PHP files; no doc blocks on most functions |
-| 19 | **Testability** | ✅ | PHPUnit configured; 11 tests, 15 assertions passing |
+| 19 | **Testability** | ✅ | PHPUnit configured; 32 tests, 56 assertions passing |
 | 20 | **Deployment & CI/CD** | ❌ | GitHub Actions configured but not connected to live host |
 | 21 | **Configuration & Environment Parity** | ❌ | No env separation (dev/staging/prod); config in PHP files |
 | 22 | **API Design & Versioning** | ❌ | No versioned REST API; M-Pesa/Paystack callbacks exist but no public API |

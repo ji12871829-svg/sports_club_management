@@ -70,12 +70,33 @@ if (file_exists(__DIR__ . '/.env')) {
     }
 }
 
+// Runs schtasks with an argv array. The array form (PHP 7.4+ on Windows)
+// hands each element to CreateProcess directly, so /TR values containing
+// spaces and inner quotes survive — passthru() routes through cmd.exe,
+// which mangles nested quotes and rejects paths like
+// "C:\xampp\htdocs\Apex Sports Club\...".
+function run_schtasks(array $argv): array
+{
+    $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $proc = proc_open($argv, $descriptors, $pipes);
+    if (!is_resource($proc)) {
+        return ['code' => -1, 'out' => '', 'err' => 'proc_open failed'];
+    }
+    $out = stream_get_contents($pipes[1]);
+    $err = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    return ['code' => proc_close($proc), 'out' => trim((string) $out), 'err' => trim((string) $err)];
+}
+
 if ($remove) {
     $cmd = 'schtasks /Delete /TN "' . $TASK_NAME . '" /F';
     echo ($dryRun ? '[dry-run] ' : '') . $cmd . PHP_EOL;
     if (!$dryRun) {
-        passthru($cmd, $code);
-        echo $code === 0 ? "Task '{$TASK_NAME}' removed.\n" : "Remove returned exit code {$code} (may not exist).\n";
+        $r = run_schtasks(['schtasks', '/Delete', '/TN', $TASK_NAME, '/F']);
+        $ok = $r['code'] === 0;
+        echo $ok ? "Task '{$TASK_NAME}' removed.\n" : "Remove returned exit code {$r['code']} (may not exist).\n";
+        if ($r['err'] !== '') echo trim($r['err']) . PHP_EOL;
     }
     exit(0);
 }
@@ -85,12 +106,11 @@ if (empty($env[$envKey])) {
     echo "Set it first (e.g. {$envKey}=admin@sportsclub.com), then re-run this script.\n";
 }
 
-$quotedPhp  = '"' . str_replace('"', '\"', $phpExe) . '"';
-$quotedScr  = '"' . str_replace('"', '\"', $script) . '"';
-$cmd = 'schtasks /Create /TN "' . $TASK_NAME . '"'
-     . ' /TR ' . $quotedPhp . ' ' . $quotedScr
-     . ' /SC DAILY /ST ' . $time
-     . ' /F';
+// /TR must be a single argument: "<php>" "<script>" — the array form of
+// proc_open quotes it for CreateProcess, so spaces in the paths are safe.
+$trValue = '"' . $phpExe . '" "' . $script . '"';
+$cmdArgs = ['schtasks', '/Create', '/TN', $TASK_NAME, '/TR', $trValue, '/SC', 'DAILY', '/ST', $time, '/F'];
+$cmd     = 'schtasks /Create /TN "' . $TASK_NAME . '" /TR ' . $trValue . ' /SC DAILY /ST ' . $time . ' /F';
 
 echo "Task:     {$TASK_NAME}\n";
 echo "Schedule: Daily at {$time}\n";
@@ -101,10 +121,12 @@ if ($dryRun) {
     exit(0);
 }
 
-passthru($cmd, $code);
-if ($code === 0) {
+$r = run_schtasks($cmdArgs);
+if ($r['out'] !== '') echo $r['out'] . PHP_EOL;
+if ($r['err'] !== '') echo $r['err'] . PHP_EOL;
+if ($r['code'] === 0) {
     echo "\n✓ Scheduled. To verify: schtasks /Query /TN \"{$TASK_NAME}\" /V /FO LIST\n";
     echo "  To remove:  php schedule_alert_cron.php --remove\n";
 } else {
-    echo "\nschtasks returned exit code {$code}. If this is a non-admin shell, run it as Administrator.\n";
+    echo "\nschtasks returned exit code {$r['code']}. If this is a non-admin shell, run it as Administrator.\n";
 }
