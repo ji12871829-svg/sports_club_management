@@ -59,10 +59,13 @@ $minCritical = getenv('ASC_SECURITY_MIN_CRITICAL');
 $minCritical = ($minCritical !== false && is_numeric($minCritical)) ? (int) $minCritical : 0;
 
 $rows = [];
+// Only surface events that still need attention — acknowledged (reviewed)
+// events are excluded so the digest stays a triage list.
 $r = $conn->query(
     "SELECT event_type, severity, ip_address, actor, details, created_at
      FROM security_events
      WHERE created_at >= NOW() - INTERVAL 24 HOUR
+       AND acknowledged = 0
      ORDER BY created_at DESC
      LIMIT 200"
 );

@@ -225,3 +225,33 @@ jobs:
       - name: Smoke test health endpoint
         run: |
           curl -s http://127.0.0.1:8080/health.php | grep -q '"status": "ok"'
+
+  # ----------------------------------------------------------------
+  # Job 5: Security smoke harness against a live/staging deployment
+  # ----------------------------------------------------------------
+  # Runs scripts/security_smoke.sh (forged webhook, CSRF, rate-limit,
+  # traversal, SQLi probes, optional authenticated 2FA pass) against a
+  # configured staging URL. The job is a no-op (skipped) unless the
+  # SMOKE_BASE_URL repository secret/variable is set — configure it and
+  # the ASC_ADMIN_* secrets to enable, then mark this job as a required
+  # check in branch protection so merges gate on it.
+  security-smoke-staging:
+    runs-on: ubuntu-latest
+    if: vars.SMOKE_BASE_URL != '' || secrets.SMOKE_BASE_URL != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run security smoke harness
+        run: |
+          base="${SMOKE_BASE_URL:-${SECRETS_SMOKE_BASE_URL}}"
+          echo "Running security smoke against: ${base}"
+          ASC_ADMIN_EMAIL="${ASC_ADMIN_EMAIL:-}" \
+          ASC_ADMIN_PASSWORD="${ASC_ADMIN_PASSWORD:-}" \
+          ASC_ADMIN_TOTP_SECRET="${ASC_ADMIN_TOTP_SECRET:-}" \
+          bash scripts/security_smoke.sh "${base}"
+        env:
+          SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL }}
+          SECRETS_SMOKE_BASE_URL: ${{ secrets.SMOKE_BASE_URL }}
+          ASC_ADMIN_EMAIL: ${{ secrets.ASC_ADMIN_EMAIL }}
+          ASC_ADMIN_PASSWORD: ${{ secrets.ASC_ADMIN_PASSWORD }}
+          ASC_ADMIN_TOTP_SECRET: ${{ secrets.ASC_ADMIN_TOTP_SECRET }}

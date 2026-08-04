@@ -197,6 +197,42 @@ if (!function_exists('log_security_event')) {
     }
 
     /**
+     * Mark a security event as acknowledged (reviewed) with an optional note.
+     * Returns ['ok' => true] on success, or ['ok' => false, 'error' => …].
+     * Never throws.
+     */
+    function acknowledge_security_event(mysqli $conn, int $eventId, string $notes, string $acknowledgedBy): array
+    {
+        try {
+            $notes = mb_substr(trim((string) $notes), 0, 500, 'UTF-8');
+            $stmt = $conn->prepare(
+                "UPDATE security_events
+                 SET acknowledged = 1,
+                     acknowledged_by = ?,
+                     acknowledged_at = NOW(),
+                     notes = ?
+                 WHERE id = ?"
+            );
+            if (!$stmt) {
+                return ['ok' => false, 'error' => 'Database prepare failed: ' . $conn->error];
+            }
+            $stmt->bind_param('ssi', $acknowledgedBy, $notes, $eventId);
+            $stmt->execute();
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            if ($affected < 0) {
+                return ['ok' => false, 'error' => 'Database update failed: ' . $conn->error];
+            }
+            if ($affected === 0) {
+                return ['ok' => false, 'error' => 'Event was already acknowledged or does not exist.'];
+            }
+            return ['ok' => true];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Optional quick accessor used by the digest cron: count events of a type
      * since a given cutoff. Returns 0 on any failure.
      */

@@ -118,6 +118,13 @@ Severity: **Critical / High / Medium / Low**. Status: **Fixed** / **Deferred** /
 - **Deterministic retention** — `cron_security_alert.php` now runs a weekly (Sunday) purge of `security_events` + `security_alert_log` honoring `ASC_SECURITY_RETENTION_DAYS` (default 30, min 7), moved **before** the digest-disabled early exit so the table can never grow unbounded when alerting is off. Documented in `.env.example`.
 - **Git identity** — repo-local `user.name`/`user.email` set so future commits don't need inline identity.
 
+## Stage-5 round 6 (CI staging smoke + acknowledge workflow + repo clean) — completed
+
+- **CI staging security-smoke job** — new `security-smoke-staging` job in `.github/workflows/ci.yml` that runs `scripts/security_smoke.sh` against `SMOKE_BASE_URL` (settable via GitHub `vars` or `secrets`), gated to skip when unconfigured, with `ASC_ADMIN_*` secrets passed for the authenticated checks. CI YAML validated.
+- **Acknowledge/notes workflow** — migration `059_security_events_ack.sql` adds `acknowledged`, `acknowledged_by`, `acknowledged_at`, `notes` columns; `includes/security_events.php` exposes `acknowledge_security_event()` (bound param UPDATE, returns ok/error, never throws); `admin/security_events.php` has a POST handler with Bootstrap modal + notes textarea, Status filter dropdown, and green badge display. `cron_security_alert.php` adds `AND acknowledged = 0` so acknowledged events drop from the daily digest (verified: 16→15 after acknowledging one event).
+- **Review fixes applied** — modal form now outputs `csrf_field('admin_csrf')` so the acknowledge POST works without JS (browsers with JS skip the duplication via the interceptor); the error message reads "already acknowledged" instead of "not found or already acknowledged"; `acknowledged_by` uses `$_SESSION['admin_email']` for immediate readability.
+- **Repo cleaned** — all remaining pre-existing work committed (317 files), local tooling/scratch dirs gitignored (`.freebuff/`, `.agent/`, `.cache/`, `.opencode/`, `dev/`, `node_modules/`, `backups/`, `screenshots/`, `output/`, `tmp/`, `legacy_sql/`), working tree clean.
+
 ## Remaining recommended next steps
 
 1. **Pen-test / red-team pass** on the live app (quarterly), tracking findings to closure in this register.
