@@ -140,6 +140,43 @@ if ($search_query === '') {
         $stmt->close();
     }
 }
+
+// ── Duplicate membership detector ───────────────────────────────────────
+// Flags members holding two *overlapping* Active memberships for the same
+// plan — typically a double-activated payment or a manual data-entry error.
+// Sequential renewals (one expiring before the next starts) are NOT flagged.
+// Rows with NULL start/end dates are skipped by the overlap comparison
+// (NULL comparisons evaluate to false) — intended, since an overlap cannot
+// be proven without dates. Add an index on (member_id, plan_id, status)
+// if this table ever grows large.
+$dup_memberships = [];
+$dup_check = $conn->query("SHOW TABLES LIKE 'member_memberships'");
+if ($dup_check && $dup_check->num_rows > 0) {
+    $dup_sql = "SELECT m.member_id, m.first_name, m.last_name, mm.plan_id,
+                       p.name AS plan_name, COUNT(*) AS overlap_count
+                FROM member_memberships mm
+                JOIN members m ON m.member_id = mm.member_id
+                LEFT JOIN membership_plans p ON p.plan_id = mm.plan_id
+                WHERE mm.status = 'Active'
+                  AND EXISTS (
+                      SELECT 1 FROM member_memberships mm2
+                      WHERE mm2.member_id = mm.member_id
+                        AND mm2.plan_id = mm.plan_id
+                        AND mm2.status = 'Active'
+                        AND mm2.membership_id <> mm.membership_id
+                        AND mm2.start_date <= mm.end_date
+                        AND mm2.end_date >= mm.start_date
+                  )
+                GROUP BY m.member_id, m.first_name, m.last_name, mm.plan_id, p.name
+                ORDER BY m.last_name, m.first_name, mm.plan_id";
+    if ($result = $conn->query($dup_sql)) {
+        while ($row = $result->fetch_assoc()) {
+            $dup_memberships[] = $row;
+        }
+        $result->free();
+    }
+    $dup_check->free();
+}
 $conn->close();
 ?>
 
@@ -279,6 +316,34 @@ $conn->close();
             <?php if (!empty($message)): ?>
                 <div class="mb-4">
                     <?php echo $message; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($dup_memberships)): ?>
+                <div class="alert alert-warning border-0 shadow-sm rounded-3 mb-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="fas fa-copy fa-lg mt-1"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-1">Duplicate Active Memberships Detected</h6>
+                            <p class="mb-2 small text-muted">
+                                The following members hold <strong>overlapping active memberships for the same plan</strong>
+                                (often caused by a double-activated payment). Review and deactivate the extra membership.
+                            </p>
+                            <ul class="mb-0 small" style="padding-left: 1.25rem;">
+                                <?php foreach ($dup_memberships as $dup): ?>
+                                    <li>
+                                        <a href="?search=<?php echo urlencode($dup['first_name'] . ' ' . $dup['last_name']); ?>"
+                                           class="fw-semibold">
+                                            <?php echo htmlspecialchars($dup['first_name'] . ' ' . $dup['last_name']); ?>
+                                        </a>
+                                        (#<?php echo (int) $dup['member_id']; ?>) —
+                                        <?php echo htmlspecialchars($dup['plan_name'] ?? 'Plan #' . (int) $dup['plan_id']); ?>
+                                        × <?php echo (int) $dup['overlap_count']; ?> memberships
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
 

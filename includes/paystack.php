@@ -42,6 +42,34 @@ function paystackInitTransaction($email, $amount, $callbackUrl, $metadata = []) 
  * @param string $reference
  * @return array
  */
+/**
+ * Verify a Paystack webhook signature (HMAC-SHA256 of the raw body).
+ *
+ * Pure and network-free so it is unit-testable. An empty secret, empty
+ * signature, or empty body always fails closed (returns false).
+ *
+ * @param string $rawBody   Raw request body as received (php://input)
+ * @param string $sigHeader Value of the x-paystack-signature header
+ * @param string|null $secret Secret key; defaults to PAYSTACK_SECRET_KEY
+ * @return bool
+ */
+function paystack_verify_signature($rawBody, $sigHeader, $secret = null)
+{
+    if ($secret === null) {
+        $secret = defined('PAYSTACK_SECRET_KEY') ? PAYSTACK_SECRET_KEY : '';
+    }
+    if ($secret === '' || $rawBody === '' || $sigHeader === '') {
+        return false;
+    }
+    $expected = hash_hmac('sha256', $rawBody, $secret);
+    return hash_equals($expected, $sigHeader);
+}
+
+/**
+ * Verify a Paystack transaction by reference
+ * @param string $reference
+ * @return array
+ */
 function paystackVerifyTransaction($reference) {
     $curl = curl_init('https://api.paystack.co/transaction/verify/' . urlencode($reference));
     curl_setopt_array($curl, [

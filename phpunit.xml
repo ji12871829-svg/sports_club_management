@@ -24,6 +24,9 @@
         <testsuite name="MpesaCycle">
             <file>tests/MpesaCallbackCycleTest.php</file>
         </testsuite>
+        <testsuite name="PaystackSignature">
+            <file>tests/PaystackSignatureTest.php</file>
+        </testsuite>
     </testsuites>
     <coverage>
         <include>
