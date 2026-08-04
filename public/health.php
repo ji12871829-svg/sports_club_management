@@ -50,6 +50,7 @@ function runCheck(string $name, string $type, callable $fn): array
 
 // ── Load DB connection once (shared between database and schema checks) ──
 require_once __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/../includes/mpesa.php'; // for mpesa_callback_url_error()
 
 // ── 1. Database connectivity ────────────────────────────────────────
 $results['database'] = runCheck('database', 'connectivity', function () use ($conn) {
@@ -138,6 +139,53 @@ $results['api_keys'] = runCheck('api_keys', 'config', function () {
         'configured_count' => count($configured),
         'total_keys'       => count($keys),
         'keys'             => $keys,
+    ];
+});
+
+// ── 5b. Payment provider configuration ───────────────────────────────
+// Catches the most common payment-breaking misconfigurations before users
+// hit them: http:// callback URLs (Safaricom rejects these with 400.002.02),
+// placeholder/example domains, and missing provider keys.
+$results['payment_config'] = runCheck('payment_config', 'config', function () {
+    $mpesaCb       = defined('MPESA_CALLBACK_URL') ? trim(MPESA_CALLBACK_URL) : '';
+    $paystackCb    = defined('PAYSTACK_CALLBACK_URL') ? trim(PAYSTACK_CALLBACK_URL) : '';
+    $mpesaKey      = defined('MPESA_CONSUMER_KEY') ? trim(MPESA_CONSUMER_KEY) : '';
+    $paystackKey   = defined('PAYSTACK_SECRET_KEY') ? trim(PAYSTACK_SECRET_KEY) : '';
+    $mpesaHttps    = str_starts_with(strtolower($mpesaCb), 'https://');
+    $placeholderRe = '/your-ngrok-domain|example\.com|placeholder/i';
+
+    $problems = [];
+    // M-Pesa: Safaricom's servers call back server-to-server, so the URL must
+    // be https:// and publicly reachable (not localhost).
+    if ($mpesaCb === '') {
+        $problems[] = 'MPESA_CALLBACK_URL is empty';
+    } else {
+        $cbError = function_exists('mpesa_callback_url_error') ? mpesa_callback_url_error($mpesaCb) : null;
+        if ($cbError !== null) $problems[] = $cbError;
+    }
+
+    // Paystack: the callback is a browser redirect (the user's own browser
+    // follows it), so http://localhost works for local dev. Only flag
+    // empty or placeholder domains.
+    if ($paystackCb === '') {
+        $problems[] = 'PAYSTACK_CALLBACK_URL is empty';
+    } elseif (preg_match($placeholderRe, $paystackCb)) {
+        $problems[] = 'PAYSTACK_CALLBACK_URL is still a placeholder domain';
+    }
+
+    if ($mpesaKey === '' || $mpesaKey === 'test') $problems[] = 'MPESA_CONSUMER_KEY is not configured';
+    if ($paystackKey === '' || $paystackKey === 'sk_test_local') $problems[] = 'PAYSTACK_SECRET_KEY is not configured';
+
+    if (!empty($problems)) {
+        throw new \RuntimeException(implode('; ', $problems));
+    }
+
+    return [
+        'mpesa_callback_url'     => $mpesaCb,
+        'mpesa_callback_valid'   => $mpesaHttps,
+        'paystack_callback_url'  => $paystackCb,
+        'paystack_callback_valid' => true,
+        'keys_configured'        => true,
     ];
 });
 

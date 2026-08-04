@@ -133,7 +133,7 @@ The app no longer depends on the project folder being named `sports_club_managem
 
 Note: the built-in defaults for `PAYSTACK_CALLBACK_URL` and `MPESA_CALLBACK_URL` still assume a `sports_club_management` folder — set both explicitly in `.env` for your actual domain/path.
 
-**M-Pesa callback URL must be HTTPS.** Safaricom's Daraja API rejects plain-HTTP callback URLs with `400.002.02 Bad Request - Invalid CallBackURL`. `localhost` is also unreachable from Safaricom's servers. For local/sandbox testing, expose the app through an HTTPS tunnel (ngrok, Cloudflare Tunnel, etc.) and point `MPESA_CALLBACK_URL` at `https://<your-tunnel>/callbacks/mpesa_callback.php`. The app fails fast with a clear message if the URL does not start with `https://`.
+**M-Pesa callback URL must be HTTPS.** Safaricom's Daraja API rejects plain-HTTP callback URLs with `400.002.02 Bad Request - Invalid CallBackURL`. `localhost` is also unreachable from Safaricom's servers. For local/sandbox testing, expose the app through an HTTPS tunnel (ngrok, Cloudflare Tunnel, etc.) and point `MPESA_CALLBACK_URL` at `https://<your-tunnel>/callbacks/mpesa_callback.php`. The app fails fast with a clear message if the URL does not start with `https://` — see `mpesa_callback_url_error()` in `includes/mpesa.php` (covered by `tests/MpesaCallbackUrlTest.php`). The `/public/health.php` `payment_config` check reports this misconfiguration so it is caught before users hit it.
 
 ## Default Admin Login
 

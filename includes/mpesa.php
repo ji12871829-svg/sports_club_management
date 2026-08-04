@@ -36,6 +36,34 @@ function getMpesaToken() {
     return $response['access_token'];
 }
 
+/**
+ * Validate the M-Pesa callback URL before making the STK push request.
+ *
+ * Safaricom's Daraja API rejects plain-HTTP callback URLs with
+ * 400.002.02 "Bad Request - Invalid CallBackURL", and localhost is never
+ * reachable from Safaricom's servers. Fail fast with a clear message
+ * instead of letting users hit the cryptic API error.
+ *
+ * @return string|null  Error message, or null when the URL is valid.
+ */
+function mpesa_callback_url_error(string $url): ?string
+{
+    $url = trim($url);
+    if ($url === '') {
+        return 'MPESA_CALLBACK_URL is empty — set it in your .env to an https:// tunnel URL (e.g. ngrok) that Safaricom can reach.';
+    }
+    if (!str_starts_with(strtolower($url), 'https://')) {
+        return 'Invalid CallBackURL: MPESA_CALLBACK_URL must start with https:// (Safaricom rejects http:// URLs). Check your .env — use an https:// tunnel URL (e.g. ngrok) that Safaricom can reach.';
+    }
+    if (preg_match('#^https://(localhost|127\.0\.0\.1)(/|:|$)#i', $url)) {
+        return 'Invalid CallBackURL: MPESA_CALLBACK_URL points at localhost — Safaricom cannot reach it. Use an https:// tunnel URL (e.g. ngrok) that is publicly reachable.';
+    }
+    if (preg_match('/your-ngrok-domain|example\.com|placeholder/i', $url)) {
+        return 'Invalid CallBackURL: MPESA_CALLBACK_URL is still a placeholder domain — replace it with your real https:// tunnel URL (e.g. ngrok).';
+    }
+    return null;
+}
+
 function mpesaSTKPush($phone, $amount, $description = 'Apex Sports Club Payment') {
     $missingConfig = [];
     if (trim(MPESA_CONSUMER_KEY) === '') $missingConfig[] = 'MPESA_CONSUMER_KEY';
@@ -48,12 +76,9 @@ function mpesaSTKPush($phone, $amount, $description = 'Apex Sports Club Payment'
         return ['error' => 'Missing M-Pesa config: ' . implode(', ', $missingConfig)];
     }
 
-    // Safaricom's Daraja API rejects plain-HTTP callback URLs with
-    // 400.002.02 "Bad Request - Invalid CallBackURL". Fail fast with a
-    // clear message instead of letting the user hit the cryptic API error.
-    $cbUrl = trim(MPESA_CALLBACK_URL);
-    if (!str_starts_with(strtolower($cbUrl), 'https://')) {
-        return ['error' => 'Invalid CallBackURL: MPESA_CALLBACK_URL must start with https:// (Safaricom rejects http:// URLs). Check your .env — use an https:// tunnel URL (e.g. ngrok) that Safaricom can reach.'];
+    $cbError = mpesa_callback_url_error(MPESA_CALLBACK_URL);
+    if ($cbError !== null) {
+        return ['error' => $cbError];
     }
 
     $token     = getMpesaToken();

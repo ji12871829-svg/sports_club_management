@@ -18,6 +18,9 @@
         <testsuite name="Security">
             <file>tests/SecurityTest.php</file>
         </testsuite>
+        <testsuite name="MpesaCallback">
+            <file>tests/MpesaCallbackUrlTest.php</file>
+        </testsuite>
     </testsuites>
     <coverage>
         <include>
