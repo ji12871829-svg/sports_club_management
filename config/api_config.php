@@ -14,8 +14,8 @@ if (!defined('BASE_URL')) {
     $scriptName = '/' . trim(str_replace('\\', '/', $scriptName), '/');
     $scriptParts = explode('/', $scriptName);
     array_pop($scriptParts); // strip the file name
-    if (in_array(end($scriptParts), ['public', 'admin'], true)) {
-        array_pop($scriptParts); // strip the public|admin segment to reach the project root
+    if (in_array(end($scriptParts), ['public', 'admin', 'callbacks'], true)) {
+        array_pop($scriptParts); // strip the public|admin|callbacks segment to reach the project root
     }
     define('BASE_URL', implode('/', $scriptParts));
     unset($scriptName, $scriptParts);

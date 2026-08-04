@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/api_config.php';
 function app_base_url(): string
 {
     $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-    foreach (['/public/', '/admin/'] as $marker) {
+    foreach (['/public/', '/admin/', '/callbacks/'] as $marker) {
         $pos = strpos($script, $marker);
         if ($pos !== false) {
             return rtrim(substr($script, 0, $pos), '/');

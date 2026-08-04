@@ -14,6 +14,7 @@ require_once '../includes/feature_helpers.php';
 require_once '../includes/promo_codes.php';
 require_once __DIR__ . '/../includes/input_sanitize.php';
 require_once __DIR__ . '/../includes/rate_limiter.php';
+require_once __DIR__ . '/../includes/url.php';
 
 $member_id = (int) $_SESSION['member_id'];
 $message = '';
