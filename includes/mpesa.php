@@ -52,7 +52,7 @@ function mpesaSTKPush($phone, $amount, $description = 'Apex Sports Club Payment'
     // 400.002.02 "Bad Request - Invalid CallBackURL". Fail fast with a
     // clear message instead of letting the user hit the cryptic API error.
     $cbUrl = trim(MPESA_CALLBACK_URL);
-    if (strpos($cbUrl, 'https://') !== 0) {
+    if (!str_starts_with(strtolower($cbUrl), 'https://')) {
         return ['error' => 'Invalid CallBackURL: MPESA_CALLBACK_URL must start with https:// (Safaricom rejects http:// URLs). Check your .env — use an https:// tunnel URL (e.g. ngrok) that Safaricom can reach.'];
     }
 
