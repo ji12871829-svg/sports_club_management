@@ -7,9 +7,11 @@ require_once __DIR__ . '/../includes/feature_helpers.php';
 require_once __DIR__ . '/../includes/ticket_helpers.php';
 require_once __DIR__ . '/../includes/promo_codes.php';
 
+require_once __DIR__ . '/../includes/url.php';
+
 $message = 'Invalid request.';
 $success = false;
-$return_url = 'admin/manage_payments.php';
+$return_url = app_url('admin/manage_payments.php');
 $reference = $_GET['reference'] ?? '';
 
 if ($reference) {
@@ -29,9 +31,13 @@ if ($reference) {
         $is_fan_ticket_purchase = $source === 'fan_ticket_purchase' && $ticket_order_id > 0;
         $is_auto_renewal = $source === 'auto_renewal'; // Fix 4
         if ($is_ticket_purchase) {
-            $return_url = $is_fan_ticket_purchase ? 'public/fan_tickets.php?paid=1' : 'public/my_tickets.php?paid=1';
+            $return_url = $is_fan_ticket_purchase
+                ? app_url('public/fan_tickets.php?paid=1')
+                : app_url('public/my_tickets.php?paid=1');
         } else {
-            $return_url = $source === 'member_portal' ? 'public/payments.php?paid=1' : 'admin/manage_payments.php';
+            $return_url = $source === 'member_portal'
+                ? app_url('public/payments.php?paid=1')
+                : app_url('admin/manage_payments.php');
         }
 
         if (($member_id <= 0 && !$is_fan_ticket_purchase) || $amount <= 0) {
@@ -61,7 +67,7 @@ if ($reference) {
                     // the renewal log to Success. Also reset the reminder flag so the
                     // next cycle can send fresh reminders for the new membership period.
                     if ($is_auto_renewal && $member_id > 0 && empty($record['duplicate'])) {
-                        require_once __DIR__ . '/includes/renewal_helpers.php';
+                        require_once __DIR__ . '/../includes/renewal_helpers.php';
                         $renewal_log_id  = isset($metadata['renewal_log_id'])  ? (int) $metadata['renewal_log_id']  : 0;
                         $membership_id_m = isset($metadata['membership_id'])    ? (int) $metadata['membership_id']   : 0;
                         if ($renewal_log_id > 0) {
