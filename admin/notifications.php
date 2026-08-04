@@ -8,7 +8,26 @@ require_once '../config/db_connect.php';
 
 require_once __DIR__ . '/../includes/input_sanitize.php';
 
-// Mark all as read
+// Mark actions now use POST + CSRF (the admin header enforces centrally
+// via csrf_valid_any). The GET-based variants still work as a fallback
+// for the UI links but are kept for backward compatibility — the admin
+// header's JS interceptor stamps the CSRF token on POST forms.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'mark_all_read') {
+        $conn->query("UPDATE admin_notifications SET is_read = 1");
+        header('Location: notifications.php'); exit;
+    }
+    if ($action === 'mark_read' && isset($_POST['id'])) {
+        $id = (int) $_POST['id'];
+        $conn->query("UPDATE admin_notifications SET is_read = 1 WHERE notification_id = $id");
+        $link = $_POST['redirect'] ?? 'notifications.php';
+        header('Location: ' . $link); exit;
+    }
+}
+
+// Legacy GET-based fallback (still supported for direct links, but
+// eventually all UI should POST).
 if (($_GET['action'] ?? '') === 'mark_all_read') {
     $conn->query("UPDATE admin_notifications SET is_read = 1");
     header('Location: notifications.php'); exit;
@@ -48,9 +67,12 @@ $icons = [
             <p class="text-muted mb-0 small"><?php echo $unread; ?> unread alert(s)</p>
         </div>
         <?php if ($unread > 0): ?>
-        <a href="?action=mark_all_read" class="btn btn-sm btn-outline-secondary ms-auto">
-            <i class="fas fa-check-double me-1"></i> Mark All Read
-        </a>
+        <form method="post" class="d-inline ms-auto">
+            <input type="hidden" name="action" value="mark_all_read">
+            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-check-double me-1"></i> Mark All Read
+            </button>
+        </form>
         <?php endif; ?>
     </div>
 
@@ -101,14 +123,21 @@ $icons = [
                     </div>
                     <div class="d-flex gap-2 flex-shrink-0">
                         <?php if ($n['link_url']): ?>
-                            <a href="?action=mark_read&id=<?php echo e($n['notification_id']); ?>&redirect=<?php echo urlencode($n['link_url']); ?>"
-                               class="btn btn-sm btn-outline-primary">View</a>
+                            <form method="post" class="d-inline">
+                                <input type="hidden" name="action" value="mark_read">
+                                <input type="hidden" name="id" value="<?php echo e($n['notification_id']); ?>">
+                                <input type="hidden" name="redirect" value="<?php echo e($n['link_url']); ?>">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">View</button>
+                            </form>
                         <?php endif; ?>
                         <?php if (!$n['is_read']): ?>
-                            <a href="?action=mark_read&id=<?php echo e($n['notification_id']); ?>&filter=<?php echo e($filter); ?>"
-                               class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-check"></i>
-                            </a>
+                            <form method="post" class="d-inline">
+                                <input type="hidden" name="action" value="mark_read">
+                                <input type="hidden" name="id" value="<?php echo e($n['notification_id']); ?>">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
                         <?php endif; ?>
                     </div>
                 </div>

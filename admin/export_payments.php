@@ -10,10 +10,13 @@ require_once '../includes/activity_log.php';
 
 require_once __DIR__ . '/../includes/input_sanitize.php';
 
-// Handle CSV download
-if (($_GET['action'] ?? '') === 'download') {
-    $from = $_GET['from'] ?? date('Y-01-01');
-    $to   = $_GET['to']   ?? date('Y-m-d');
+// Handle CSV download — prefer POST (CSRF-protected via the admin header
+// central enforcement). The GET fallback is kept for backward compatibility.
+$is_download = ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'download')
+            || (($_GET['action'] ?? '') === 'download');
+if ($is_download) {
+    $from = $_POST['from'] ?? $_GET['from'] ?? date('Y-01-01');
+    $to   = $_POST['to']   ?? $_GET['to']   ?? date('Y-m-d');
 
     $stmt = $conn->prepare("
         SELECT p.payment_id, CONCAT(m.first_name,' ',m.last_name) AS member_name,
@@ -69,8 +72,9 @@ $conn->close();
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-            <form method="GET" action="">
+            <form method="POST" action="">
                 <input type="hidden" name="action" value="download">
+                <?php echo csrf_field('admin_csrf'); ?>
                 <div class="row g-3 mb-4">
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold">From Date</label>

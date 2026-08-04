@@ -125,6 +125,12 @@ Severity: **Critical / High / Medium / Low**. Status: **Fixed** / **Deferred** /
 - **Review fixes applied** — modal form now outputs `csrf_field('admin_csrf')` so the acknowledge POST works without JS (browsers with JS skip the duplication via the interceptor); the error message reads "already acknowledged" instead of "not found or already acknowledged"; `acknowledged_by` uses `$_SESSION['admin_email']` for immediate readability.
 - **Repo cleaned** — all remaining pre-existing work committed (317 files), local tooling/scratch dirs gitignored (`.freebuff/`, `.agent/`, `.cache/`, `.opencode/`, `dev/`, `node_modules/`, `backups/`, `screenshots/`, `output/`, `tmp/`, `legacy_sql/`), working tree clean.
 
+## Stage-5 round 7 (pen-test audit, GET-CSRF fixes, health endpoint) — completed
+
+- **Systematic admin pen-test audit** — scanned all 66 admin PHP files. Found two real gaps: admin/notifications.php had GET-based state changes (mark_read/mark_all_read) without CSRF protection, and admin/export_payments.php had a GET-based CSV download. Both converted to POST+CSRF (the admin header's central csrf_valid_any() enforcement now covers them). The GET fallbacks are kept for backward compatibility but deprecated. All other POST handlers are covered by the admin header's central CSRF enforcement, and all SQL interpolations that were found use int-cast (safe). No eval/system/shell_exec calls found.
+- **Health endpoint with security state** — public/health.php now returns: migration version (59), rate-limit state (last 5 min counts per action_type), last 10 security events, slow pages (7-day count). Full JSON response at /public/health.php.
+- **Combined security diff summary** — ce2bd7d..a6a34c7: 337 files changed, 65,353 insertions, 1,174 deletions across 4 security-hardening commits.
+
 ## Remaining recommended next steps
 
 1. **Pen-test / red-team pass** on the live app (quarterly), tracking findings to closure in this register.

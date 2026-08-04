@@ -141,7 +141,52 @@ $results['api_keys'] = runCheck('api_keys', 'config', function () {
     ];
 });
 
-// ── 6. Database table count ─────────────────────────────────────────
+// ── 6. Migration version (latest applied migration number) ──────────
+$results['migration_version'] = runCheck('migration_version', 'database', function () use ($conn) {
+    // Scan migration files for the highest numbered migration
+    $files = glob(__DIR__ . '/../migrations/*.sql');
+    $max = 0;
+    $total = 0;
+    foreach ($files as $f) {
+        $total++;
+        if (preg_match('/(\d{3})_/', basename($f), $m)) {
+            $max = max($max, (int) $m[1]);
+        }
+    }
+    return ['latest_migration_ver' => $max, 'migration_files' => $total];
+});
+
+// ── 7. Rate-limit state (last 5 min of login_attempts) ──────────────
+$results['rate_limit_state'] = runCheck('rate_limit_state', 'database', function () use ($conn) {
+    $r = $conn->query("SELECT action_type, COUNT(*) c FROM login_attempts WHERE attempted_at > NOW() - INTERVAL 5 MINUTE GROUP BY action_type ORDER BY c DESC LIMIT 5");
+    if (!$r) return ['counts' => []];
+    $counts = [];
+    while ($row = $r->fetch_assoc()) {
+        $counts[$row['action_type']] = (int) $row['c'];
+    }
+    $r->free();
+    return ['last_5min_counts' => $counts];
+});
+
+// ── 8. Last 10 security events ──────────────────────────────────────
+$results['last_security_events'] = runCheck('last_security_events', 'database', function () use ($conn) {
+    $r = $conn->query("SELECT event_type, severity, details, created_at FROM security_events ORDER BY id DESC LIMIT 10");
+    if (!$r) return ['events' => []];
+    $events = $r->fetch_all(MYSQLI_ASSOC);
+    $r->free();
+    return ['recent_events' => $events];
+});
+
+// ── 10. Slow pages (last 7 days) ────────────────────────────────────
+$results['slow_pages'] = runCheck('slow_pages', 'database', function () use ($conn) {
+    $r = $conn->query("SELECT COUNT(*) FROM page_timings WHERE created_at >= NOW() - INTERVAL 7 DAY");
+    if (!$r) return ['count_7day' => 0];
+    $c = (int) $r->fetch_row()[0];
+    $r->free();
+    return ['count_7day' => $c];
+});
+
+// ── 11. Database table count ────────────────────────────────────────
 $results['schema'] = runCheck('schema', 'database', function () use ($conn) {
     $r = $conn->query('SHOW TABLES');
     if (!$r) {
