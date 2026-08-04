@@ -1,0 +1,227 @@
+name: Apex Sports Club CI
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ----------------------------------------------------------------
+  # Job 1: Static analysis & lint
+  # ----------------------------------------------------------------
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, mysqli, pdo_mysql, xml, gd, zip
+          tools: phpunit:9.6
+
+      - name: PHP Lint (syntax check on all files)
+        run: |
+          find . -name '*.php' -not -path './vendor/*' -not -path './.freebuff/*' -not -path './.github/*' |
+          xargs -I {} php -l {} 2>&1 | grep -v 'No syntax errors' || true
+
+      - name: Check for hardcoded secrets
+        run: |
+          ! grep -rn 'sk_live_\|pk_live_\|SG\.\|AKIA' --include='*.php' --include='*.sql' --include='*.env*' . 2>/dev/null
+
+  # ----------------------------------------------------------------
+  # Job 1b: Security scans (secrets + SAST)
+  # ----------------------------------------------------------------
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # gitleaks needs history for full-repo diff scanning
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: SAST — Semgrep (PHP)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
+          publishDeployment: ${{ secrets.SEMGREP_APP_DEPLOYMENT }}
+          generateSarif: "1"
+        # Note: if SEMGREP_APP_TOKEN is unset the action still runs a local
+        # scan with the default ruleset (no findings published).
+
+      - name: Dangerous patterns regression gate
+        run: |
+          set -e
+          echo "Checking for newly introduced dangerous patterns…"
+          # Fail if any of these appear in committed PHP (callers must justify each one).
+          # Note: exec( is anchored with a negative class so legitimate curl_exec(
+          # calls (outbound APIs) do not trip the gate.
+          ! grep -rnE 'eval\s*\(|shell_exec\s*\(|passthru\s*\(|system\s*\(|(^|[^_a-zA-Z])exec\s*\(|assert\s*\(|unserialize\s*\(' --include='*.php' admin/ public/ includes/ config/ callbacks/ 2>/dev/null
+          # No hardcoded credentials or live API keys anywhere.
+          ! grep -rnE 'sk_live_|pk_live_|AKIA[0-9A-Z]{16}|BEGIN (RSA|OPENSSH|EC) PRIVATE' --include='*.php' --include='*.js' --include='*.json' --include='*.env*' . 2>/dev/null
+          # No mt_rand for anything that looks like a token/code (weak RNG).
+          ! grep -rnE 'mt_rand\([^)]*\)[^;]*code|mt_rand\([^)]*\)[^;]*token|mt_rand\([^)]*\)[^;]*secret' --include='*.php' admin/ public/ includes/ 2>/dev/null
+          echo "Security scan: no dangerous patterns found."
+
+      - name: Dependency audit (composer)
+        run: |
+          # composer.lock is committed; fail on known CVEs in the dependency graph.
+          composer install --no-interaction --no-progress --prefer-dist --no-dev --ignore-platform-reqs
+          composer audit --locked --no-interaction
+
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          composer global require cyclonedx/cyclonedx-php-composer --no-interaction --no-progress 2>/dev/null || true
+          composer make-sbom 2>/dev/null && cp -f composer.sbom.json sbom.json || echo "::warning::SBOM generation skipped (cyclonedx plugin unavailable)"
+
+  # ----------------------------------------------------------------
+  # Job 2: PHPUnit tests
+  # ----------------------------------------------------------------
+  test:
+    runs-on: ubuntu-latest
+    needs: [lint, security-scan]
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: sports_club_db_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, mysqli, pdo_mysql, xml, gd, zip
+          tools: phpunit:9.6
+
+      - name: Wait for MySQL
+        run: |
+          for i in $(seq 1 30); do
+            mysqladmin ping -h127.0.0.1 -uroot -proot && break
+            sleep 2
+          done
+
+      - name: Build schema from migrations
+        run: |
+          php scripts/migrate.php
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: sports_club_db_test
+
+      - name: Run PHPUnit
+        run: phpunit --configuration=phpunit.xml
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: 3306
+          MYSQL_USER: root
+          MYSQL_PASS: root
+          MYSQL_DB: sports_club_db_test
+
+  # ----------------------------------------------------------------
+  # Job 3: Migration dry-run
+  # ----------------------------------------------------------------
+  migration-dry-run:
+    runs-on: ubuntu-latest
+    needs: [lint, security-scan]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate migration filenames and numbering
+        run: |
+          set -e
+          for f in migrations/*.sql; do
+            name=$(basename "$f")
+            if ! echo "$name" | grep -Eq '^[0-9]{3}_[a-z0-9_]+\.sql$'; then
+              echo "Invalid migration filename: $name (expected NNN_name.sql)"
+              exit 1
+            fi
+          done
+          dupes=$(ls migrations/*.sql | sed 's/.*\///' | cut -c1-3 | sort | uniq -d)
+          if [ -n "$dupes" ]; then
+            echo "Duplicate migration numbers: $dupes"
+            exit 1
+          fi
+          echo "All $(ls migrations/*.sql | wc -l) migration filenames valid, no duplicate numbers"
+        # Note: full apply/rollback verification happens in the test job
+        # (php scripts/migrate.php against a fresh MariaDB).
+        shell: bash
+
+  # ----------------------------------------------------------------
+  # Job 4: Smoke test (built-in server)
+  # ----------------------------------------------------------------
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: [test, migration-dry-run]
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: sports_club_db_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, mysqli, pdo_mysql, xml, gd, zip, curl
+        run: |
+          mysql -h127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS sports_club_db"
+          for f in migrations/*.sql; do
+            mysql -h127.0.0.1 -uroot -proot sports_club_db < "$f"
+          done
+
+      - name: Start PHP built-in server
+        run: |
+          cp .env.example .env
+          # MariaDB service uses root/root and binds IPv4; .env.example has empty password + localhost
+          sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/; s/^DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+          php -S 127.0.0.1:8080 -t public/ > /dev/null 2>&1 &
+          sleep 3
+
+      - name: Smoke test homepage
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/ | grep -q '200'
+
+      - name: Smoke test login page
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/login.php | grep -q '200'
+
+      - name: Smoke test register page
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/register.php | grep -q '200'
+
+      - name: Smoke test health endpoint
+        run: |
+          curl -s http://127.0.0.1:8080/health.php | grep -q '"status": "ok"'

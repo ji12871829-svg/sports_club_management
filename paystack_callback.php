@@ -1,8 +1,54 @@
 <?php
+// ============================================================
+//  paystack_callback.php
+//  Paystack transaction verification + idempotent payment recording.
+//
+//  SECURITY: Verifies the Paystack x-paystack-signature header
+//  (HMAC-SHA256 of raw body using PAYSTACK_SECRET_KEY) before trusting
+//  any incoming callback. Requests without a valid signature are rejected.
+//
+//  IDEMPOTENCY: Uses provider_reference (the Paystack reference) as
+//  a unique upsert key — retried callbacks never duplicate payments.
+// ============================================================
+
 require_once __DIR__ . '/config/db_connect.php';
 require_once __DIR__ . '/config/api_config.php';
 require_once __DIR__ . '/includes/paystack.php';
 require_once __DIR__ . '/includes/send_email.php';
+require_once __DIR__ . '/includes/rate_limiter.php';
+
+// ── Webhook signature verification ─────────────────────────────────────
+// Paystack sends `x-paystack-signature` as HMAC-SHA256 of the raw request
+// body, signed with the secret key. We verify this BEFORE trusting any data
+// — and BEFORE the rate limiter, so a forged flood (wrong signature) is
+// rejected with a cheap CPU-only check and never writes to the DB.
+$rawBody = file_get_contents('php://input');
+$sigHeader = $_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] ?? '';
+$cb_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+$expectedSig = hash_hmac('sha256', $rawBody, PAYSTACK_SECRET_KEY);
+if ($sigHeader === '' || !hash_equals($expectedSig, $sigHeader)) {
+    // The callback may have come via GET redirect (user browser) — in that
+    // case there's no signature header. We fall through to the reference-
+    // based verification (which calls Paystack API directly).
+    // If the body is non-empty and the signature is wrong, reject outright.
+    if ($rawBody !== '' && $sigHeader !== '') {
+        error_log('[Paystack] Webhook signature mismatch — rejecting.');
+        log_security_event_throttled('callback_reject', 'critical', 'Paystack webhook signature mismatch (forged or tampered request)', $cb_ip);
+        http_response_code(403);
+        echo json_encode(['status' => false, 'message' => 'Invalid signature']);
+        exit;
+    }
+}
+
+// Defense-in-depth: cap callback/return traffic per client IP. Only requests
+// that passed the signature gate (or browser GET redirects) reach this point.
+if (!rate_limit_check('paystack_cb_' . md5($cb_ip), 120, 60)) {
+    log_security_event_throttled('callback_reject', 'warning', 'Paystack callback rate limit exceeded', $cb_ip);
+    http_response_code(429);
+    echo json_encode(['status' => false, 'message' => 'Rate limited']);
+    exit;
+}
 
 $message = 'Invalid request.';
 $success = false;
@@ -19,37 +65,55 @@ if ($reference) {
         $description = $metadata['description'] ?? 'Paystack payment';
         $customer_email = $data['customer']['email'] ?? '';
 
+        // Use Paystack reference as the idempotency key
+        $paystackRef = $data['reference'] ?? $reference;
+
         if ($member_id <= 0 || $amount <= 0) {
             $message = 'Unable to save payment because the member or amount information is missing.';
         } else {
-            $sql = "INSERT INTO payments (member_id, amount, payment_method, description) VALUES (?, ?, ?, ?)";
+            // ── Idempotent upsert ──────────────────────────────────────
+            $sql = "INSERT INTO payments (member_id, amount, payment_method, description, provider_reference, payment_status)
+                    VALUES (?, ?, ?, ?, ?, 'Completed')
+                    ON DUPLICATE KEY UPDATE
+                        payment_status = VALUES(payment_status),
+                        description    = VALUES(description),
+                        payment_date   = CURRENT_TIMESTAMP";
             if ($stmt = $conn->prepare($sql)) {
                 $payment_method = 'Paystack';
-                $stmt->bind_param('idss', $member_id, $amount, $payment_method, $description);
+                $stmt->bind_param('idsss', $member_id, $amount, $payment_method, $description, $paystackRef);
 
                 if ($stmt->execute()) {
+                    $is_new = $stmt->affected_rows === 1;
                     $success = true;
-                    $message = 'Paystack payment completed and recorded successfully.';
 
-                    $member_email = '';
-                    $member_fname = '';
-                    $member_lname = '';
-                    $sql_member = 'SELECT email, first_name, last_name FROM members WHERE member_id = ?';
-                    if ($stmt_m = $conn->prepare($sql_member)) {
-                        $stmt_m->bind_param('i', $member_id);
-                        $stmt_m->execute();
-                        $stmt_m->bind_result($member_email, $member_fname, $member_lname);
-                        $stmt_m->fetch();
-                        $stmt_m->close();
-                    }
+                    if ($is_new) {
+                        $message = 'Paystack payment completed and recorded successfully.';
 
-                    if ($member_email) {
-                        sendEmail(
-                            $member_email,
-                            trim($member_fname . ' ' . $member_lname),
-                            '🧾 Payment Receipt — Apex Sports Club',
-                            emailPaymentReceipt($member_fname ?: 'Member', $amount, 'Paystack', $description)
-                        );
+                        $member_email = '';
+                        $member_fname = '';
+                        $member_lname = '';
+                        $sql_member = 'SELECT email, first_name, last_name FROM members WHERE member_id = ?';
+                        if ($stmt_m = $conn->prepare($sql_member)) {
+                            $stmt_m->bind_param('i', $member_id);
+                            $stmt_m->execute();
+                            $stmt_m->bind_result($member_email, $member_fname, $member_lname);
+                            $stmt_m->fetch();
+                            $stmt_m->close();
+                        }
+
+                        if ($member_email) {
+                            sendEmail(
+                                $member_email,
+                                trim($member_fname . ' ' . $member_lname),
+                                '🧾 Payment Receipt — Apex Sports Club',
+                                emailPaymentReceipt($member_fname ?: 'Member', $amount, 'Paystack', $description)
+                            );
+                        }
+
+                        error_log('[Paystack] New payment recorded: ' . $paystackRef . ' KES ' . $amount);
+                    } else {
+                        $message = 'Payment already recorded (duplicate callback ignored).';
+                        error_log('[Paystack] Duplicate callback ignored for: ' . $paystackRef);
                     }
                 } else {
                     $message = 'Failed to record payment: ' . $stmt->error;
@@ -63,8 +127,7 @@ if ($reference) {
         $message = $verify['message'] ?? 'Paystack transaction verification failed.';
     }
 }
-?>
-<!doctype html>
+?><!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">

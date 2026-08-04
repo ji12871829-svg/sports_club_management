@@ -28,6 +28,8 @@ function sendEmail($toEmail, $toName, $subject, $htmlBody) {
         CURLOPT_URL            => "https://api.brevo.com/v3/smtp/email",
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST           => true,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_CONNECTTIMEOUT => 8,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => [
             "api-key: "    . BREVO_API_KEY,
@@ -88,7 +90,7 @@ function emailWelcome($firstName) {
           <li>🏅 Browse available coaches</li>
           <li>📊 Track your bookings</li>
         </ul>
-        <a href='http://localhost/sports_club_management/public/login.php'
+        <a href='" . SITE_URL . "/public/login.php'
            style='display:inline-block;background:#007bff;color:white;padding:12px 24px;
                   border-radius:6px;text-decoration:none;margin-top:12px'>
           Login to Your Account →
@@ -129,7 +131,7 @@ function emailBookingConfirmation($firstName, $sport, $facility, $date, $startTi
         <p style='margin-top:16px;color:#666;font-size:13px'>
           Your booking status is currently <strong>Pending</strong> and will be confirmed by an admin shortly.
         </p>
-        <a href='http://localhost/sports_club_management/public/view_bookings.php'
+        <a href='" . SITE_URL . "/public/view_bookings.php'
            style='display:inline-block;background:#28a745;color:white;padding:12px 24px;
                   border-radius:6px;text-decoration:none;margin-top:8px'>
           View My Bookings →
@@ -153,7 +155,7 @@ function emailBookingStatusUpdate($firstName, $sport, $date, $status) {
         <p>Hi <strong>" . htmlspecialchars($firstName) . "</strong>,</p>
         <p>Your booking for <strong>" . htmlspecialchars($sport) . "</strong> on <strong>" . htmlspecialchars($date) . "</strong>
            has been updated to: <strong style='color:{$color}'>{$status}</strong>.</p>
-        <a href='http://localhost/sports_club_management/public/view_bookings.php'
+        <a href='" . SITE_URL . "/public/view_bookings.php'
            style='display:inline-block;background:#007bff;color:white;padding:12px 24px;
                   border-radius:6px;text-decoration:none;margin-top:8px'>
           View My Bookings →
