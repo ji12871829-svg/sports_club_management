@@ -27,494 +27,300 @@ $weekly_workouts = $wearable->getLeaderboard('weekly_workouts', 10);
 $monthly_calories = $wearable->getLeaderboard('monthly_calories', 10);
 
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitness Dashboard - Apex Sports Club</title>
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        .fitness-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 20px;
-        }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 40px;
-        }
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
-        .header h1 {
-            margin: 0 0 10px 0;
-        }
+<style>
+    /* Fitness page local styles (tabs + rank badges) */
+    .md-tabs {
+        display: flex;
+        gap: 0.25rem;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 1.25rem;
+    }
+    .md-tab {
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.7rem 1.1rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #6b7280;
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .md-tab:hover { color: #111827; }
+    .md-tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+    .md-tab-content { display: none; }
+    .md-tab-content.active { display: block; }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        background: #eef2ff; color: #4f46e5;
+        font-weight: 800; font-size: 0.82rem;
+    }
+    .rank-1 { background: #fef9c3; color: #854d0e; }
+    .rank-2 { background: #f3f4f6; color: #374151; }
+    .rank-3 { background: #ffedd5; color: #9a3412; }
 
-        .stat-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    .md-device {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.1rem 1.25rem;
+        height: 100%;
+    }
+    .md-device h5 { font-weight: 700; color: #111827; margin-bottom: 0.15rem; }
+    .md-device .device-info { font-size: 0.85rem; color: #6b7280; margin: 0.2rem 0; }
 
-        .stat-label {
-            font-size: 12px;
-            color: #999;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
+    .md-activity-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f1f3f5;
+        transition: background 0.15s ease;
+    }
+    .md-activity-row:last-child { border-bottom: none; }
+    .md-activity-row:hover { background: #fafbfc; }
+    .md-activity-row h5 { font-size: 0.92rem; font-weight: 700; color: #111827; margin-bottom: 0.1rem; }
+    .md-activity-row p { font-size: 0.8rem; color: #6b7280; margin: 0; }
+    .md-activity-stats { display: flex; gap: 1rem; flex-shrink: 0; }
+    .md-activity-stat { font-size: 0.8rem; font-weight: 700; color: #4f46e5; }
+</style>
 
-        .stat-value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
+<div class="py-4">
+    <!-- Welcome banner -->
+    <div class="md-banner mb-4">
+        <h1><i class="fas fa-heart-pulse me-2"></i>Fitness Dashboard</h1>
+        <div class="md-banner-sub">Track your workouts, connect wearables, and compete on club leaderboards</div>
+    </div>
 
-        .stat-unit {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .section {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-
-        .section h2 {
-            margin-top: 0;
-            color: #333;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 15px;
-        }
-
-        .devices-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .device-card {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .device-card h3 {
-            margin: 0 0 10px 0;
-            color: #333;
-        }
-
-        .device-info {
-            font-size: 14px;
-            color: #666;
-            margin: 10px 0;
-        }
-
-        .device-status {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            font-weight: bold;
-            background: #d4edda;
-            color: #155724;
-            margin: 10px 0;
-        }
-
-        .device-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            text-decoration: none;
-            display: inline-block;
-            flex: 1;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .leaderboard-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .leaderboard-table thead {
-            background: #f0f0f0;
-        }
-
-        .leaderboard-table th,
-        .leaderboard-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .leaderboard-table th {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .rank-badge {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 30px;
-            font-weight: bold;
-        }
-
-        .rank-1 {
-            background: #ffd700;
-            color: #333;
-        }
-
-        .rank-2 {
-            background: #c0c0c0;
-            color: #333;
-        }
-
-        .rank-3 {
-            background: #cd7f32;
-        }
-
-        .activity-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .activity-item {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .activity-info h4 {
-            margin: 0 0 5px 0;
-            color: #333;
-        }
-
-        .activity-info p {
-            margin: 0;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .activity-stats {
-            text-align: right;
-        }
-
-        .activity-stat {
-            font-size: 14px;
-            font-weight: bold;
-            color: #667eea;
-            margin: 5px 0;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-
-        .empty-state p {
-            font-size: 16px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-        }
-
-        .tab {
-            padding: 15px 20px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-    </style>
-</head>
-<body>
-    <?php include '../includes/header.php'; ?>
-
-    <div class="fitness-container">
-        <div class="header">
-            <h1>💪 Fitness Dashboard</h1>
-            <p>Track your workouts, connect wearables, and compete on leaderboards</p>
-        </div>
-
-        <!-- Stats Overview -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Workouts (30 days)</div>
-                <div class="stat-value"><?php echo $stats['total_activities'] ?? 0; ?></div>
-                <div class="stat-unit">sessions</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Duration</div>
-                <div class="stat-value"><?php echo number_format($stats['total_minutes'] ?? 0); ?></div>
-                <div class="stat-unit">minutes</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Distance Covered</div>
-                <div class="stat-value"><?php echo number_format($stats['total_distance'] ?? 0, 1); ?></div>
-                <div class="stat-unit">km</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Calories Burned</div>
-                <div class="stat-value"><?php echo number_format($stats['total_calories'] ?? 0); ?></div>
-                <div class="stat-unit">kcal</div>
-            </div>
-        </div>
-
-        <!-- Wearable Devices Section -->
-        <div class="section">
-            <h2>📱 Connected Devices</h2>
-            
-            <?php if (empty($devices)): ?>
-                <div class="empty-state">
-                    <p>No wearable devices connected yet.</p>
-                    <p>Connect your Apple Health, Garmin, Fitbit, Strava, or WHOOP to sync your fitness data.</p>
+    <!-- Stats overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="md-stat">
+                <div class="md-stat-icon md-stat-icon-blue"><i class="fas fa-dumbbell"></i></div>
+                <div>
+                    <div class="md-stat-label">Workouts (30 days)</div>
+                    <div class="md-stat-value"><?php echo (int) ($stats['total_activities'] ?? 0); ?></div>
+                    <div class="md-stat-sub">sessions logged</div>
                 </div>
-            <?php else: ?>
-                <div class="devices-grid">
-                    <?php foreach ($devices as $device): ?>
-                        <div class="device-card">
-                            <h3><?php echo ucfirst($device['device_type']); ?></h3>
-                            <p class="device-info"><?php echo htmlspecialchars($device['device_name']); ?></p>
-                            <div class="device-status">✓ Connected</div>
-                            <p class="device-info">
-                                Last sync: <?php echo $device['last_sync'] ? date('M d, Y H:i', strtotime($device['last_sync'])) : 'Never'; ?>
-                            </p>
-                            <div class="device-actions">
-                                <button class="btn btn-secondary" onclick="syncDevice(<?php echo $device['device_id']; ?>)">
-                                    Sync Now
-                                </button>
-                                <form method="POST" style="flex: 1;">
-                                    <input type="hidden" name="device_id" value="<?php echo $device['device_id']; ?>">
-                                    <button type="submit" name="disconnect_device" class="btn btn-danger" style="width: 100%;">
-                                        Disconnect
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="md-stat">
+                <div class="md-stat-icon md-stat-icon-amber"><i class="fas fa-clock"></i></div>
+                <div>
+                    <div class="md-stat-label">Total Duration</div>
+                    <div class="md-stat-value"><?php echo number_format((float) ($stats['total_minutes'] ?? 0)); ?></div>
+                    <div class="md-stat-sub">minutes</div>
                 </div>
-            <?php endif; ?>
-
-            <a href="connect_wearable.php" class="btn btn-primary" style="display: inline-block; margin-top: 20px;">
-                + Connect Device
-            </a>
-        </div>
-
-        <!-- Leaderboards Section -->
-        <div class="section">
-            <h2>🏆 Leaderboards</h2>
-            
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('weekly')">Weekly Workouts</button>
-                <button class="tab" onclick="switchTab('monthly')">Monthly Calories</button>
-            </div>
-
-            <!-- Weekly Workouts -->
-            <div id="weekly" class="tab-content active">
-                <table class="leaderboard-table">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Member</th>
-                            <th>Workouts</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($weekly_workouts as $idx => $member): ?>
-                            <tr>
-                                <td>
-                                    <span class="rank-badge rank-<?php echo $member['rank']; ?>">
-                                        <?php echo $member['rank']; ?>
-                                    </span>
-                                </td>
-                                <td><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></td>
-                                <td><?php echo intval($member['score']); ?> sessions</td>
-                                <td>
-                                    <?php echo $member['member_id'] == $member_id ? '👤 You' : ''; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Monthly Calories -->
-            <div id="monthly" class="tab-content">
-                <table class="leaderboard-table">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Member</th>
-                            <th>Calories</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($monthly_calories as $idx => $member): ?>
-                            <tr>
-                                <td>
-                                    <span class="rank-badge rank-<?php echo $member['rank']; ?>">
-                                        <?php echo $member['rank']; ?>
-                                    </span>
-                                </td>
-                                <td><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></td>
-                                <td><?php echo number_format(intval($member['score'])); ?> kcal</td>
-                                <td>
-                                    <?php echo $member['member_id'] == $member_id ? '👤 You' : ''; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
             </div>
         </div>
-
-        <!-- Recent Activities Section -->
-        <div class="section">
-            <h2>📊 Recent Activities</h2>
-            
-            <?php if (empty($activities)): ?>
-                <div class="empty-state">
-                    <p>No activities recorded yet.</p>
-                    <p>Connect a wearable device to start tracking your fitness.</p>
+        <div class="col-sm-6 col-xl-3">
+            <div class="md-stat">
+                <div class="md-stat-icon md-stat-icon-green"><i class="fas fa-map-location-dot"></i></div>
+                <div>
+                    <div class="md-stat-label">Distance Covered</div>
+                    <div class="md-stat-value"><?php echo number_format((float) ($stats['total_distance'] ?? 0), 1); ?></div>
+                    <div class="md-stat-sub">km</div>
                 </div>
-            <?php else: ?>
-                <ul class="activity-list">
-                    <?php foreach ($activities as $activity): ?>
-                        <li class="activity-item">
-                            <div class="activity-info">
-                                <h4><?php echo ucfirst(str_replace('_', ' ', $activity['activity_type'])); ?></h4>
-                                <p><?php echo date('M d, Y', strtotime($activity['activity_date'])); ?> • <?php echo htmlspecialchars($activity['device_name'] ?? 'Manual Entry'); ?></p>
-                            </div>
-                            <div class="activity-stats">
-                                <?php if ($activity['duration_minutes']): ?>
-                                    <div class="activity-stat">⏱️ <?php echo $activity['duration_minutes']; ?> min</div>
-                                <?php endif; ?>
-                                <?php if ($activity['distance_km']): ?>
-                                    <div class="activity-stat">📍 <?php echo number_format($activity['distance_km'], 1); ?> km</div>
-                                <?php endif; ?>
-                                <?php if ($activity['calories_burned']): ?>
-                                    <div class="activity-stat">🔥 <?php echo $activity['calories_burned']; ?> kcal</div>
-                                <?php endif; ?>
-                            </div>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
+            </div>
         </div>
-
-        <div style="text-align: center; margin-top: 40px;">
-            <a href="member_profile.php" class="btn btn-secondary">Back to Profile</a>
+        <div class="col-sm-6 col-xl-3">
+            <div class="md-stat">
+                <div class="md-stat-icon md-stat-icon-amber"><i class="fas fa-fire"></i></div>
+                <div>
+                    <div class="md-stat-label">Calories Burned</div>
+                    <div class="md-stat-value"><?php echo number_format((float) ($stats['total_calories'] ?? 0)); ?></div>
+                    <div class="md-stat-sub">kcal</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <?php include '../includes/footer.php'; ?>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Connected devices -->
+            <div class="md-card mb-4">
+                <div class="md-card-head">
+                    <div>
+                        <h4 class="md-card-title"><i class="fas fa-mobile-screen"></i>Connected Devices</h4>
+                        <small class="text-muted"><?php echo count($devices); ?> wearable<?php echo count($devices) === 1 ? '' : 's'; ?> linked to your profile</small>
+                    </div>
+                    <a href="connect_wearable.php" class="md-btn md-btn-dark"><i class="fas fa-plus"></i> Connect Device</a>
+                </div>
+                <?php if (empty($devices)): ?>
+                    <div class="md-empty">
+                        <i class="fas fa-link-slash"></i>
+                        No wearable devices connected yet.<br>
+                        <small>Connect Apple Health, Garmin, Fitbit, Strava, or WHOOP to sync your fitness data.</small>
+                    </div>
+                <?php else: ?>
+                    <div class="md-card-body">
+                        <div class="row g-3">
+                            <?php foreach ($devices as $device): ?>
+                                <div class="col-md-6">
+                                    <div class="md-device">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h5><i class="fas fa-watch me-2"></i><?php echo ucfirst($device['device_type']); ?></h5>
+                                            <span class="md-pill md-pill-green"><i class="fas fa-check me-1"></i>Connected</span>
+                                        </div>
+                                        <p class="device-info"><?php echo htmlspecialchars($device['device_name']); ?></p>
+                                        <p class="device-info">
+                                            Last sync: <?php echo $device['last_sync'] ? date('M d, Y H:i', strtotime($device['last_sync'])) : 'Never'; ?>
+                                        </p>
+                                        <div class="d-flex gap-2 mt-2">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="syncDevice(<?php echo (int) $device['device_id']; ?>)">
+                                                Sync Now
+                                            </button>
+                                            <form method="POST" class="flex-grow-1">
+                                                <input type="hidden" name="device_id" value="<?php echo (int) $device['device_id']; ?>">
+                                                <button type="submit" name="disconnect_device" class="btn btn-sm btn-outline-danger w-100">
+                                                    Disconnect
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
 
-    <script>
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            <!-- Leaderboards -->
+            <div class="md-card mb-4">
+                <div class="md-card-head">
+                    <div>
+                        <h4 class="md-card-title"><i class="fas fa-trophy"></i>Leaderboards</h4>
+                        <small class="text-muted">Club-wide rankings</small>
+                    </div>
+                </div>
+                <div class="md-card-body">
+                    <div class="md-tabs">
+                        <button class="md-tab active" onclick="switchTab('weekly')">Weekly Workouts</button>
+                        <button class="md-tab" onclick="switchTab('monthly')">Monthly Calories</button>
+                    </div>
 
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
+                    <div id="weekly" class="md-tab-content active">
+                        <div class="table-responsive">
+                            <table class="table md-table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Member</th>
+                                        <th>Workouts</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($weekly_workouts as $member): ?>
+                                        <tr>
+                                            <td><span class="rank-badge rank-<?php echo (int) $member['rank']; ?>"><?php echo (int) $member['rank']; ?></span></td>
+                                            <td class="fw-semibold"><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></td>
+                                            <td><?php echo (int) $member['score']; ?> sessions</td>
+                                            <td><?php echo (int) $member['member_id'] === (int) $member_id ? '<span class="md-pill md-pill-blue">You</span>' : ''; ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-        function syncDevice(deviceId) {
-            alert('Syncing device ' + deviceId + '...');
-            // In production, this would call an AJAX endpoint
-        }
-    </script>
-</body>
-</html>
+                    <div id="monthly" class="md-tab-content">
+                        <div class="table-responsive">
+                            <table class="table md-table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Member</th>
+                                        <th>Calories</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($monthly_calories as $member): ?>
+                                        <tr>
+                                            <td><span class="rank-badge rank-<?php echo (int) $member['rank']; ?>"><?php echo (int) $member['rank']; ?></span></td>
+                                            <td class="fw-semibold"><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></td>
+                                            <td><?php echo number_format((float) $member['score']); ?> kcal</td>
+                                            <td><?php echo (int) $member['member_id'] === (int) $member_id ? '<span class="md-pill md-pill-blue">You</span>' : ''; ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent activities -->
+            <div class="md-card">
+                <div class="md-card-head">
+                    <div>
+                        <h4 class="md-card-title"><i class="fas fa-chart-line"></i>Recent Activities</h4>
+                        <small class="text-muted">Your latest workout log entries</small>
+                    </div>
+                </div>
+                <?php if (empty($activities)): ?>
+                    <div class="md-empty">
+                        <i class="fas fa-person-running"></i>
+                        No activities recorded yet.<br>
+                        <small>Connect a wearable device to start tracking your fitness.</small>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($activities as $activity): ?>
+                        <div class="md-activity-row">
+                            <div>
+                                <h5><?php echo ucfirst(str_replace('_', ' ', $activity['activity_type'])); ?></h5>
+                                <p><?php echo date('M d, Y', strtotime($activity['activity_date'])); ?> &bull; <?php echo htmlspecialchars($activity['device_name'] ?? 'Manual Entry'); ?></p>
+                            </div>
+                            <div class="md-activity-stats">
+                                <?php if (!empty($activity['duration_minutes'])): ?>
+                                    <span class="md-activity-stat">&#9201; <?php echo (int) $activity['duration_minutes']; ?> min</span>
+                                <?php endif; ?>
+                                <?php if (!empty($activity['distance_km'])): ?>
+                                    <span class="md-activity-stat">&#128205; <?php echo number_format((float) $activity['distance_km'], 1); ?> km</span>
+                                <?php endif; ?>
+                                <?php if (!empty($activity['calories_burned'])): ?>
+                                    <span class="md-activity-stat">&#128293; <?php echo (int) $activity['calories_burned']; ?> kcal</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <?php include __DIR__ . '/../includes/member_quick_actions.php'; ?>
+        </div>
+    </div>
+</div>
+
+<?php include __DIR__ . '/../includes/footer.php'; ?>
+
+<script>
+    function switchTab(tabName) {
+        document.querySelectorAll('.md-tab-content').forEach(function (tab) {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.md-tab').forEach(function (tab) {
+            tab.classList.remove('active');
+        });
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    function syncDevice(deviceId) {
+        alert('Syncing device ' + deviceId + '...');
+        // In production, this would call an AJAX endpoint
+    }
+</script>

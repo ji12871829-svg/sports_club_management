@@ -21,6 +21,7 @@ require_once __DIR__ . '/assets.php'; ?>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo asc_asset(BASE_URL . '/public/css/style.css', __DIR__ . '/../public/css/style.css'); ?>">
+    <link rel="stylesheet" href="<?php echo asc_asset(BASE_URL . '/public/css/portal.css', __DIR__ . '/../public/css/portal.css'); ?>">
 </head>
 <body>
     <?php $asc_logged_in = isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true; ?>

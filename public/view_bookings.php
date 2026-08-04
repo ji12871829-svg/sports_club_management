@@ -51,40 +51,61 @@ $conn->close();
 
 <?php include '../includes/header.php'; ?>
 
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card">
-            <div class="card-header"><h2>My Bookings</h2></div>
-            <div class="card-body">
-                <?php if (empty($bookings)): ?>
-                    <div class="alert alert-info">You have no bookings yet.</div>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Sport</th>
-                                    <th>Facility</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($bookings as $booking): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($booking["sport_name"]); ?></td>
-                                        <td><?php echo htmlspecialchars($booking["facility_name"] . " (" . $booking["facility_location"] . ")"); ?></td>
-                                        <td><?php echo htmlspecialchars($booking["booking_date"]); ?></td>
-                                        <td><?php echo htmlspecialchars(date("H:i", strtotime($booking["start_time"])) . " - " . date("H:i", strtotime($booking["end_time"]))); ?></td>
-                                        <td><?php echo htmlspecialchars($booking["status"]); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+<div class="py-4">
+    <div class="md-page-head">
+        <div>
+            <h1 class="md-page-title">My Bookings</h1>
+            <p class="md-page-sub">Your session bookings across club facilities</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="md-card">
+                <div class="md-card-head">
+                    <div>
+                        <h4 class="md-card-title"><i class="fas fa-calendar-check"></i>Booking History</h4>
+                        <small class="text-muted"><?php echo count($bookings); ?> booking<?php echo count($bookings) === 1 ? '' : 's'; ?> on record</small>
                     </div>
+                </div>
+                <?php if (empty($bookings)): ?>
+                    <div class="md-empty"><i class="fas fa-calendar-day"></i>You have no bookings yet. Book a court or class to get started.</div>
+                <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table md-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Sport</th>
+                                <th>Facility</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($bookings as $booking):
+                                $sc = strtolower($booking['status']);
+                                $pill = in_array($sc, ['confirmed', 'approved']) ? 'md-pill-green'
+                                      : ($sc === 'pending' ? 'md-pill-amber'
+                                      : ($sc === 'cancelled' ? 'md-pill-red' : 'md-pill-gray'));
+                            ?>
+                            <tr>
+                                <td class="fw-semibold"><?php echo htmlspecialchars($booking['sport_name']); ?></td>
+                                <td><?php echo htmlspecialchars($booking['facility_name'] . ($booking['facility_location'] ? ' (' . $booking['facility_location'] . ')' : '')); ?></td>
+                                <td><?php echo htmlspecialchars(date('d M Y', strtotime($booking['booking_date']))); ?></td>
+                                <td class="md-time"><?php echo htmlspecialchars(date('g:i A', strtotime($booking['start_time'])) . ' – ' . date('g:i A', strtotime($booking['end_time']))); ?></td>
+                                <td><span class="md-pill <?php echo $pill; ?>"><?php echo htmlspecialchars($booking['status']); ?></span></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
                 <?php endif; ?>
             </div>
+        </div>
+
+        <div class="col-lg-4">
+            <?php include __DIR__ . '/../includes/member_quick_actions.php'; ?>
         </div>
     </div>
 </div>

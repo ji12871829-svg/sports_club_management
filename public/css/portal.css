@@ -1,0 +1,271 @@
+/* ── Apex Sports Club — Member Portal Design Tokens ─────────────
+   Shared by the member dashboard and portal-styled member pages.
+   Mirrors the dashboard reference (light gray canvas, white cards,
+   blue accents, rounded pills). */
+
+/* ── Page scaffolding ─────────────────────────────────────────── */
+.md-page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+.md-page-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.3px;
+    margin: 0;
+}
+.md-page-sub {
+    font-size: 0.88rem;
+    color: #6b7280;
+    margin: 0.15rem 0 0;
+}
+
+/* ── Cards ────────────────────────────────────────────────────── */
+.md-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+.md-card-head {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f3f5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.md-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+.md-card-title i {
+    color: #6366f1;
+    margin-right: 0.5rem;
+}
+.md-card .md-card-body {
+    padding: 1.5rem;
+}
+
+/* ── Welcome banner ───────────────────────────────────────────── */
+.md-banner {
+    background: linear-gradient(120deg, #1e293b 0%, #3b0764 100%);
+    border-radius: 16px;
+    color: #fff;
+    padding: 2.25rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.md-banner::after {
+    content: '';
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.28) 0%, rgba(129, 140, 248, 0) 70%);
+}
+.md-banner::before {
+    content: '';
+    position: absolute;
+    left: 30%; bottom: -110px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0) 70%);
+}
+.md-banner h1 { font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.25rem; }
+.md-banner .md-banner-sub { color: #a5b4fc; font-size: 0.95rem; }
+
+/* ── Summary stat cards ───────────────────────────────────────── */
+.md-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    height: 100%;
+}
+.md-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 24, 40, 0.07); }
+.md-stat-icon {
+    width: 50px; height: 50px; flex-shrink: 0;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+}
+.md-stat-icon-blue   { background: #eff6ff; color: #2563eb; }
+.md-stat-icon-amber  { background: #fffbeb; color: #d97706; }
+.md-stat-icon-green  { background: #ecfdf5; color: #059669; }
+.md-stat-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; color: #6b7280; text-transform: uppercase; }
+.md-stat-value { font-size: 1.45rem; font-weight: 800; color: #111827; line-height: 1.2; }
+.md-stat-sub { font-size: 0.82rem; color: #6b7280; }
+.md-plan-badge {
+    display: inline-block;
+    background: #eff6ff; color: #2563eb;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 0.15rem 0.7rem;
+    font-weight: 700; font-size: 0.95rem;
+}
+
+/* ── Tables ───────────────────────────────────────────────────── */
+.md-table th {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: #6b7280;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 0.75rem 1.5rem;
+    white-space: nowrap;
+}
+.md-table td {
+    padding: 0.9rem 1.5rem;
+    border-bottom: 1px solid #f1f3f5;
+    font-size: 0.9rem;
+    color: #374151;
+    vertical-align: middle;
+}
+.md-table tbody tr:last-child td { border-bottom: none; }
+.md-table tbody tr:hover { background: #fafbfc; }
+.md-time { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; color: #111827; }
+
+/* ── Status pills ─────────────────────────────────────────────── */
+.md-pill {
+    display: inline-block;
+    padding: 0.22rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+.md-pill-green { background: #dcfce7; color: #15803d; }
+.md-pill-amber { background: #fef3c7; color: #b45309; }
+.md-pill-red   { background: #fee2e2; color: #b91c1c; }
+.md-pill-gray  { background: #f3f4f6; color: #6b7280; }
+.md-pill-blue  { background: #eef2ff; color: #4f46e5; }
+
+/* ── Activity timeline ────────────────────────────────────────── */
+.md-timeline { position: relative; padding-left: 1.25rem; }
+.md-timeline::before {
+    content: '';
+    position: absolute;
+    left: 25px; top: 12px; bottom: 12px;
+    width: 2px;
+    background: #e5e7eb;
+}
+.md-activity {
+    position: relative;
+    display: flex; gap: 1rem;
+    padding-bottom: 1.4rem;
+}
+.md-activity:last-child { padding-bottom: 0; }
+.md-activity-icon {
+    width: 50px; height: 50px; flex-shrink: 0;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.05rem;
+    color: #6b7280;
+    position: relative; z-index: 1;
+}
+.md-activity.booking  .md-activity-icon { color: #2563eb; background: #eff6ff; border-color: #dbeafe; }
+.md-activity.payment  .md-activity-icon { color: #059669; background: #ecfdf5; border-color: #d1fae5; }
+.md-activity.ticket   .md-activity-icon { color: #d97706; background: #fffbeb; border-color: #fde68a; }
+.md-activity-ts { font-size: 0.72rem; font-weight: 600; color: #9ca3af; }
+.md-activity-title { font-weight: 700; color: #111827; font-size: 0.92rem; }
+.md-activity-desc { font-size: 0.82rem; color: #6b7280; }
+
+/* ── Quick actions hub ────────────────────────────────────────── */
+.md-hub-group-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #6b7280;
+}
+.md-action {
+    display: flex; align-items: center; gap: 0.75rem;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    color: #374151;
+    font-weight: 600; font-size: 0.9rem;
+    text-decoration: none;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.md-action i { color: #6366f1; width: 18px; text-align: center; font-size: 0.95rem; }
+.md-action:hover {
+    border-color: #c7d2fe;
+    color: #4f46e5;
+    background: #fafaff;
+    transform: translateX(3px);
+    text-decoration: none;
+}
+.md-action-logout { color: #dc2626; }
+.md-action-logout i { color: #dc2626; }
+.md-action-logout:hover {
+    border-color: #fca5a5;
+    color: #dc2626;
+    background: #fef2f2;
+}
+.md-action-logout:hover i { color: #dc2626; }
+
+/* ── Empty states ─────────────────────────────────────────────── */
+.md-empty {
+    text-align: center;
+    color: #9ca3af;
+    padding: 2rem 1rem;
+    font-size: 0.9rem;
+}
+.md-empty i { font-size: 1.6rem; margin-bottom: 0.5rem; display: block; color: #d1d5db; }
+
+/* ── Forms & buttons ──────────────────────────────────────────── */
+.md-form-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.4rem;
+}
+.md-input, .md-select {
+    display: block;
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    color: #111827;
+    background: #fff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.md-input:focus, .md-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    outline: 0;
+}
+.md-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.md-btn:hover { text-decoration: none; transform: translateY(-1px); }
+.md-btn-primary { background: #2563eb; color: #fff !important; }
+.md-btn-primary:hover { background: #1d4ed8; color: #fff !important; }
+.md-btn-dark { background: #111827; color: #fff !important; }
+.md-btn-dark:hover { background: #1f2937; color: #fff !important; }
