@@ -4,7 +4,7 @@
  * Run once via browser: http://localhost/Apex Sports Club/scripts/migrate_features.php
  * Or CLI: php scripts/migrate_features.php
  */
-require_once __DIR__ . '/config/db_connect.php';
+require_once __DIR__ . '/../config/db_connect.php';
 
 $isCli = php_sapi_name() === 'cli';
 if (!$isCli) {

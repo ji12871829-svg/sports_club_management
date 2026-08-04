@@ -48,6 +48,14 @@ function mpesaSTKPush($phone, $amount, $description = 'Apex Sports Club Payment'
         return ['error' => 'Missing M-Pesa config: ' . implode(', ', $missingConfig)];
     }
 
+    // Safaricom's Daraja API rejects plain-HTTP callback URLs with
+    // 400.002.02 "Bad Request - Invalid CallBackURL". Fail fast with a
+    // clear message instead of letting the user hit the cryptic API error.
+    $cbUrl = trim(MPESA_CALLBACK_URL);
+    if (strpos($cbUrl, 'https://') !== 0) {
+        return ['error' => 'Invalid CallBackURL: MPESA_CALLBACK_URL must start with https:// (Safaricom rejects http:// URLs). Check your .env — use an https:// tunnel URL (e.g. ngrok) that Safaricom can reach.'];
+    }
+
     $token     = getMpesaToken();
     if (!$token) return ['error' => 'Could not get M-Pesa token'];
 

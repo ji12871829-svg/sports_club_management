@@ -56,7 +56,7 @@ define('MPESA_CONSUMER_KEY', config_value('MPESA_CONSUMER_KEY'));
 define('MPESA_CONSUMER_SECRET', config_value('MPESA_CONSUMER_SECRET'));
 define('MPESA_SHORTCODE', config_value('MPESA_SHORTCODE', '174379'));  // sandbox shortcode
 define('MPESA_PASSKEY', config_value('MPESA_PASSKEY'));
-define('MPESA_CALLBACK_URL', config_value('MPESA_CALLBACK_URL', 'http://localhost/sports_club_management/mpesa_callback.php'));
+define('MPESA_CALLBACK_URL', config_value('MPESA_CALLBACK_URL', 'https://your-ngrok-domain.ngrok-free.app/mpesa_callback.php'));
 define('MPESA_ENV', config_value('MPESA_ENV', 'sandbox')); // change to 'production' when live
 
 

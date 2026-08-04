@@ -6,8 +6,40 @@ require_once __DIR__ . '/../includes/send_email.php';
 require_once __DIR__ . '/../includes/feature_helpers.php';
 require_once __DIR__ . '/../includes/ticket_helpers.php';
 require_once __DIR__ . '/../includes/promo_codes.php';
+require_once __DIR__ . '/../includes/rate_limiter.php';
 
 require_once __DIR__ . '/../includes/url.php';
+
+// ── Webhook signature verification (defense-in-depth) ─────────────────
+// Paystack webhooks carry `x-paystack-signature` = HMAC-SHA256 of the raw
+// body signed with the secret key. Verify BEFORE trusting any data and
+// BEFORE the rate limiter so forged floods are rejected with a cheap
+// CPU-only check and never write to the DB. Browser GET redirects have no
+// signature header and fall through to Paystack's server-side reference
+// verification below.
+$rawBody    = file_get_contents('php://input');
+$sigHeader  = $_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] ?? '';
+$cb_ip      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$expectedSig = hash_hmac('sha256', $rawBody, PAYSTACK_SECRET_KEY);
+
+if ($sigHeader === '' || !hash_equals($expectedSig, $sigHeader)) {
+    if ($rawBody !== '' && $sigHeader !== '') {
+        error_log('[Paystack] Webhook signature mismatch — rejecting.');
+        log_security_event_throttled('callback_reject', 'critical', 'Paystack webhook signature mismatch (forged or tampered request)', $cb_ip);
+        http_response_code(403);
+        echo json_encode(['status' => false, 'message' => 'Invalid signature']);
+        exit;
+    }
+}
+
+// Defense-in-depth: cap callback/return traffic per client IP. Only requests
+// that passed the signature gate (or browser GET redirects) reach this point.
+if (!rate_limit_check('paystack_cb_' . md5($cb_ip), 120, 60)) {
+    log_security_event_throttled('callback_reject', 'warning', 'Paystack callback rate limit exceeded', $cb_ip);
+    http_response_code(429);
+    echo json_encode(['status' => false, 'message' => 'Rate limited']);
+    exit;
+}
 
 $message = 'Invalid request.';
 $success = false;

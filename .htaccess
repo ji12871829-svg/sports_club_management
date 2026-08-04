@@ -62,8 +62,11 @@
 Options -Indexes
 
 # ── Custom error pages ────────────────────────────────────────────
-ErrorDocument 404 /public/404.php
-ErrorDocument 403 /public/404.php
+# Project-relative path (no leading slash) so ErrorDocument resolves
+# relative to the directory containing this .htaccess — works from any
+# deployment folder (e.g. /Apex Sports Club/ or the web root).
+ErrorDocument 404 public/404.php
+ErrorDocument 403 public/404.php
 
 # ── Block access to sensitive files ────────────────────────────────
 <FilesMatch "\.(env|git|log|sql|bak|ini|htaccess)$">
