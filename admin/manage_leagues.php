@@ -251,7 +251,7 @@ $conn->close();
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <tr><td colspan="7">No leagues found. Run league_team_schema.sql to seed the league structure.</td></tr>
+                                <tr><td colspan="7">No leagues found. Run <code>php scripts/migrate.php</code> to build and seed the league structure.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>

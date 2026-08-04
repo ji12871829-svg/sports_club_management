@@ -1,0 +1,13 @@
+# Apex Sports Club — robots.txt (root)
+# Crawlers should use the public/ folder version.
+# Apache serves this file at the document root level.
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /config/
+Disallow: /migrations/
+Disallow: /uploads/
+
+Sitemap: https://apexsportsclub.com/public/sitemap.xml

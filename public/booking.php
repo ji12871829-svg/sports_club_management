@@ -14,6 +14,7 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 require_once '../config/db_connect.php';
 require_once '../config/api_config.php';
 require_once '../includes/send_email.php';
+require_once '../includes/csrf.php';
 
 $member_id = $_SESSION["member_id"];
 $sport_id = $facility_id = $booking_date = $start_time = $end_time = "";
@@ -50,6 +51,11 @@ if ($result = $conn->query($sql_coaches)) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    // ── CSRF Protection ────────────────────────────────────────
+    if (!csrf_verify($_POST['csrf_token'] ?? '', 'member_csrf')) {
+        $booking_error = 'Your session has expired. Please reload the page and try again.';
+    }
 
     // ── Validate sport ────────────────────────────────────────
     if (empty(trim($_POST["sport_id"]))) {
@@ -92,43 +98,75 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $coach_id = !empty($_POST["coach_id"]) ? trim($_POST["coach_id"]) : null;
 
     if (empty($sport_id_err) && empty($facility_id_err) && empty($booking_date_err)
-        && empty($start_time_err) && empty($end_time_err)) {
+        && empty($start_time_err) && empty($end_time_err) && empty($booking_error)) {
 
-        $sql = "INSERT INTO bookings (member_id, facility_id, coach_id, sport_id, booking_date, start_time, end_time, status)
-                VALUES (?,?,?,?,?,?,?,'Pending')";
-
-        if ($stmt = $conn->prepare($sql)) {
-            $coach_id = $coach_id !== "" ? $coach_id : null;
-
-            $stmt->bind_param(
-                "iiissss",
-                $member_id,
-                $facility_id,
-                $coach_id,
-                $sport_id,
-                $booking_date,
-                $start_time,
-                $end_time
+        // ── Transaction with conflict detection (prevents double-booking) ──
+        $conn->begin_transaction();
+        try {
+            // Lock the facility for this time slot to detect concurrent bookings
+            $conflict_check = $conn->prepare(
+                "SELECT COUNT(*) FROM bookings
+                 WHERE facility_id = ?
+                   AND booking_date = ?
+                   AND status NOT IN ('cancelled', 'rejected')
+                   AND start_time < ? AND end_time > ?
+                 FOR UPDATE"
             );
+            $conflict_check->bind_param("isss", $facility_id, $booking_date, $end_time, $start_time);
+            $conflict_check->execute();
+            $conflict_check->bind_result($overlap_count);
+            $conflict_check->fetch();
+            $conflict_check->close();
 
-            if ($stmt->execute()) {
-                $booking_success = "Booking submitted successfully! You will receive a confirmation email.";
-
-                // ── Send Confirmation Email via Brevo ─────────
-                sendBookingConfirmationFromPost(
-                    $_POST,
-                    $_SESSION['email'],
-                    $_SESSION['first_name'],
-                    $sports,
-                    $facilities
-                );
-
-                header("Location: view_bookings.php");
-                exit;
+            if ($overlap_count > 0) {
+                $booking_error = "This time slot is no longer available. Please choose a different time.";
+                $conn->rollback();
             } else {
-                $booking_error = "Something went wrong. Please try again. " . $stmt->error;
+                $sql = "INSERT INTO bookings (member_id, facility_id, coach_id, sport_id, booking_date, start_time, end_time, status)
+                        VALUES (?,?,?,?,?,?,?,'Pending')";
+
+                if ($stmt = $conn->prepare($sql)) {
+                    $coach_id = $coach_id !== "" ? $coach_id : null;
+
+                    $stmt->bind_param(
+                        "iiissss",
+                        $member_id,
+                        $facility_id,
+                        $coach_id,
+                        $sport_id,
+                        $booking_date,
+                        $start_time,
+                        $end_time
+                    );
+
+                    if ($stmt->execute()) {
+                        $conn->commit();
+                        $booking_success = "Booking submitted successfully! You will receive a confirmation email.";
+
+                        // ── Send Confirmation Email via Brevo ─────────
+                        sendBookingConfirmationFromPost(
+                            $_POST,
+                            $_SESSION['email'],
+                            $_SESSION['first_name'],
+                            $sports,
+                            $facilities
+                        );
+
+                        header("Location: view_bookings.php");
+                        exit;
+                    } else {
+                        $conn->rollback();
+                        $booking_error = "Something went wrong. Please try again. " . $stmt->error;
+                    }
+                    $stmt->close();
+                } else {
+                    $conn->rollback();
+                }
             }
-            $stmt->close();
+        } catch (Exception $e) {
+            $conn->rollback();
+            $booking_error = "An unexpected error occurred. Please try again.";
+            error_log('Booking transaction failed: ' . $e->getMessage());
         }
     }
     $conn->close();
@@ -159,6 +197,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php endif; ?>
 
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+
+                    <?php echo csrf_field('member_csrf'); ?>
 
                     <div class="mb-3">
                         <label for="sport_id" class="form-label">Sport <span class="text-danger">*</span></label>
@@ -208,7 +248,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <label for="booking_date" class="form-label">Date <span class="text-danger">*</span></label>
                         <input type="date" name="booking_date" id="booking_date"
                                class="form-control <?php echo (!empty($booking_date_err)) ? 'is-invalid' : ''; ?>"
-                               value="<?php echo $booking_date; ?>"
+                               value="<?php echo htmlspecialchars($booking_date); ?>"
                                min="<?php echo date('Y-m-d'); ?>">
                         <span class="invalid-feedback"><?php echo $booking_date_err; ?></span>
                     </div>
@@ -218,7 +258,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
                             <input type="time" name="start_time" id="start_time"
                                    class="form-control <?php echo (!empty($start_time_err)) ? 'is-invalid' : ''; ?>"
-                                   value="<?php echo $start_time; ?>"
+                                   value="<?php echo htmlspecialchars($start_time); ?>"
                                    min="00:00">
                             <span class="invalid-feedback"><?php echo $start_time_err; ?></span>
                         </div>
@@ -226,7 +266,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
                             <input type="time" name="end_time" id="end_time"
                                    class="form-control <?php echo (!empty($end_time_err)) ? 'is-invalid' : ''; ?>"
-                                   value="<?php echo $end_time; ?>"
+                                   value="<?php echo htmlspecialchars($end_time); ?>"
                                    max="23:59">
                             <span class="invalid-feedback"><?php echo $end_time_err; ?></span>
                         </div>

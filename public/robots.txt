@@ -1,0 +1,15 @@
+# Apex Sports Club — robots.txt
+# https://apexsportsclub.com/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /config/
+Disallow: /migrations/
+Disallow: /uploads/
+Disallow: /public/health.php
+Disallow: /public/delete_account.php
+
+# Sitemap
+Sitemap: https://apexsportsclub.com/sitemap.xml

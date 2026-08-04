@@ -1,14 +1,10 @@
 <?php
-// Initialize the session
-session_start();
- 
-// Unset all of the session variables
-$_SESSION = array();
- 
-// Destroy the session.php
+require_once '../includes/session_config.php';
+require_once '../includes/admin_2fa.php';
+
+asc_session_start();
+$_SESSION = [];
 session_destroy();
- 
-// Redirect to login page
-header("location: admin_login.php");
+
+header('Location: admin_login.php');
 exit;
-?>

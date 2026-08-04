@@ -1,3 +1,30 @@
 .env
 .env.*
 !.env.example
+logs/
+mpesa_log.txt
+admin_cookies.txt
+vendor/
+.phpunit.cache/
+.phpunit.result.cache
+
+# Local tooling / scratch (never commit)
+node_modules/
+backups/
+screenshots/
+output/
+tmp/
+legacy_sql/
+.freebuff/
+.agent/
+.cache/
+.opencode/
+phpunit.phar
+public/hero_bg.mp4
+
+# User-uploaded media (keep the security .htaccess)
+uploads/*
+!uploads/.htaccess
+
+# Dev scratch scripts
+dev/

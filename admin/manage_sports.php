@@ -1,13 +1,14 @@
 <?php
 include_once("../includes/admin_header.php");
 require_once "../config/db_connect.php";
+require_once __DIR__ . '/../includes/csrf.php';
 
 $message = "";
 $name = $description = "";
 $name_err = $description_err = "";
 
 // Handle Add/Edit operation
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && csrf_verify($_POST['csrf_token'] ?? '', 'admin_csrf')) {
     // Validate name
     if (empty(trim($_POST["name"]))) {
         $name_err = "Please enter a sport name.";
@@ -26,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($name_err) && empty($description_err)) {
         if (isset($_POST["sport_id"]) && !empty($_POST["sport_id"])) {
             // Update operation
-            $sport_id = $_POST["sport_id"];
+            $sport_id = (int) $_POST["sport_id"];
             $sql = "UPDATE sports SET name = ?, description = ? WHERE sport_id = ?";
             if ($stmt = $conn->prepare($sql)) {
                 $stmt->bind_param("ssi", $name, $description, $sport_id);
@@ -54,9 +55,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Handle Delete operation
-if (isset($_GET["action"]) && $_GET["action"] == "delete" && isset($_GET["id"])) {
-    $sport_id = $_GET["id"];
+// Handle Delete operation — POST-only with CSRF (was GET: trivially CSRF-able)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST["action"] ?? '') == "delete" && csrf_verify($_POST['csrf_token'] ?? '', 'admin_csrf')) {
+    $sport_id = (int) ($_POST["id"] ?? 0);
     $sql = "DELETE FROM sports WHERE sport_id = ?";
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param("i", $sport_id);
@@ -71,7 +72,7 @@ if (isset($_GET["action"]) && $_GET["action"] == "delete" && isset($_GET["id"]))
 
 // Handle Edit form pre-fill
 if (isset($_GET["action"]) && $_GET["action"] == "edit" && isset($_GET["id"])) {
-    $sport_id = $_GET["id"];
+    $sport_id = (int) $_GET["id"];
     $sql = "SELECT name, description FROM sports WHERE sport_id = ?";
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param("i", $sport_id);
@@ -109,8 +110,9 @@ $conn->close();
 
                 <h3><?php echo (isset($_GET["action"]) && $_GET["action"] == "edit") ? "Edit Sport" : "Add New Sport"; ?></h3>
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                    <?php echo csrf_field('admin_csrf'); ?>
                     <?php if (isset($sport_id)): ?>
-                        <input type="hidden" name="sport_id" value="<?php echo $sport_id; ?>">
+                        <input type="hidden" name="sport_id" value="<?php echo (int) $sport_id; ?>">
                     <?php endif; ?>
                     <div class="mb-3">
                         <label for="name" class="form-label">Sport Name</label>
@@ -148,8 +150,13 @@ $conn->close();
                                     <td><?php echo htmlspecialchars($sport["name"]); ?></td>
                                     <td><?php echo htmlspecialchars($sport["description"]); ?></td>
                                     <td>
-                                        <a href="manage_sports.php?action=edit&id=<?php echo $sport["sport_id"]; ?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <a href="manage_sports.php?action=delete&id=<?php echo $sport["sport_id"]; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this sport?');">Delete</a>
+                                        <a href="manage_sports.php?action=edit&id=<?php echo (int) $sport["sport_id"]; ?>" class="btn btn-warning btn-sm">Edit</a>
+                                        <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this sport?');">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo (int) $sport["sport_id"]; ?>">
+                                            <?php echo csrf_field('admin_csrf'); ?>
+                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

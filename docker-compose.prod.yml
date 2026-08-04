@@ -1,0 +1,198 @@
+version: '3.8'
+
+# ── Production Docker Compose for Apex Sports Club ────────────────
+# Adds Traefik reverse proxy with auto-TLS (Let's Encrypt), health-checked
+# services, and production-hardened defaults.
+#
+# Usage:
+#   cp .env.example .env          # Edit with real API keys + domain
+#   docker compose -f docker-compose.prod.yml up -d
+# ─────────────────────────────────────────────────────────────────────
+
+x-common-env: &common-env
+  APP_ENV: production
+  MYSQL_HOST: db
+  MYSQL_PORT: 3306
+  MYSQL_USER: ${MYSQL_USER:-apex_user}
+  MYSQL_PASS: ${MYSQL_PASS:-apex_secret}
+  MYSQL_DB: ${MYSQL_DB:-apex_sports_club}
+  PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY}
+  PAYSTACK_PUBLIC_KEY: ${PAYSTACK_PUBLIC_KEY}
+  MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
+  MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
+  MPESA_PASSKEY: ${MPESA_PASSKEY}
+  MPESA_SHORTCODE: ${MPESA_SHORTCODE:-174379}
+  GEMINI_API_KEY: ${GEMINI_API_KEY}
+  BREVO_API_KEY: ${BREVO_API_KEY}
+  API_SPORTS_KEY: ${API_SPORTS_KEY}
+  TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
+  TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
+  SMTP_HOST: ${SMTP_HOST}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER}
+  SMTP_PASS: ${SMTP_PASS}
+  SMTP_FROM: ${SMTP_FROM:-noreply@apexsportsclub.com}
+  SITE_URL: ${SITE_URL:-https://apexsportsclub.com}
+
+services:
+  # ── Traefik Reverse Proxy ──────────────────────────────────────────
+  traefik:
+    image: traefik:v3.1
+    container_name: apex-traefik
+    restart: unless-stopped
+    command:
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Let's Encrypt (HTTP-01 challenge)
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@apexsportsclub.com}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # Redirect HTTP → HTTPS
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      # Dashboard (secure with password)
+      - "--api.dashboard=true"
+      - "--api.debug=false"
+      # Docker provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Logging
+      - "--log.level=WARN"
+      - "--accesslog=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik_letsencrypt:/letsencrypt"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN:-apexsportsclub.com}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${DASHBOARD_USERS:-admin:$$2y$$10$$P9FnIGIX0P3wG0q.H5Gj5e}"  # admin/admin123
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+    networks:
+      - apex-network
+
+  # ── PHP Application ────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=production
+    container_name: apex-app
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+    volumes:
+      - app_uploads:/var/www/html/uploads
+      # Mount config files that change per environment
+      - ./config/api_config.php:/var/www/html/config/api_config.php:ro
+      - ./config/db_connect.php:/var/www/html/config/db_connect.php:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health.php"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`${DOMAIN:-apexsportsclub.com}`) || Host(`www.${DOMAIN:-apexsportsclub.com}`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.app.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.app-compress.compress=true"
+      - "traefik.http.middlewares.app-security.headers.framedeny=true"
+      - "traefik.http.middlewares.app-security.headers.sslredirect=true"
+      - "traefik.http.middlewares.app-security.headers.stsincludesubdomains=true"
+      - "traefik.http.middlewares.app-security.headers.stspreload=true"
+      - "traefik.http.middlewares.app-security.headers.contenttypenosniff=true"
+      - "traefik.http.middlewares.app-security.headers.browserxssfilter=true"
+      - "traefik.http.middlewares.app-security.headers.referrerpolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.app.middlewares=app-compress,app-security"
+    networks:
+      - apex-network
+
+  # ── MariaDB ────────────────────────────────────────────────────────
+  db:
+    image: mariadb:10.11
+    container_name: apex-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret}
+      MARIADB_DATABASE: ${MYSQL_DB:-apex_sports_club}
+      MARIADB_USER: ${MYSQL_USER:-apex_user}
+      MARIADB_PASSWORD: ${MYSQL_PASS:-apex_secret}
+    ports:
+      - "127.0.0.1:3307:3306"  # Only accessible from host, not the network
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/migrate-init.sh:/docker-entrypoint-initdb.d/10-migrations.sh:ro
+      - ./migrations:/migrations:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Production hardening
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=200
+      - --innodb_buffer_pool_size=256M
+      - --innodb_log_file_size=64M
+      - --query_cache_size=0
+      - --skip-query-cache
+    networks:
+      - apex-network
+
+  # ── phpMyAdmin (optional, remove for production if not needed) ─────
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: apex-pma
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 20M
+    depends_on:
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pma.rule=Host(`db.${DOMAIN:-apexsportsclub.com}`)"
+      - "traefik.http.routers.pma.entrypoints=websecure"
+      - "traefik.http.routers.pma.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.pma.middlewares=pma-auth"
+      - "traefik.http.middlewares.pma-auth.basicauth.users=${PMA_USERS:-admin:$$2y$$10$$P9FnIGIX0P3wG0q.H5Gj5e}"
+    networks:
+      - apex-network
+
+  # ── MailHog (email testing) ────────────────────────────────────────
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: apex-mail
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mail.rule=Host(`mail.${DOMAIN:-apexsportsclub.com}`)"
+      - "traefik.http.routers.mail.entrypoints=websecure"
+      - "traefik.http.routers.mail.tls.certresolver=letsencrypt"
+    networks:
+      - apex-network
+
+volumes:
+  app_uploads:
+  db_data:
+  traefik_letsencrypt:
+
+networks:
+  apex-network:
+    driver: bridge

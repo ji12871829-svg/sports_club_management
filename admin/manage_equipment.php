@@ -1,6 +1,7 @@
 <?php
 include_once("../includes/admin_header.php");
 require_once __DIR__ . "/../config/db_connect.php";
+require_once __DIR__ . '/../includes/csrf.php';
 
 $message = "";
 $name = $description = $condition = "";
@@ -16,7 +17,7 @@ $equipment_id_to_edit = null;
 ======================= */
 if (isset($_GET["action"]) && $_GET["action"] == "edit" && isset($_GET["id"])) {
     $edit_mode = true;
-    $equipment_id_to_edit = $_GET["id"];
+    $equipment_id_to_edit = (int) $_GET["id"];
 
     $sql = "SELECT name, description, quantity, `condition` FROM equipment WHERE equipment_id = ?";
 
@@ -35,7 +36,7 @@ if (isset($_GET["action"]) && $_GET["action"] == "edit" && isset($_GET["id"])) {
 /* =======================
    ADD / UPDATE
 ======================= */
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && csrf_verify($_POST['csrf_token'] ?? '', 'admin_csrf')) {
 
     $name = trim($_POST["name"] ?? "");
     $description = trim($_POST["description"] ?? "");
@@ -66,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if (!empty($_POST["equipment_id"])) {
             // UPDATE
-            $equipment_id = $_POST["equipment_id"];
+            $equipment_id = (int) $_POST["equipment_id"];
 
             $sql = "UPDATE equipment 
                     SET name = ?, description = ?, quantity = ?, `condition` = ? 
@@ -109,11 +110,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 /* =======================
-   DELETE
+   DELETE — POST-only with CSRF (was GET: trivially CSRF-able)
 ======================= */
-if (isset($_GET["action"]) && $_GET["action"] == "delete" && isset($_GET["id"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST["action"] ?? '') == "delete" && csrf_verify($_POST['csrf_token'] ?? '', 'admin_csrf')) {
 
-    $equipment_id = $_GET["id"];
+    $equipment_id = (int) ($_POST["id"] ?? 0);
 
     $sql = "DELETE FROM equipment WHERE equipment_id = ?";
 
@@ -161,8 +162,10 @@ $conn->close();
 
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
 
+                    <?php echo csrf_field('admin_csrf'); ?>
+
                     <?php if ($edit_mode): ?>
-                        <input type="hidden" name="equipment_id" value="<?php echo $equipment_id_to_edit; ?>">
+                        <input type="hidden" name="equipment_id" value="<?php echo (int) $equipment_id_to_edit; ?>">
                     <?php endif; ?>
 
                     <div class="mb-3">
@@ -225,8 +228,13 @@ $conn->close();
                                     <td><?php echo htmlspecialchars($equipment["quantity"]); ?></td>
                                     <td><?php echo htmlspecialchars($equipment["condition"]); ?></td>
                                     <td>
-                                        <a href="?action=edit&id=<?php echo $equipment["equipment_id"]; ?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <a href="?action=delete&id=<?php echo $equipment["equipment_id"]; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</a>
+                                        <a href="?action=edit&id=<?php echo (int) $equipment["equipment_id"]; ?>" class="btn btn-warning btn-sm">Edit</a>
+                                        <form method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo (int) $equipment["equipment_id"]; ?>">
+                                            <?php echo csrf_field('admin_csrf'); ?>
+                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

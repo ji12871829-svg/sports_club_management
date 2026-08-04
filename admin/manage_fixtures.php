@@ -93,8 +93,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'delete_fixture') {
             $fixture_id = (int)($_POST['fixture_id'] ?? 0);
             if ($fixture_id > 0) {
-                // Get league before deleting
-                $row = $conn->query("SELECT league_id FROM fixtures WHERE fixture_id=$fixture_id")->fetch_assoc();
+                // Get league before deleting (using prepared statement)
+                $stmt_league = $conn->prepare("SELECT league_id FROM fixtures WHERE fixture_id=?");
+                $stmt_league->bind_param("i", $fixture_id);
+                $stmt_league->execute();
+                $row = $stmt_league->get_result()->fetch_assoc();
+                $stmt_league->close();
+
                 $stmt = $conn->prepare("DELETE FROM fixtures WHERE fixture_id=?");
                 $stmt->bind_param("i", $fixture_id);
                 if ($stmt->execute()) {

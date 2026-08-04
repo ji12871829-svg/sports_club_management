@@ -1,0 +1,534 @@
+<?php
+
+require_once __DIR__ . '/feature_helpers.php';
+require_once __DIR__ . '/match_events.php';
+require_once __DIR__ . '/gemini_client.php';
+
+function asc_match_reports_ready(mysqli $conn): bool
+{
+    return db_table_exists($conn, 'match_reports');
+}
+
+function asc_match_report_context(mysqli $conn, int $fixtureId): ?array
+{
+    $stmt = $conn->prepare(
+        "SELECT f.fixture_id, f.league_id, f.home_team_id, f.away_team_id,
+                f.match_date, f.match_time, f.venue, f.matchday, f.status,
+                f.home_score, f.away_score,
+                h.name AS home_team, a.name AS away_team,
+                l.name AS league_name, l.season,
+                s.name AS sport_name
+         FROM fixtures f
+         JOIN teams h ON h.team_id = f.home_team_id
+         JOIN teams a ON a.team_id = f.away_team_id
+         JOIN leagues l ON l.league_id = f.league_id
+         JOIN sports s ON s.sport_id = l.sport_id
+         WHERE f.fixture_id = ?
+         LIMIT 1"
+    );
+    $stmt->bind_param('i', $fixtureId);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    return $row ?: null;
+}
+
+function asc_get_match_report_by_fixture(mysqli $conn, int $fixtureId, bool $publishedOnly = false): ?array
+{
+    if (!asc_match_reports_ready($conn)) {
+        return null;
+    }
+
+    $sql = "SELECT * FROM match_reports WHERE fixture_id = ?";
+    if ($publishedOnly) {
+        $sql .= " AND is_published = 1";
+    }
+    $sql .= " LIMIT 1";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $fixtureId);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    return $row ?: null;
+}
+
+function asc_completed_fixtures_for_reports(mysqli $conn, int $limit = 80): array
+{
+    if (!asc_match_reports_ready($conn)) {
+        $result = $conn->query(
+            "SELECT f.fixture_id, f.match_date, f.match_time, f.status,
+                    f.home_score, f.away_score,
+                    h.name AS home_team, a.name AS away_team,
+                    l.name AS league_name, s.name AS sport_name,
+                    NULL AS report_id, NULL AS is_published, NULL AS source, NULL AS report_updated_at
+             FROM fixtures f
+             JOIN teams h ON h.team_id = f.home_team_id
+             JOIN teams a ON a.team_id = f.away_team_id
+             JOIN leagues l ON l.league_id = f.league_id
+             JOIN sports s ON s.sport_id = l.sport_id
+             WHERE f.status = 'Completed'
+             ORDER BY f.match_date DESC, f.fixture_id DESC
+             LIMIT " . (int) $limit
+        );
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    $result = $conn->query(
+        "SELECT f.fixture_id, f.match_date, f.match_time, f.status,
+                f.home_score, f.away_score,
+                h.name AS home_team, a.name AS away_team,
+                l.name AS league_name, s.name AS sport_name,
+                mr.report_id, mr.is_published, mr.source, mr.updated_at AS report_updated_at
+         FROM fixtures f
+         JOIN teams h ON h.team_id = f.home_team_id
+         JOIN teams a ON a.team_id = f.away_team_id
+         JOIN leagues l ON l.league_id = f.league_id
+         JOIN sports s ON s.sport_id = l.sport_id
+         LEFT JOIN match_reports mr ON mr.fixture_id = f.fixture_id
+         WHERE f.status = 'Completed'
+         ORDER BY COALESCE(f.live_updated_at, f.updated_at, f.match_date) DESC, f.fixture_id DESC
+         LIMIT " . (int) $limit
+    );
+
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+function asc_generate_match_report(mysqli $conn, int $fixtureId, ?int $adminId = null, bool $publish = false): array
+{
+    if (!asc_match_reports_ready($conn)) {
+        return [
+            'success' => false,
+            'error' => 'Run the latest migration before generating match reports.',
+        ];
+    }
+
+    $context = asc_match_report_context($conn, $fixtureId);
+    if (!$context) {
+        return [
+            'success' => false,
+            'error' => 'Fixture not found.',
+        ];
+    }
+
+    if (($context['status'] ?? '') !== 'Completed') {
+        return [
+            'success' => false,
+            'error' => 'Only completed fixtures can have match reports.',
+        ];
+    }
+
+    $events = asc_fixture_events($conn, $fixtureId);
+    $existing = asc_get_match_report_by_fixture($conn, $fixtureId);
+    $shouldPublish = $publish || !empty($existing['is_published']);
+
+    $prompt = asc_match_report_prompt($context, $events);
+    $source = 'fallback';
+    $note = 'Generated from match data without Gemini.';
+    $body = '';
+
+    $ai = asc_gemini_generate_text($prompt, [
+        'temperature' => 0.45,
+        'maxOutputTokens' => 500,
+        'timeout' => 22,
+    ]);
+
+    if (!empty($ai['success'])) {
+        $body = asc_normalize_match_report_body((string) $ai['text']);
+        $source = 'gemini';
+        $note = 'Generated by Gemini using fixture scoreline, goals, and cards.';
+    }
+
+    if ($body === '') {
+        $body = asc_fallback_match_report_body($context, $events);
+        if (!empty($ai['error'])) {
+            $note = 'Fallback used: ' . substr((string) $ai['error'], 0, 220);
+        }
+    }
+
+    $headline = asc_match_report_headline($context);
+    $isPublished = $shouldPublish ? 1 : 0;
+    $publishedBy = $shouldPublish ? $adminId : null;
+    $publishedAt = $shouldPublish ? date('Y-m-d H:i:s') : null;
+
+    $stmt = $conn->prepare(
+        "INSERT INTO match_reports
+            (fixture_id, headline, body, source, generation_note, generated_by, is_published, published_by, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            headline = VALUES(headline),
+            body = VALUES(body),
+            source = VALUES(source),
+            generation_note = VALUES(generation_note),
+            generated_by = VALUES(generated_by),
+            is_published = VALUES(is_published),
+            published_by = VALUES(published_by),
+            published_at = VALUES(published_at),
+            updated_at = CURRENT_TIMESTAMP"
+    );
+    $stmt->bind_param(
+        'issssiiis',
+        $fixtureId,
+        $headline,
+        $body,
+        $source,
+        $note,
+        $adminId,
+        $isPublished,
+        $publishedBy,
+        $publishedAt
+    );
+    $ok = $stmt->execute();
+    $stmt->close();
+
+    if (!$ok) {
+        return [
+            'success' => false,
+            'error' => 'Could not save the generated report.',
+        ];
+    }
+
+    if ($shouldPublish) {
+        asc_publish_match_report_by_fixture($conn, $fixtureId, $adminId);
+    }
+
+    return [
+        'success' => true,
+        'report' => asc_get_match_report_by_fixture($conn, $fixtureId),
+        'source' => $source,
+        'note' => $note,
+        'published' => $shouldPublish,
+    ];
+}
+
+function asc_save_match_report_draft(
+    mysqli $conn,
+    int $fixtureId,
+    string $headline,
+    string $body,
+    ?int $adminId = null,
+    bool $publish = false
+): array {
+    if (!asc_match_reports_ready($conn)) {
+        return [
+            'success' => false,
+            'error' => 'Run the latest migration before saving match reports.',
+        ];
+    }
+
+    $context = asc_match_report_context($conn, $fixtureId);
+    if (!$context || ($context['status'] ?? '') !== 'Completed') {
+        return [
+            'success' => false,
+            'error' => 'Only completed fixtures can have match reports.',
+        ];
+    }
+
+    $headline = trim($headline);
+    $body = asc_normalize_match_report_body($body, false);
+
+    if ($headline === '' || $body === '') {
+        return [
+            'success' => false,
+            'error' => 'Headline and report body are required.',
+        ];
+    }
+
+    $publishedAt = $publish ? date('Y-m-d H:i:s') : null;
+    $publishedBy = $publish ? $adminId : null;
+    $isPublished = $publish ? 1 : 0;
+    $note = 'Edited by admin.';
+    $source = 'manual';
+
+    $stmt = $conn->prepare(
+        "INSERT INTO match_reports
+            (fixture_id, headline, body, source, generation_note, generated_by, is_published, published_by, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            headline = VALUES(headline),
+            body = VALUES(body),
+            source = VALUES(source),
+            generation_note = VALUES(generation_note),
+            generated_by = VALUES(generated_by),
+            is_published = IF(VALUES(is_published) = 1, 1, is_published),
+            published_by = IF(VALUES(is_published) = 1, VALUES(published_by), published_by),
+            published_at = IF(VALUES(is_published) = 1, VALUES(published_at), published_at),
+            updated_at = CURRENT_TIMESTAMP"
+    );
+    $stmt->bind_param(
+        'issssiiis',
+        $fixtureId,
+        $headline,
+        $body,
+        $source,
+        $note,
+        $adminId,
+        $isPublished,
+        $publishedBy,
+        $publishedAt
+    );
+    $ok = $stmt->execute();
+    $stmt->close();
+
+    if (!$ok) {
+        return [
+            'success' => false,
+            'error' => 'Could not save the report.',
+        ];
+    }
+
+    $current = asc_get_match_report_by_fixture($conn, $fixtureId);
+    if ($publish || !empty($current['is_published'])) {
+        asc_publish_match_report_by_fixture($conn, $fixtureId, $adminId);
+    }
+
+    return [
+        'success' => true,
+        'report' => asc_get_match_report_by_fixture($conn, $fixtureId),
+        'published' => $publish || !empty($current['is_published']),
+    ];
+}
+
+function asc_publish_match_report_by_fixture(mysqli $conn, int $fixtureId, ?int $adminId = null): bool
+{
+    if (!asc_match_reports_ready($conn)) {
+        return false;
+    }
+
+    $report = asc_get_match_report_by_fixture($conn, $fixtureId);
+    if (!$report) {
+        return false;
+    }
+
+    $stmt = $conn->prepare(
+        "UPDATE match_reports
+         SET is_published = 1,
+             published_by = ?,
+             published_at = COALESCE(published_at, NOW())
+         WHERE fixture_id = ?"
+    );
+    $stmt->bind_param('ii', $adminId, $fixtureId);
+    $ok = $stmt->execute();
+    $stmt->close();
+
+    if (!$ok || !db_table_exists($conn, 'activity_feed')) {
+        return $ok;
+    }
+
+    $report = asc_get_match_report_by_fixture($conn, $fixtureId);
+    if (!$report) {
+        return false;
+    }
+
+    $del = $conn->prepare("DELETE FROM activity_feed WHERE event_type = 'match_report' AND fixture_id = ?");
+    $del->bind_param('i', $fixtureId);
+    $del->execute();
+    $del->close();
+
+    $title = $report['headline'];
+    $description = $report['body'];
+    $eventType = 'match_report';
+    $icon = 'AI';
+    $color = '#2563eb';
+    $linkUrl = 'fixture_detail.php?id=' . $fixtureId;
+    $memberId = null;
+
+    $stmt = $conn->prepare(
+        "INSERT INTO activity_feed
+            (event_type, title, description, icon, color, member_id, fixture_id, link_url, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
+    );
+    $stmt->bind_param(
+        'sssssiis',
+        $eventType,
+        $title,
+        $description,
+        $icon,
+        $color,
+        $memberId,
+        $fixtureId,
+        $linkUrl
+    );
+    $feedOk = $stmt->execute();
+    $stmt->close();
+
+    return $feedOk;
+}
+
+function asc_unpublish_match_report_by_fixture(mysqli $conn, int $fixtureId): bool
+{
+    if (!asc_match_reports_ready($conn)) {
+        return false;
+    }
+
+    $stmt = $conn->prepare(
+        "UPDATE match_reports
+         SET is_published = 0, published_by = NULL, published_at = NULL
+         WHERE fixture_id = ?"
+    );
+    $stmt->bind_param('i', $fixtureId);
+    $ok = $stmt->execute();
+    $stmt->close();
+
+    if (db_table_exists($conn, 'activity_feed')) {
+        $del = $conn->prepare("DELETE FROM activity_feed WHERE event_type = 'match_report' AND fixture_id = ?");
+        $del->bind_param('i', $fixtureId);
+        $del->execute();
+        $del->close();
+    }
+
+    return $ok;
+}
+
+function asc_match_report_headline(array $context): string
+{
+    return sprintf(
+        '%s %d-%d %s',
+        $context['home_team'],
+        (int) $context['home_score'],
+        (int) $context['away_score'],
+        $context['away_team']
+    );
+}
+
+function asc_match_report_prompt(array $context, array $events): string
+{
+    $eventLines = asc_match_report_event_lines($events);
+    $scoreline = asc_match_report_headline($context);
+    $venue = trim((string) ($context['venue'] ?? ''));
+    if ($venue === '') {
+        $venue = 'not recorded';
+    }
+
+    return "Write a polished Apex Sports Club match report using only the data below.\n"
+        . "Rules: exactly two short paragraphs, no headline, no markdown, no invented quotes, no invented injuries, no invented tactics.\n\n"
+        . "Sport: {$context['sport_name']}\n"
+        . "Competition: {$context['league_name']} {$context['season']}\n"
+        . "Matchday: {$context['matchday']}\n"
+        . "Date: {$context['match_date']}\n"
+        . "Venue: {$venue}\n"
+        . "Scoreline: {$scoreline}\n"
+        . "Events:\n{$eventLines}";
+}
+
+function asc_match_report_event_lines(array $events): string
+{
+    if (empty($events)) {
+        return '- No goals or cards were recorded in the event log.';
+    }
+
+    $lines = [];
+    foreach ($events as $event) {
+        $minute = $event['minute'] !== null ? (int) $event['minute'] . "'" : 'time not recorded';
+        $player = trim((string) ($event['player_name'] ?? ''));
+        if ($player === '') {
+            $player = 'Unknown player';
+        }
+        $type = str_replace('_', ' ', (string) $event['event_type']);
+        $team = (string) ($event['team_name'] ?? 'Unknown team');
+        $lines[] = '- ' . $minute . ': ' . $type . ' - ' . $player . ' (' . $team . ')';
+    }
+
+    return implode("\n", $lines);
+}
+
+function asc_normalize_match_report_body(string $body, bool $forceTwoParagraphs = true): string
+{
+    $body = preg_replace('/```[a-zA-Z]*|```/', '', $body);
+    $body = preg_replace('/[ \t]+/', ' ', (string) $body);
+    $body = preg_replace("/\r\n?/", "\n", (string) $body);
+    $body = trim((string) $body);
+
+    if ($body === '') {
+        return '';
+    }
+
+    $paragraphs = preg_split("/\n{2,}/", $body) ?: [];
+    $paragraphs = array_values(array_filter(array_map('trim', $paragraphs), fn($p) => $p !== ''));
+
+    if (!$forceTwoParagraphs) {
+        return substr(implode("\n\n", $paragraphs), 0, 4000);
+    }
+
+    if (count($paragraphs) >= 2) {
+        return substr($paragraphs[0] . "\n\n" . $paragraphs[1], 0, 2400);
+    }
+
+    $sentences = preg_split('/(?<=[.!?])\s+/', $paragraphs[0] ?? $body) ?: [];
+    $sentences = array_values(array_filter(array_map('trim', $sentences), fn($s) => $s !== ''));
+
+    if (count($sentences) >= 2) {
+        $split = max(1, (int) ceil(count($sentences) / 2));
+        $first = implode(' ', array_slice($sentences, 0, $split));
+        $second = implode(' ', array_slice($sentences, $split));
+        if ($second !== '') {
+            return substr(trim($first) . "\n\n" . trim($second), 0, 2400);
+        }
+    }
+
+    return substr($paragraphs[0] ?? $body, 0, 2400);
+}
+
+function asc_fallback_match_report_body(array $context, array $events): string
+{
+    $home = (string) $context['home_team'];
+    $away = (string) $context['away_team'];
+    $homeScore = (int) $context['home_score'];
+    $awayScore = (int) $context['away_score'];
+    $venue = trim((string) ($context['venue'] ?? ''));
+    $venueText = $venue !== '' ? ' at ' . $venue : '';
+
+    if ($homeScore > $awayScore) {
+        $resultText = $home . ' claimed the win';
+    } elseif ($awayScore > $homeScore) {
+        $resultText = $away . ' claimed the win';
+    } else {
+        $resultText = $home . ' and ' . $away . ' shared the points';
+    }
+
+    $first = sprintf(
+        '%s as %s finished %d-%d against %s in %s%s.',
+        $resultText,
+        $home,
+        $homeScore,
+        $awayScore,
+        $away,
+        (string) $context['league_name'],
+        $venueText
+    );
+
+    $goals = [];
+    $cards = [];
+    foreach ($events as $event) {
+        $label = asc_match_report_event_label($event);
+        if (in_array($event['event_type'], ['goal', 'penalty', 'own_goal'], true)) {
+            $goals[] = $label;
+        } elseif (in_array($event['event_type'], ['yellow_card', 'red_card'], true)) {
+            $cards[] = $label;
+        }
+    }
+
+    $secondParts = [];
+    $secondParts[] = $goals ? 'The event log highlighted ' . implode(', ', array_slice($goals, 0, 6)) . '.' : 'No scorers were recorded in the event log.';
+    if ($cards) {
+        $secondParts[] = 'Disciplinary notes included ' . implode(', ', array_slice($cards, 0, 6)) . '.';
+    }
+    $secondParts[] = 'Supporters can review the fixture page for the full scoreline, timeline, and post-match details.';
+
+    return $first . "\n\n" . implode(' ', $secondParts);
+}
+
+function asc_match_report_event_label(array $event): string
+{
+    $player = trim((string) ($event['player_name'] ?? ''));
+    if ($player === '') {
+        $player = 'Unknown player';
+    }
+    $team = trim((string) ($event['team_name'] ?? ''));
+    $minute = $event['minute'] !== null ? (int) $event['minute'] . "'" : 'time not recorded';
+    $type = str_replace('_', ' ', (string) $event['event_type']);
+
+    return $player . ' (' . $team . ', ' . $type . ', ' . $minute . ')';
+}

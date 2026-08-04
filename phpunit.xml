@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PHPUnit configuration.
+  Valid for PHPUnit 9.6 (the committed phpunit.phar and composer "phpunit/phpunit": "^9.6")
+  and forward-compatible with PHPUnit 10/11 (CI installs 9.6 via shivammathur/setup-php).
+  DB connection env vars are set per-run (phpunit.xml no longer forces MYSQL_* values)
+  so CI can pass its own credentials; local runs fall back to the defaults in
+  tests/bootstrap.php (127.0.0.1, root, empty password, sports_club_db_test).
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true">
+    <testsuites>
+        <testsuite name="Payment">
+            <file>tests/PaymentIdempotencyTest.php</file>
+        </testsuite>
+        <testsuite name="Security">
+            <file>tests/SecurityTest.php</file>
+        </testsuite>
+    </testsuites>
+    <coverage>
+        <include>
+            <directory>admin</directory>
+            <directory>includes</directory>
+            <directory>public</directory>
+        </include>
+    </coverage>
+</phpunit>

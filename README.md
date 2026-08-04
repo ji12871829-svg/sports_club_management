@@ -13,7 +13,6 @@ The project is designed for a local XAMPP-style setup, but it can also be deploy
 - Fixtures and standings management with automatic standings recalculation after completed results
 - Paystack checkout support for payments
 - Brevo email integration for receipts and booking emails
-- Cloudflare Turnstile CAPTCHA support
 - Optional API-SPORTS integration for external sports data
 - Environment-based configuration so API keys are not committed to GitHub
 
@@ -33,9 +32,9 @@ sports_club_management/
 ├── config/                        Database and environment config loaders
 ├── includes/                      Shared headers, email, Paystack, and CAPTCHA helpers
 ├── public/                        Public member-facing pages and assets
-├── database.sql                   Core database schema and seed data
-├── league_team_schema.sql         League, team, and team membership schema
-├── fixtures_standings_schema.sql  Fixtures and standings schema
+├── migrations/                    Numbered SQL migrations (canonical schema, 001–056)
+├── scripts/migrate.php            Migration runner (apply / --status / --baseline)
+├── bin/setup.sh                   One-command local setup
 ├── .env.example                   Safe environment variable template
 └── DOCUMENTATION.md               Full project documentation
 ```
@@ -46,7 +45,7 @@ sports_club_management/
 - MySQL or MariaDB
 - `mysqli` PHP extension enabled
 - XAMPP, WAMP, MAMP, or a PHP hosting environment
-- Paystack, Brevo, Cloudflare Turnstile, and API-SPORTS accounts only if you want to use those integrations
+- Paystack, Brevo, and API-SPORTS accounts only if you want to use those integrations
 
 ## Local Setup
 
@@ -60,18 +59,18 @@ sports_club_management/
 
 2. Start Apache and MySQL.
 
-3. Create a MySQL database named:
+3. Create a MySQL database named `sports_club_db` (the migration runner creates it automatically if missing).
 
-   ```sql
-   sports_club_db
+4. Build the schema. The old `database.sql` files were removed — the canonical schema is the numbered migrations in `migrations/`, applied with the runner:
+
+   ```powershell
+   C:\xampp\php\php.exe scripts/migrate.php
    ```
 
-4. Import the SQL files in this order:
+   Or run the full one-command setup (database, migrations, test DB, PHPUnit):
 
-   ```text
-   database.sql
-   league_team_schema.sql
-   fixtures_standings_schema.sql
+   ```bash
+   bash bin/setup.sh
    ```
 
 5. Copy the environment template:
@@ -104,9 +103,6 @@ DB_USER=root
 DB_PASSWORD=
 DB_NAME=sports_club_db
 
-CF_TURNSTILE_SITE_KEY=
-CF_TURNSTILE_SECRET_KEY=
-
 BREVO_API_KEY=
 CLUB_EMAIL_FROM=your_email@example.com
 CLUB_EMAIL_NAME=Apex Sports Club
@@ -124,6 +120,18 @@ CLUB_LAT=-1.286389
 CLUB_LNG=36.817223
 CLUB_CITY=Nairobi
 ```
+
+## Portable URL Handling
+
+The app no longer depends on the project folder being named `sports_club_management`. Two constants in `config/api_config.php` are auto-detected from the request:
+
+- `BASE_URL` — the app's mount point (e.g. `/sports_club_management`, `/Apex Sports Club`, or empty at the web root). Derived automatically from `SCRIPT_NAME`; not configurable. Used by `includes/header.php` and `includes/footer.php` for all nav links, the stylesheet, and `script.js`, so navigation and assets work from any folder.
+- `SITE_URL` — a full `scheme://host/BASE_URL` URL used by `includes/send_email.php` for absolute links in outgoing emails (email clients cannot resolve relative paths). Override in `.env` if auto-detection is wrong — e.g. behind a reverse proxy, or when emails are sent from CLI/cron where there is no `HTTP_HOST`:
+  ```dotenv
+  SITE_URL=https://example.com
+  ```
+
+Note: the built-in defaults for `PAYSTACK_CALLBACK_URL` and `MPESA_CALLBACK_URL` still assume a `sports_club_management` folder — set both explicitly in `.env` for your actual domain/path.
 
 ## Default Admin Login
 
@@ -152,7 +160,7 @@ On the server:
 
 1. Upload or clone the repository.
 2. Create the MySQL database.
-3. Import the SQL files in the same order shown above.
+3. Run the migrations to build the schema: `php scripts/migrate.php`.
 4. Create a server-side `.env` file with production values.
 5. Point the web server to this project folder.
 6. Confirm that `public/index.php` and `admin/admin_login.php` load correctly.

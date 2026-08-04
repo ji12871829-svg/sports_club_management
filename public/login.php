@@ -1,8 +1,7 @@
 <?php
 // ============================================================
 //  public/login.php
-//  APIs Added:
-//    ✅ Cloudflare Turnstile — Free CAPTCHA (no reCAPTCHA needed)
+//  Enhanced with rate limiting (5 attempts per 15 min per email/IP).
 // ============================================================
 session_start();
 
@@ -13,19 +12,17 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
 
 require_once '../config/db_connect.php';
 require_once '../config/api_config.php';
-require_once '../includes/turnstile.php';
+require_once '../includes/rate_limiter.php';
+require_once '../includes/csrf.php';
 
 $email = $password = '';
-$email_err = $password_err = $login_err = $captcha_err = '';
+$email_err = $password_err = $login_err = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // ── Cloudflare Turnstile Verification ─────────────────────
-    $token = $_POST['cf-turnstile-response'] ?? '';
-    if (empty($token)) {
-        $captcha_err = 'Please complete the security check.';
-    } elseif (!verifyTurnstile($token)) {
-        $captcha_err = 'Security check failed. Please try again.';
+    // ── CSRF Protection (login CSRF / session-fixation defense) ──
+    if (!csrf_verify($_POST['csrf_token'] ?? '', 'member_csrf')) {
+        $login_err = 'Your session has expired. Please reload the page and try again.';
     }
 
     // ── Validate Email ────────────────────────────────────────
@@ -42,8 +39,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $password = trim($_POST["password"]);
     }
 
+    // ── Rate Limiting Check ───────────────────────────────────
+    if (empty($email_err)) {
+        $rate_check = check_login_attempts($conn, $email);
+        if (!$rate_check['allowed']) {
+            $login_err = 'Too many failed login attempts. Please try again in 15 minutes.';
+        }
+    }
+
     // ── Authenticate ──────────────────────────────────────────
-    if (empty($email_err) && empty($password_err) && empty($captcha_err)) {
+    if (empty($email_err) && empty($password_err) && empty($login_err)) {
         $sql = "SELECT member_id, first_name, email, password FROM members WHERE email = ?";
         if ($stmt = $conn->prepare($sql)) {
             $stmt->bind_param("s", $param_email);
@@ -54,6 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $stmt->bind_result($member_id, $first_name, $email, $hashed_password);
                     if ($stmt->fetch()) {
                         if (password_verify($password, $hashed_password)) {
+                            clear_login_attempts($conn, $email);
                             session_regenerate_id(true);
                             $_SESSION["loggedin"]   = true;
                             $_SESSION["member_id"]  = $member_id;
@@ -62,10 +68,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             header("location: dashboard.php");
                             exit;
                         } else {
+                            register_login_attempt($conn, $email);
                             $login_err = "Invalid email or password.";
                         }
                     }
                 } else {
+                    register_login_attempt($conn, $email);
                     $login_err = "Invalid email or password.";
                 }
             }
@@ -102,6 +110,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
 
+                    <?php echo csrf_field('member_csrf'); ?>
+
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
                         <input type="email" name="email" id="email"
@@ -117,19 +127,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <span class="invalid-feedback"><?php echo $password_err; ?></span>
                     </div>
 
-                    <!-- ✅ Cloudflare Turnstile Widget -->
-                    <div class="mb-3">
-                        <div class="cf-turnstile"
-                             data-sitekey="<?php echo CF_TURNSTILE_SITE_KEY; ?>"
-                             data-theme="light">
-                        </div>
-                        <?php if (!empty($captcha_err)): ?>
-                            <div class="text-danger small mt-1">
-                                <i class="fas fa-exclamation-circle me-1"></i><?php echo $captcha_err; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
                     <div class="mb-3">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-sign-in-alt me-1"></i>Login
@@ -138,6 +135,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     <p class="text-center">
                         Don't have an account? <a href="register.php">Sign up now</a>.
+                    </p>
+                    <p class="text-center text-muted small">
+                        <a href="privacy.php">Privacy Policy</a> &middot; <a href="forgot_password.php">Forgot password?</a>
                     </p>
 
                 </form>

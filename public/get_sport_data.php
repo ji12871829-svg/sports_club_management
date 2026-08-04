@@ -5,8 +5,16 @@
 //  Keeps your API key hidden on the server side
 // ============================================================
 require_once '../config/api_config.php';
+require_once __DIR__ . '/../includes/rate_limiter.php';
 
 header('Content-Type: application/json');
+
+// The API-Sports key is billed per call — cap external fetches per client.
+if (!rate_limit_check(client_rate_key('sport_data'), 30, 60)) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Rate limit exceeded. Please try again shortly.']);
+    exit;
+}
 
 $sport = $_GET['sport'] ?? '';
 $type  = $_GET['type']  ?? 'fixtures'; // fixtures, standings, live

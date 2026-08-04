@@ -6,13 +6,35 @@
 
 load_dotenv(__DIR__ . '/../.env');
 
+// Base URL of the app, auto-detected from the current request so the project
+// works regardless of the folder name it is deployed under (e.g. /Apex Sports Club/,
+// /sports_club_management/, or the web root). Used by includes/header.php and footer.php.
+if (!defined('BASE_URL')) {
+    $scriptName = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/index.php';
+    $scriptName = '/' . trim(str_replace('\\', '/', $scriptName), '/');
+    $scriptParts = explode('/', $scriptName);
+    array_pop($scriptParts); // strip the file name
+    if (in_array(end($scriptParts), ['public', 'admin'], true)) {
+        array_pop($scriptParts); // strip the public|admin segment to reach the project root
+    }
+    define('BASE_URL', implode('/', $scriptParts));
+    unset($scriptName, $scriptParts);
+}
+
+// Full site URL (scheme + host + BASE_URL), used by includes/send_email.php for
+// absolute links in outgoing emails (email clients can't resolve relative paths).
+// Override in .env with SITE_URL=... if auto-detection is wrong (e.g. behind a proxy).
+if (!defined('SITE_URL')) {
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host   = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+    define('SITE_URL', rtrim(config_value('SITE_URL', '') ?: $scheme . '://' . $host . BASE_URL, '/'));
+    unset($scheme, $host);
+}
+
 define('DB_HOST', config_value('DB_HOST', 'localhost'));
 define('DB_USER', config_value('DB_USER', 'root'));
 define('DB_PASSWORD', config_value('DB_PASSWORD', ''));
 define('DB_NAME', config_value('DB_NAME', 'sports_club_db'));
-
-define('CF_TURNSTILE_SITE_KEY', config_value('CF_TURNSTILE_SITE_KEY'));
-define('CF_TURNSTILE_SECRET_KEY', config_value('CF_TURNSTILE_SECRET_KEY'));
 
 define('BREVO_API_KEY', config_value('BREVO_API_KEY'));
 define('CLUB_EMAIL_FROM', config_value('CLUB_EMAIL_FROM', 'ji12871829@gmail.com'));
@@ -22,6 +44,9 @@ define('RECAPTCHA_SITE_KEY', config_value('RECAPTCHA_SITE_KEY'));
 define('RECAPTCHA_SECRET_KEY', config_value('RECAPTCHA_SECRET_KEY'));
 
 define('API_SPORTS_KEY', config_value('API_SPORTS_KEY'));
+
+define('GEMINI_API_KEY', config_value('GEMINI_API_KEY'));
+define('OPENROUTER_API_KEY', config_value('OPENROUTER_API_KEY'));
 
 define('PAYSTACK_SECRET_KEY', config_value('PAYSTACK_SECRET_KEY'));
 define('PAYSTACK_PUBLIC_KEY', config_value('PAYSTACK_PUBLIC_KEY'));

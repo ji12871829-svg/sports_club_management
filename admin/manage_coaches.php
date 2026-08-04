@@ -1,13 +1,14 @@
 <?php
 include_once("../includes/admin_header.php");
 require_once "../config/db_connect.php";
+require_once __DIR__ . '/../includes/csrf.php';
 
 $message = "";
 $first_name = $last_name = $email = $phone_number = $specialization = "";
 $first_name_err = $last_name_err = $email_err = $phone_number_err = $specialization_err = "";
 
 // Handle Add/Edit operation
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && csrf_verify($_POST['csrf_token'] ?? '', 'admin_csrf')) {
     // Validate first name
     if (empty(trim($_POST["first_name"]))) {
         $first_name_err = "Please enter a first name.";
@@ -43,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($first_name_err) && empty($last_name_err) && empty($email_err) && empty($specialization_err)) {
         if (isset($_POST["coach_id"]) && !empty($_POST["coach_id"])) {
             // Update operation
-            $coach_id = $_POST["coach_id"];
+            $coach_id = (int) $_POST["coach_id"];
             $sql = "UPDATE coaches SET first_name = ?, last_name = ?, email = ?, phone_number = ?, specialization = ? WHERE coach_id = ?";
             if ($stmt = $conn->prepare($sql)) {
                 $stmt->bind_param("sssssi", $first_name, $last_name, $email, $phone_number, $specialization, $coach_id);
@@ -71,9 +72,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Handle Delete operation
-if (isset($_GET["action"]) && $_GET["action"] == "delete" && isset($_GET["id"])) {
-    $coach_id = $_GET["id"];
+// Handle Delete operation — POST-only with CSRF (was GET: trivially CSRF-able)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST["action"] ?? '') == "delete" && csrf_verify($_POST['csrf_token'] ?? '', 'admin_csrf')) {
+    $coach_id = (int) ($_POST["id"] ?? 0);
     $sql = "DELETE FROM coaches WHERE coach_id = ?";
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param("i", $coach_id);
@@ -88,7 +89,7 @@ if (isset($_GET["action"]) && $_GET["action"] == "delete" && isset($_GET["id"]))
 
 // Handle Edit form pre-fill
 if (isset($_GET["action"]) && $_GET["action"] == "edit" && isset($_GET["id"])) {
-    $coach_id = $_GET["id"];
+    $coach_id = (int) $_GET["id"];
     $sql = "SELECT first_name, last_name, email, phone_number, specialization FROM coaches WHERE coach_id = ?";
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param("i", $coach_id);
@@ -126,8 +127,9 @@ $conn->close();
 
                 <h3><?php echo (isset($_GET["action"]) && $_GET["action"] == "edit") ? "Edit Coach" : "Add New Coach"; ?></h3>
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                    <?php echo csrf_field('admin_csrf'); ?>
                     <?php if (isset($coach_id)): ?>
-                        <input type="hidden" name="coach_id" value="<?php echo $coach_id; ?>">
+                        <input type="hidden" name="coach_id" value="<?php echo (int) $coach_id; ?>">
                     <?php endif; ?>
                     <div class="mb-3">
                         <label for="first_name" class="form-label">First Name</label>
@@ -186,8 +188,13 @@ $conn->close();
                                     <td><?php echo htmlspecialchars($coach["phone_number"]); ?></td>
                                     <td><?php echo htmlspecialchars($coach["specialization"]); ?></td>
                                     <td>
-                                        <a href="manage_coaches.php?action=edit&id=<?php echo $coach["coach_id"]; ?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <a href="manage_coaches.php?action=delete&id=<?php echo $coach["coach_id"]; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this coach?');">Delete</a>
+                                        <a href="manage_coaches.php?action=edit&id=<?php echo (int) $coach["coach_id"]; ?>" class="btn btn-warning btn-sm">Edit</a>
+                                        <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this coach?');">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo (int) $coach["coach_id"]; ?>">
+                                            <?php echo csrf_field('admin_csrf'); ?>
+                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

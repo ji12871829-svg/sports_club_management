@@ -8,6 +8,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
 }
 
 require_once '../config/db_connect.php';
+require_once '../includes/csrf.php';
 
 $member_id = $_SESSION["member_id"];
 $first_name = $last_name = $email = $phone_number = $address = '';
@@ -38,6 +39,10 @@ if ($stmt_fetch = $conn->prepare($sql_fetch)) {
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // ── CSRF Protection ────────────────────────────────────────
+    if (!csrf_verify($_POST['csrf_token'] ?? '', 'member_csrf')) {
+        $update_error = "Your session has expired. Please reload the page and try again.";
+    }
     // Validate first name
     if (empty(trim($_POST["first_name"]))) {
         $first_name_err = "Please enter your first name.";
@@ -84,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $address = trim($_POST["address"]);
 
     // Check input errors before updating in database
-    if (empty($first_name_err) && empty($last_name_err) && empty($email_err)) {
+    if (empty($first_name_err) && empty($last_name_err) && empty($email_err) && empty($update_error)) {
         $sql_update = "UPDATE members SET first_name = ?, last_name = ?, email = ?, phone_number = ?, address = ? WHERE member_id = ?";
 
         if ($stmt_update = $conn->prepare($sql_update)) {
@@ -130,6 +135,7 @@ $conn->close();
                 }
                 ?>
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                    <?php echo csrf_field('member_csrf'); ?>
                     <div class="mb-3">
                         <label for="first_name" class="form-label">First Name</label>
                         <input type="text" name="first_name" id="first_name" class="form-control <?php echo (!empty($first_name_err)) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($first_name); ?>">

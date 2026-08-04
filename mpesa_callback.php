@@ -1,23 +1,31 @@
 <?php
 // Safaricom sends payment confirmation here
+// IDEMPOTENT: uses provider_reference as upsert key — retried callbacks don't duplicate.
+
 require_once 'config/db_connect.php';
 require_once 'includes/send_email.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-// Log for debugging
-file_put_contents('mpesa_log.txt',
-    date('Y-m-d H:i:s') . " — " . json_encode($data) . "\n",
-    FILE_APPEND
-);
-
+// ── Log only masked data (no full JSON, no PII dump) ───────────────────
 $resultCode = $data['Body']['stkCallback']['ResultCode'] ?? -1;
+$checkoutId = $data['Body']['stkCallback']['CheckoutRequestID'] ?? 'N/A';
+error_log('[M-Pesa Callback] ResultCode=' . $resultCode . ' CheckoutRequestID=' . $checkoutId);
 
 if ($resultCode == 0) {
     $items     = $data['Body']['stkCallback']['CallbackMetadata']['Item'];
-    $amount    = $items[0]['Value'] ?? 0;
-    $mpesaCode = $items[1]['Value'] ?? '';
+    $amount    = (float)($items[0]['Value'] ?? 0);
+    $mpesaCode = $items[1]['Value'] ?? '';           // MpesaReceiptNumber — unique transaction ref
     $phone     = $items[4]['Value'] ?? '';
+    $transDate = $items[3]['Value'] ?? '';            // TransactionDate (YYYYMMDDHHmmss)
+
+    // Must have a receipt number for idempotency
+    if ($mpesaCode === '') {
+        error_log('[M-Pesa Callback] Missing MpesaReceiptNumber — cannot process.');
+        http_response_code(200);
+        echo json_encode(['ResultCode' => 0, 'ResultDesc' => 'Accepted (missing receipt)']);
+        exit;
+    }
 
     // Find member by phone
     $stmt = $conn->prepare("SELECT member_id, first_name, email FROM members WHERE phone_number LIKE ?");
@@ -29,21 +37,39 @@ if ($resultCode == 0) {
     $stmt->close();
 
     if ($member_id) {
-        // Save payment
+        // ── Idempotent upsert using provider_reference ─────────────────
         $method = 'M-Pesa';
         $desc   = 'M-Pesa payment — ' . $mpesaCode;
-        $stmt2  = $conn->prepare("INSERT INTO payments (member_id, amount, payment_method, description) VALUES (?,?,?,?)");
-        $stmt2->bind_param("idss", $member_id, $amount, $method, $desc);
+
+        $stmt2 = $conn->prepare(
+            "INSERT INTO payments (member_id, amount, payment_method, description, provider_reference, payment_status)
+             VALUES (?, ?, ?, ?, ?, 'Completed')
+             ON DUPLICATE KEY UPDATE
+                 payment_status = VALUES(payment_status),
+                 description    = VALUES(description),
+                 payment_date   = CURRENT_TIMESTAMP"
+        );
+        $stmt2->bind_param("idsss", $member_id, $amount, $method, $desc, $mpesaCode);
         $stmt2->execute();
+
+        // Check if this was an insert (new) or update (duplicate already existed)
+        $is_new = $stmt2->affected_rows === 1;
         $stmt2->close();
 
-        // Send receipt email
-        sendEmail(
-            $member_email,
-            $member_fname,
-            '🧾 M-Pesa Payment Receipt — Apex Sports Club',
-            emailPaymentReceipt($member_fname, $amount, 'M-Pesa', $desc)
-        );
+        if ($is_new) {
+            // Only send receipt email for new payments
+            sendEmail(
+                $member_email,
+                $member_fname,
+                '🧾 M-Pesa Payment Receipt — Apex Sports Club',
+                emailPaymentReceipt($member_fname, $amount, 'M-Pesa', $desc)
+            );
+            error_log('[M-Pesa Callback] Recorded new payment: ' . $mpesaCode . ' KES ' . $amount);
+        } else {
+            error_log('[M-Pesa Callback] Duplicate callback ignored for: ' . $mpesaCode);
+        }
+    } else {
+        error_log('[M-Pesa Callback] No member found for phone ending in ' . substr($phone, -4));
     }
 }
 

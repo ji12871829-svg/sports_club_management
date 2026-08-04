@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apex-sports-app
+    ports:
+      - "8080:80"
+    environment:
+      - APP_ENV=development
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=apex_user
+      - MYSQL_PASS=apex_secret
+      - MYSQL_DB=apex_sports_club
+      - PAYSTACK_SECRET_KEY=${PAYSTACK_SECRET_KEY:-sk_test_local}
+      - PAYSTACK_PUBLIC_KEY=${PAYSTACK_PUBLIC_KEY:-pk_test_local}
+      - MPESA_CONSUMER_KEY=${MPESA_CONSUMER_KEY:-test}
+      - MPESA_CONSUMER_SECRET=${MPESA_CONSUMER_SECRET:-test}
+      - MPESA_PASSKEY=${MPESA_PASSKEY:-test}
+      - MPESA_SHORTCODE=${MPESA_SHORTCODE:-174379}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-test}
+      - TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY:-test}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY:-test}
+      - SMTP_HOST=${SMTP_HOST:-mailhog}
+      - SMTP_PORT=${SMTP_PORT:-1025}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-noreply@apexsportsclub.local}
+    volumes:
+      - .:/var/www/html
+      - ./uploads:/var/www/html/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - apex-network
+
+  db:
+    image: mariadb:10.11
+    container_name: apex-sports-db
+    restart: unless-stopped
+    environment:
+      - MARIADB_ROOT_PASSWORD=root_secret
+      - MARIADB_DATABASE=apex_sports_club
+      - MARIADB_USER=apex_user
+      - MARIADB_PASSWORD=apex_secret
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/migrate-init.sh:/docker-entrypoint-initdb.d/10-migrations.sh:ro
+      - ./migrations:/migrations:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - apex-network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: apex-sports-pma
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - UPLOAD_LIMIT=20M
+    depends_on:
+      - db
+    networks:
+      - apex-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: apex-sports-mail
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - apex-network
+
+volumes:
+  db_data:
+
+networks:
+  apex-network:
+    driver: bridge

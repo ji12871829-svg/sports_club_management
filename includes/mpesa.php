@@ -12,11 +12,28 @@ function getMpesaToken() {
     $curl = curl_init(mpesaBaseUrl() . '/oauth/v1/generate?grant_type=client_credentials');
     curl_setopt_array($curl, [
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_CONNECTTIMEOUT => 8,
         CURLOPT_HTTPHEADER     => ['Authorization: Basic ' . $credentials]
     ]);
-    $response = json_decode(curl_exec($curl), true);
+
+    $responseBody = curl_exec($curl);
+    $curlError = curl_error($curl);
+    $httpCode  = curl_getinfo($curl, CURLINFO_HTTP_CODE);
     curl_close($curl);
-    return $response['access_token'] ?? null;
+
+    if ($responseBody === false) {
+        error_log('M-Pesa token request failed: ' . $curlError);
+        return null;
+    }
+
+    $response = json_decode($responseBody, true);
+    if (!is_array($response) || empty($response['access_token'])) {
+        error_log('M-Pesa token response invalid. HTTP ' . $httpCode . ' body=' . $responseBody);
+        return null;
+    }
+
+    return $response['access_token'];
 }
 
 function mpesaSTKPush($phone, $amount, $description = 'Apex Sports Club Payment') {
@@ -55,6 +72,8 @@ function mpesaSTKPush($phone, $amount, $description = 'Apex Sports Club Payment'
     curl_setopt_array($curl, [
         CURLOPT_POST           => true,
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 20,
+        CURLOPT_CONNECTTIMEOUT => 10,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => [
             'Authorization: Bearer ' . $token,

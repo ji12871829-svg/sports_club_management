@@ -36,7 +36,7 @@ $conn->close();
       <div class="card-body">
 
         <?php if (empty($leagues)): ?>
-          <p class="text-muted">No leagues found. Please run <code>league_team_schema.sql</code> first.</p>
+          <p class="text-muted">No leagues found. Please run <code>php scripts/migrate.php</code> first.</p>
         <?php endif; ?>
 
         <!-- Tab nav — one tab per league -->

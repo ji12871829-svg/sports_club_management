@@ -23,35 +23,40 @@ The system includes:
 
 ## Setup and Installation
 
-1. Place the `sports_club_management` folder inside your web server document root.
+1. Place the project folder inside your web server document root.
    - For XAMPP on Windows: `C:\xampp\htdocs\sports_club_management`
 
 2. Start Apache and MySQL.
 
-3. Create the database using `database.sql`.
-   - Open `http://localhost/phpmyadmin`
-   - Select `Import`
-   - Choose `sports_club_management/database.sql`
-   - Click `Go`
+3. Build the database. The old `database.sql`, `league_team_schema.sql`, and `fixtures_standings_schema.sql` files were removed — the canonical schema is now the numbered migrations in `migrations/` (001 → 056), applied with the migration runner:
 
-4. Add league and team support using `league_team_schema.sql`.
-   - Import `sports_club_management/league_team_schema.sql` after `database.sql`.
-   - This creates `leagues`, `teams`, and `team_memberships`.
-   - It seeds football with 15 teams, rugby with 14 teams, and adds teams for hockey, volleyball, chess, horse riding, and badminton.
+   ```powershell
+   C:\xampp\php\php.exe scripts/migrate.php
+   ```
 
-5. Copy `.env.example` to `.env` and configure your local values.
+   - The runner creates the `sports_club_db` database if it does not exist.
+   - Add `--status` to list applied/pending migrations.
+   - If your database was created by the old SQL files, run `php scripts/migrate.php --baseline` to mark migrations as applied without replaying them.
+
+   Or run the full one-command setup, which does everything (`.env`, uploads dir, database, migrations, test DB, PHPUnit):
+
+   ```bash
+   bash bin/setup.sh
+   ```
+
+4. Copy `.env.example` to `.env` and configure your local values.
    - `.env` is ignored by Git and should never be committed.
    - Default XAMPP database credentials are already shown in `.env.example`.
    - Change the database values if your MySQL credentials differ.
 
-6. Set API keys in `.env`.
+5. Set API keys in `.env`.
    - Use real keys only in development or production, not placeholders.
    - `PAYSTACK_SECRET_KEY` and `PAYSTACK_PUBLIC_KEY` for Paystack checkout
    - `PAYSTACK_CALLBACK_URL` should point to `paystack_callback.php`
    - `BREVO_API_KEY` for email sending
    - `RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` for reCAPTCHA protection
 
-7. Open the application in your browser.
+6. Open the application in your browser.
    - Public site: `http://localhost/sports_club_management/public/index.php`
    - Admin site: `http://localhost/sports_club_management/admin/admin_login.php`
 
@@ -138,21 +143,15 @@ The `.env.example` file includes an `API_SPORTS_KEY` placeholder. This can be us
 
 ## Database Schema
 
-The `database.sql` file contains the schema and sample data for:
-- `members`
-- `sports`
-- `coaches`
-- `facilities`
-- `equipment`
-- `bookings`
-- `payments`
+The schema lives as numbered, idempotent SQL migrations in `migrations/` and is applied with `php scripts/migrate.php` (or `bash bin/setup.sh`). Key tables created across the 56 migrations include:
 
-The `league_team_schema.sql` migration adds:
-- `leagues`
-- `teams`
-- `team_memberships`
+- `members`, `sports`, `coaches`, `facilities`, `equipment`
+- `bookings`, `payments`
+- `leagues`, `teams`, `team_memberships`
+- `fixtures`, `standings`
+- plus AI, engagement, ops, and compliance features (AI review log, notifications, polls, sponsors, damage reports, membership plans, privacy consent, and more)
 
-Use `database.sql` first, then import `league_team_schema.sql` to enable league team registration.
+Migration `001` seeds the base sample data (members, sports, coaches, facilities, equipment, bookings, payments, and the default admin account); later migrations seed league teams and player rosters.
 
 ## Configuration Files
 
@@ -164,11 +163,26 @@ Creates the MySQL connection used by all pages. It reads database settings from 
 
 Central loader for API keys and service settings. Real values come from `.env`; safe placeholders live in `.env.example`.
 
+## Portable URL Handling
+
+The app works from any folder name; it no longer depends on being deployed as `sports_club_management`. `config/api_config.php` auto-detects two constants from the current request:
+
+- `BASE_URL` — the app's mount point (e.g. `/sports_club_management`, `/Apex Sports Club`, or empty when the project is at the web root). Derived automatically from `SCRIPT_NAME`; it is not configurable. `includes/header.php` and `includes/footer.php` use it for all nav links, the stylesheet, and `script.js`, so navigation and assets resolve correctly regardless of where the project lives.
+- `SITE_URL` — full `scheme://host/BASE_URL` used by `includes/send_email.php` for absolute links in outgoing emails (welcome, booking confirmation, booking status, payment receipt). Email clients cannot resolve relative URLs, so `SITE_URL` is always a complete URL.
+
+`SITE_URL` can be overridden in `.env` when auto-detection is wrong — e.g. behind a reverse proxy, or when emails are sent from CLI/cron jobs where there is no `HTTP_HOST` to detect:
+
+```dotenv
+SITE_URL=https://example.com
+```
+
 ## Testing and Utilities
 
-The project includes helper scripts:
-- `test_apisports.php` – verify API-Sports configuration and response
-- `test_email.php` – verify Brevo email sending
+- `scripts/migrate.php` – apply / status / baseline database migrations
+- `bin/setup.sh` – one-command setup (env, database, migrations, test DB, PHPUnit)
+- `php phpunit.phar --configuration=phpunit.xml` – run the PHPUnit suite (payment idempotency + security)
+- `cron/*` – scheduled jobs (AI booking review, database backup, membership renewals, email campaigns, reminders)
+- `public/health.php` and `admin/system_health.php` – health checks for CI and monitoring
 
 ## Security Notes
 

@@ -1,0 +1,31 @@
+# ── Apex Sports Club — uploads/ hardening ──────────────────────────────
+# Uploaded files are stored here. Never let them execute as PHP.
+# Files are served as static content only (profile photos, gallery images…).
+
+# Block any server-side script types from running inside uploads/
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phar|pl|py|cgi|asp|aspx|jsp|sh|htaccess)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Strip the PHP handler even if it sneaks through (double insurance)
+<IfModule mod_php.c>
+    RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8
+    RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8
+</IfModule>
+<IfModule mod_php7.c>
+    RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8
+    RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8
+</IfModule>
+
+# No directory listings
+Options -Indexes
+
+# No server-side includes / CGI
+Options -ExecCGI
+RemoveHandler .cgi .pl .py

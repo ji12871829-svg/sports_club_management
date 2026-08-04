@@ -1,6 +1,13 @@
 <?php
 include_once("../includes/admin_header.php");
 require_once "../config/db_connect.php";
+require_once __DIR__ . '/../includes/cache.php';
+require_once __DIR__ . '/../includes/csrf.php';
+
+// Invalidate the facilities list cache on any POST/action that mutates data.
+if (($_SERVER['REQUEST_METHOD'] === 'POST') || (isset($_GET['action']) && $_GET['action'] === 'edit')) {
+    cache_delete('mg_facilities');
+}
 
 $message = "";
 $name = $location = $type = "";
@@ -12,7 +19,7 @@ $facility_id_to_edit = null;
 // Handle Edit form pre-fill
 if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['id'])) {
     $edit_mode = true;
-    $facility_id_to_edit = $_GET['id'];
+    $facility_id_to_edit = (int) $_GET['id'];
     $sql = "SELECT name, location, type, capacity FROM facilities WHERE facility_id = ?";
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param("i", $facility_id_to_edit);
@@ -28,7 +35,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['id'])) {
 }
 
 // Handle Add/Edit operation
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && csrf_verify($_POST['csrf_token'] ?? '', 'admin_csrf')) {
     // Validate name
     if (empty(trim($_POST["name"]))) {
         $name_err = "Please enter a facility name.";
@@ -63,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($name_err) && empty($location_err) && empty($type_err) && empty($capacity_err)) {
         if (isset($_POST["facility_id"]) && !empty($_POST["facility_id"])) {
             // Update operation
-            $facility_id = $_POST["facility_id"];
+            $facility_id = (int) $_POST["facility_id"];
             $sql = "UPDATE facilities SET name = ?, location = ?, type = ?, capacity = ? WHERE facility_id = ?";
             if ($stmt = $conn->prepare($sql)) {
                 $stmt->bind_param("sssii", $name, $location, $type, $capacity, $facility_id);
@@ -92,9 +99,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Handle Delete operation
-if (isset($_GET["action"]) && $_GET["action"] == "delete" && isset($_GET["id"])) {
-    $facility_id = $_GET["id"];
+// Handle Delete operation — POST-only with CSRF (was GET: trivially CSRF-able)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST["action"] ?? '') == "delete" && csrf_verify($_POST['csrf_token'] ?? '', 'admin_csrf')) {
+    $facility_id = (int) ($_POST["id"] ?? 0);
     $sql = "DELETE FROM facilities WHERE facility_id = ?";
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param("i", $facility_id);
@@ -107,15 +114,18 @@ if (isset($_GET["action"]) && $_GET["action"] == "delete" && isset($_GET["id"]))
     }
 }
 
-// Fetch all facilities
-$facilities = [];
-$sql = "SELECT facility_id, name, location, type, capacity FROM facilities";
-if ($result = $conn->query($sql)) {
-    while ($row = $result->fetch_assoc()) {
-        $facilities[] = $row;
+// Fetch all facilities — cached 60s, invalidated on any add/edit/delete above.
+$facilities = cache_remember('mg_facilities', 60, function () use ($conn) {
+    $rows = [];
+    $sql = "SELECT facility_id, name, location, type, capacity FROM facilities";
+    if ($result = $conn->query($sql)) {
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+        $result->free();
     }
-    $result->free();
-}
+    return $rows;
+});
 $conn->close();
 ?>
 
@@ -130,8 +140,9 @@ $conn->close();
 
                 <h3><?php echo ($edit_mode) ? "Edit Facility" : "Add New Facility"; ?></h3>
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                    <?php echo csrf_field('admin_csrf'); ?>
                     <?php if ($edit_mode): ?>
-                        <input type="hidden" name="facility_id" value="<?php echo $facility_id_to_edit; ?>">
+                        <input type="hidden" name="facility_id" value="<?php echo (int) $facility_id_to_edit; ?>">
                     <?php endif; ?>
                     <div class="mb-3">
                         <label for="name" class="form-label">Facility Name</label>
@@ -183,8 +194,13 @@ $conn->close();
                                     <td><?php echo htmlspecialchars($facility["type"]); ?></td>
                                     <td><?php echo htmlspecialchars($facility["capacity"]); ?></td>
                                     <td>
-                                        <a href="manage_facilities.php?action=edit&id=<?php echo $facility["facility_id"]; ?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <a href="manage_facilities.php?action=delete&id=<?php echo $facility["facility_id"]; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this facility?');">Delete</a>
+                                        <a href="manage_facilities.php?action=edit&id=<?php echo (int) $facility["facility_id"]; ?>" class="btn btn-warning btn-sm">Edit</a>
+                                        <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this facility?');">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo (int) $facility["facility_id"]; ?>">
+                                            <?php echo csrf_field('admin_csrf'); ?>
+                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
