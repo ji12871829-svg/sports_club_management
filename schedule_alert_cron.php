@@ -1,26 +1,58 @@
 <?php
 /**
  * schedule_alert_cron.php
- * Registers cron_profiler_alert.php as a daily Windows Task Scheduler task
- * so the slow-page digest emails itself without manual scheduling.
+ * Registers a daily alert cron as a Windows Task Scheduler task so the
+ * email digests run without manual scheduling.
  *
  * Usage:
- *   php schedule_alert_cron.php            # create the task (daily 06:00)
- *   php schedule_alert_cron.php --remove   # delete the task
+ *   php schedule_alert_cron.php                     # profiler digest (daily 06:00)
+ *   php schedule_alert_cron.php --cron payment      # payment health check
+ *   php schedule_alert_cron.php --remove            # delete the selected task
  *   php schedule_alert_cron.php --time 08:30
- *   php schedule_alert_cron.php --dry-run  # just print the command
+ *   php schedule_alert_cron.php --dry-run           # just print the command
  *
- * Requires: ASC_PROFILER_EMAIL_TO set in .env (otherwise the digest itself
- * is a no-op and there is no point scheduling it).
+ * Tasks:
+ *   --cron profiler (default) → ApexProfilerSlowDigest → cron_profiler_alert.php
+ *                              (requires ASC_PROFILER_EMAIL_TO in .env)
+ *   --cron payment            → ApexPaymentHealth      → cron_payment_health.php
+ *                              (requires ASC_PAYMENT_ALERT_EMAIL_TO in .env)
  */
 
 // ── Task definition ────────────────────────────────────────────────────
-$TASK_NAME = 'ApexProfilerSlowDigest';
-$phpExe    = PHP_BINARY;
-$script    = __DIR__ . '/cron_profiler_alert.php';
-$time      = '06:00';
+$CRONS = [
+    'profiler' => [
+        'task_name' => 'ApexProfilerSlowDigest',
+        'script'    => 'cron_profiler_alert.php',
+        'env_key'   => 'ASC_PROFILER_EMAIL_TO',
+        'label'     => 'profiler slow-page digest',
+    ],
+    'payment' => [
+        'task_name' => 'ApexPaymentHealth',
+        'script'    => 'cron_payment_health.php',
+        'env_key'   => 'ASC_PAYMENT_ALERT_EMAIL_TO',
+        'label'     => 'payment configuration health check',
+    ],
+];
 
 $args = $_SERVER['argv'] ?? [];
+$cron = 'profiler';
+foreach ($args as $i => $a) {
+    if ($a === '--cron' && isset($args[$i + 1])) {
+        $cron = strtolower($args[$i + 1]);
+    }
+}
+if (!isset($CRONS[$cron])) {
+    fwrite(STDERR, "Unknown --cron '{$cron}'. Supported: " . implode(', ', array_keys($CRONS)) . "\n");
+    exit(1);
+}
+
+$TASK_NAME = $CRONS[$cron]['task_name'];
+$script    = __DIR__ . '/' . $CRONS[$cron]['script'];
+$envKey    = $CRONS[$cron]['env_key'];
+$label     = $CRONS[$cron]['label'];
+$phpExe    = PHP_BINARY;
+$time      = '06:00';
+
 $remove = in_array('--remove', $args, true);
 $dryRun = in_array('--dry-run', $args, true);
 foreach ($args as $i => $a) {
@@ -48,9 +80,9 @@ if ($remove) {
     exit(0);
 }
 
-if (empty($env['ASC_PROFILER_EMAIL_TO'])) {
-    echo "WARNING: ASC_PROFILER_EMAIL_TO is not set in .env — the digest would do nothing.\n";
-    echo "Set it first (e.g. ASC_PROFILER_EMAIL_TO=admin@sportsclub.com), then re-run this script.\n";
+if (empty($env[$envKey])) {
+    echo "WARNING: {$envKey} is not set in .env — the {$label} would do nothing.\n";
+    echo "Set it first (e.g. {$envKey}=admin@sportsclub.com), then re-run this script.\n";
 }
 
 $quotedPhp  = '"' . str_replace('"', '\"', $phpExe) . '"';

@@ -7,6 +7,7 @@ include_once("../includes/admin_header.php");
 require_once "../config/db_connect.php";
 require_once "../includes/feature_helpers.php";
 require_once __DIR__ . '/../includes/input_sanitize.php';
+require_once __DIR__ . '/../includes/mpesa.php'; // mpesa_callback_url_error() + payment constants
 
 if (!function_exists('admin_scalar')) {
     function admin_scalar(mysqli $conn, string $sql, $default = 0)
@@ -200,6 +201,44 @@ if (db_table_exists($conn, 'page_timings')) {
     if ($sp) { $sp->free(); }
 }
 
+// ── PAYMENT HEALTH (payment-config checks + duplicate memberships) ──────
+// Mirrors public/health.php's payment_config check so admins see payment
+// risk at a glance without curling the health endpoint. NULL start/end
+// dates are intentionally skipped by the overlap comparison (cannot prove
+// an overlap without dates) — see manage_members.php for the same query.
+$payment_health_problems = [];
+
+$phMpesaCb = defined('MPESA_CALLBACK_URL') ? trim(MPESA_CALLBACK_URL) : '';
+if ($phMpesaCb === '') {
+    $payment_health_problems[] = 'MPESA_CALLBACK_URL is empty';
+} elseif (function_exists('mpesa_callback_url_error')) {
+    $phErr = mpesa_callback_url_error($phMpesaCb);
+    if ($phErr !== null) $payment_health_problems[] = $phErr;
+}
+$phPaystackCb = defined('PAYSTACK_CALLBACK_URL') ? trim(PAYSTACK_CALLBACK_URL) : '';
+if ($phPaystackCb === '' || preg_match('/your-ngrok-domain|example\.com|placeholder/i', $phPaystackCb)) {
+    $payment_health_problems[] = 'PAYSTACK_CALLBACK_URL is empty or a placeholder domain';
+}
+if (!defined('MPESA_CONSUMER_KEY') || trim(MPESA_CONSUMER_KEY) === '' || MPESA_CONSUMER_KEY === 'test') {
+    $payment_health_problems[] = 'MPESA_CONSUMER_KEY is not configured';
+}
+if (!defined('PAYSTACK_SECRET_KEY') || trim(PAYSTACK_SECRET_KEY) === '' || PAYSTACK_SECRET_KEY === 'sk_test_local') {
+    $payment_health_problems[] = 'PAYSTACK_SECRET_KEY is not configured';
+}
+
+// Duplicate *overlapping* active memberships (same member + plan)
+$dup_memberships = find_duplicate_memberships($conn);
+$dup_member_ids  = array_unique(array_column($dup_memberships, 'member_id'));
+$dup_member_count = count($dup_member_ids);
+
+// Last payment-health alert sent (cron throttle window is 24h)
+$payment_health_alert_at = '';
+if (db_table_exists($conn, 'security_alert_log')) {
+    $ph_r = $conn->query("SELECT MAX(sent_at) FROM security_alert_log WHERE alert_type = 'payment_health'");
+    if ($ph_r && $row = $ph_r->fetch_row()) { $payment_health_alert_at = $row[0] ?? ''; }
+    if ($ph_r) { $ph_r->free(); }
+}
+
 $conn->close();
 ?>
 
@@ -296,6 +335,43 @@ $conn->close();
             <a href="slow_pages.php" class="asc-btn asc-btn-ghost btn-sm">
                 <i class="fas fa-chart-line"></i> View Slow Pages
             </a>
+        </div>
+    </div>
+
+    <!-- Payment health status -->
+    <div class="asc-card mb-4">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3 py-3 px-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="asc-stat-icon <?php echo (empty($payment_health_problems) && $dup_member_count === 0) ? 'asc-icon-success' : 'asc-icon-warning'; ?>">
+                    <i class="fas fa-shield-heart"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold asc-text-ink">Payment Health</h5>
+                    <p class="mb-0 small asc-text-muted">
+                        <?php if (empty($payment_health_problems) && $dup_member_count === 0): ?>
+                            All payment checks passing
+                            <?php if ($payment_health_alert_at): ?>
+                                <span class="text-muted ms-1">Last alert: <?php echo date('d M H:i', strtotime($payment_health_alert_at)); ?></span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <?php foreach ($payment_health_problems as $phProblem): ?>
+                                <span class="asc-badge asc-badge-danger me-1"><?php echo e($phProblem); ?></span>
+                            <?php endforeach; ?>
+                            <?php if ($dup_member_count > 0): ?>
+                                <span class="asc-badge asc-badge-warning me-1"><?php echo (int) $dup_member_count; ?> member<?php echo $dup_member_count === 1 ? '' : 's'; ?> with overlapping active membership<?php echo $dup_member_count === 1 ? '' : 's'; ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </p>
+                </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="manage_members.php" class="asc-btn asc-btn-ghost btn-sm">
+                    <i class="fas fa-users"></i> Members
+                </a>
+                <a href="../public/health.php" class="asc-btn asc-btn-ghost btn-sm">
+                    <i class="fas fa-stethoscope"></i> Health Endpoint
+                </a>
+            </div>
         </div>
     </div>
 

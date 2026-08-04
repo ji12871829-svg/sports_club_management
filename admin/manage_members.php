@@ -5,6 +5,7 @@ require_once "../includes/csrf.php";
 require_once "../includes/activity_log.php";
 require_once "../includes/whatsapp.php";
 require_once "../includes/roles.php";
+require_once "../includes/feature_helpers.php"; // find_duplicate_memberships()
 require_once __DIR__ . '/../includes/cache.php';
 
 $message = '';
@@ -144,39 +145,9 @@ if ($search_query === '') {
 // ── Duplicate membership detector ───────────────────────────────────────
 // Flags members holding two *overlapping* Active memberships for the same
 // plan — typically a double-activated payment or a manual data-entry error.
-// Sequential renewals (one expiring before the next starts) are NOT flagged.
-// Rows with NULL start/end dates are skipped by the overlap comparison
-// (NULL comparisons evaluate to false) — intended, since an overlap cannot
-// be proven without dates. Add an index on (member_id, plan_id, status)
-// if this table ever grows large.
-$dup_memberships = [];
-$dup_check = $conn->query("SHOW TABLES LIKE 'member_memberships'");
-if ($dup_check && $dup_check->num_rows > 0) {
-    $dup_sql = "SELECT m.member_id, m.first_name, m.last_name, mm.plan_id,
-                       p.name AS plan_name, COUNT(*) AS overlap_count
-                FROM member_memberships mm
-                JOIN members m ON m.member_id = mm.member_id
-                LEFT JOIN membership_plans p ON p.plan_id = mm.plan_id
-                WHERE mm.status = 'Active'
-                  AND EXISTS (
-                      SELECT 1 FROM member_memberships mm2
-                      WHERE mm2.member_id = mm.member_id
-                        AND mm2.plan_id = mm.plan_id
-                        AND mm2.status = 'Active'
-                        AND mm2.membership_id <> mm.membership_id
-                        AND mm2.start_date <= mm.end_date
-                        AND mm2.end_date >= mm.start_date
-                  )
-                GROUP BY m.member_id, m.first_name, m.last_name, mm.plan_id, p.name
-                ORDER BY m.last_name, m.first_name, mm.plan_id";
-    if ($result = $conn->query($dup_sql)) {
-        while ($row = $result->fetch_assoc()) {
-            $dup_memberships[] = $row;
-        }
-        $result->free();
-    }
-    $dup_check->free();
-}
+// Shared helper: find_duplicate_memberships() in includes/feature_helpers.php
+// (sequential renewals and NULL dates are intentionally not flagged).
+$dup_memberships = find_duplicate_memberships($conn);
 $conn->close();
 ?>
 

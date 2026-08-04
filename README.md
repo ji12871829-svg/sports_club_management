@@ -9,6 +9,8 @@ The project is designed for a local XAMPP-style setup, but it can also be deploy
 - Member registration, login, profile management, and session handling
 - Public pages for sports, coaches, facilities, bookings, fixtures, and team registration
 - Admin dashboard for managing members, sports, coaches, facilities, equipment, bookings, payments, leagues, teams, fixtures, and standings
+- Duplicate-membership detector — flags members holding overlapping Active memberships for the same plan (admin members list + dashboard banner)
+- Payment configuration health monitor — a cron that catches M-Pesa/Paystack misconfigurations (http:// callbacks, placeholder domains, missing keys) and emails the admin
 - League team registration with seeded teams for multiple sports
 - Fixtures and standings management with automatic standings recalculation after completed results
 - Paystack checkout support for payments
@@ -134,6 +136,24 @@ The app no longer depends on the project folder being named `sports_club_managem
 Note: the built-in defaults for `PAYSTACK_CALLBACK_URL` and `MPESA_CALLBACK_URL` still assume a `sports_club_management` folder — set both explicitly in `.env` for your actual domain/path.
 
 **M-Pesa callback URL must be HTTPS.** Safaricom's Daraja API rejects plain-HTTP callback URLs with `400.002.02 Bad Request - Invalid CallBackURL`. `localhost` is also unreachable from Safaricom's servers. For local/sandbox testing, expose the app through an HTTPS tunnel (ngrok, Cloudflare Tunnel, etc.) and point `MPESA_CALLBACK_URL` at `https://<your-tunnel>/callbacks/mpesa_callback.php`. The app fails fast with a clear message if the URL does not start with `https://` — see `mpesa_callback_url_error()` in `includes/mpesa.php` (covered by `tests/MpesaCallbackUrlTest.php`). The `/public/health.php` `payment_config` check reports this misconfiguration so it is caught before users hit it.
+
+## Cron Jobs
+
+Alerting/health crons (run daily via Windows Task Scheduler or cron):
+
+- `cron_payment_health.php` — validates the payment configuration (M-Pesa callback must be `https://` and not a placeholder, provider keys present) and emails the admin on failure. Alerts throttle to one email per 24h per problem. Requires `ASC_PAYMENT_ALERT_EMAIL_TO` in `.env`.
+- `cron_profiler_alert.php` — emails a daily slow-page digest from the request profiler (`page_timings`). Requires `ASC_PROFILER_EMAIL_TO` in `.env`.
+- `cron_security_alert.php` — daily digest of security events (rate-limit hits, CSRF rejections, callback rejections, lockouts) with real-time email on critical events.
+
+Register them with `schedule_alert_cron.php` (creates Windows Task Scheduler tasks):
+
+```bash
+php schedule_alert_cron.php                    # profiler slow-page digest, daily 06:00
+php schedule_alert_cron.php --cron payment     # payment health check, daily 06:00
+php schedule_alert_cron.php --remove           # remove the selected task
+```
+
+Other scheduled jobs live in `cron/` (AI booking review, database backup, membership renewals, email campaigns, reminders).
 
 ## Default Admin Login
 

@@ -158,8 +158,8 @@ jobs:
           extensions: mbstring, mysqli, gd
           tools: phpunit:9.6
 
-      - name: Run M-Pesa callback URL validation tests
-        run: phpunit --configuration=phpunit.xml --filter MpesaCallbackUrlTest
+      - name: Run payment-config validation tests (M-Pesa URL + Paystack signature)
+        run: phpunit --configuration=phpunit.xml --filter 'MpesaCallbackUrlTest|PaystackSignatureTest'
 
       - name: Assert payment_config health check passes with https callback
         run: |

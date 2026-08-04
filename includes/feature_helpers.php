@@ -316,3 +316,51 @@ function activate_membership_for_payment(
 
     return $success;
 }
+
+/**
+ * Find members holding overlapping Active memberships for the same plan —
+ * typically a double-activated payment or a manual data-entry error.
+ * Sequential renewals (one period ending before the next starts) are NOT
+ * flagged. Rows with NULL start/end dates are skipped by the overlap
+ * comparison (NULL comparisons evaluate to false) — intended, since an
+ * overlap cannot be proven without dates. Add an index on
+ * (member_id, plan_id, status) if this table ever grows large.
+ *
+ * @return array<int, array{
+ *   member_id: int, first_name: string, last_name: string,
+ *   plan_id: int, plan_name: ?string, overlap_count: int
+ * }>
+ */
+function find_duplicate_memberships(mysqli $conn): array
+{
+    if (!db_table_exists($conn, 'member_memberships')) {
+        return [];
+    }
+
+    $sql = "SELECT m.member_id, m.first_name, m.last_name, mm.plan_id,
+                   p.name AS plan_name, COUNT(*) AS overlap_count
+            FROM member_memberships mm
+            JOIN members m ON m.member_id = mm.member_id
+            LEFT JOIN membership_plans p ON p.plan_id = mm.plan_id
+            WHERE mm.status = 'Active'
+              AND EXISTS (
+                  SELECT 1 FROM member_memberships mm2
+                  WHERE mm2.member_id = mm.member_id
+                    AND mm2.plan_id = mm.plan_id
+                    AND mm2.status = 'Active'
+                    AND mm2.membership_id <> mm.membership_id
+                    AND mm2.start_date <= mm.end_date
+                    AND mm2.end_date >= mm.start_date
+              )
+            GROUP BY m.member_id, m.first_name, m.last_name, mm.plan_id, p.name
+            ORDER BY m.last_name, m.first_name, mm.plan_id";
+
+    $rows = [];
+    if ($result = $conn->query($sql)) {
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+        $result->free();
+    }
+    return $rows;
+}
