@@ -112,7 +112,12 @@ Severity: **Critical / High / Medium / Low**. Status: **Fixed** / **Deferred** /
 - **Real-time critical alerting** — `maybe_send_security_alert()` in `includes/security_events.php` fires an immediate email when a `critical` event (or `auth_lockout`) is logged, once per alert type per 15 min. Atomic throttle via `INSERT … SELECT … WHERE NOT EXISTS` (migration `058_security_alerts.sql`), throttle row claimed BEFORE the network call so a send failure still counts against the window; guarded on `BREVO_API_KEY` so an unconfigured env never burns throttle slots. `sendEmail()` now sets `CURLOPT_TIMEOUT=15`/`CONNECTTIMEOUT=8` so a slow Brevo cannot stall the webhook-rejection path. Verified: 3 concurrent critical events → exactly 1 alert row + 1 email attempt.
 - **Admin security page** — `admin/security_events.php`: filters (type/severity/IP/date), paginated event table (50/page), 24h summary cards per event type, top-offending-IPs table (7 days). Prepared statements throughout; all output `htmlspecialchars`-escaped; permission `logs.view` + nav dropdown item + page-title entry added to `includes/admin_header.php`. Live-verified with a real admin session (200, renders live events).
 
+## Stage-5 round 5 (smoke harness + deterministic retention + git identity) — completed
+
+- **Security smoke harness** — `scripts/security_smoke.sh` replays the full live check matrix (forged webhook 403, M-Pesa no-500, unauthenticated 302/403 gates, traversal 404, config direct-hit harmless, rate-limit 429 within 6 calls, SQLi probe inert) plus an optional authenticated pass (full login + 2FA via the app's own `includes/totp.php`, CSRF no-token/wrong-token 403, admin pages 200). Prints PASS/FAIL/SKIP and **exits 1 on any regression**. CI/staging-ready: `BASE_URL`, `ASC_ADMIN_EMAIL`/`ASC_ADMIN_PASSWORD`/`ASC_ADMIN_TOTP_SECRET` env-configurable; M-Pesa check accepts 200/403 so production allow-list behavior doesn't false-positive. Verified: 16/16 pass authenticated, fails correctly (exit 1) against a bad target.
+- **Deterministic retention** — `cron_security_alert.php` now runs a weekly (Sunday) purge of `security_events` + `security_alert_log` honoring `ASC_SECURITY_RETENTION_DAYS` (default 30, min 7), moved **before** the digest-disabled early exit so the table can never grow unbounded when alerting is off. Documented in `.env.example`.
+- **Git identity** — repo-local `user.name`/`user.email` set so future commits don't need inline identity.
+
 ## Remaining recommended next steps
 
-1. **Commit this security round** (composer.lock, dependabot, CI SBOM, security-events pipeline, alerts, admin page, docs) so CI's `composer install --locked` is reproducible and Dependabot alerts can be enabled.
-2. **Pen-test / red-team pass** on the live app (quarterly), tracking findings to closure in this register.
+1. **Pen-test / red-team pass** on the live app (quarterly), tracking findings to closure in this register.

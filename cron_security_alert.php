@@ -18,6 +18,37 @@
 require_once __DIR__ . '/config/db_connect.php';
 require_once __DIR__ . '/includes/send_email.php';
 
+// ── Retention cleanup (runs regardless of digest enablement) ────────────────
+// Keep events for ASC_SECURITY_RETENTION_DAYS (default 30). Runs once per week
+// (Sunday, day 0) deterministically instead of probabilistically, so every
+// deployment purges on a predictable schedule. Executed BEFORE the early exits
+// below so the table can never grow unbounded when the digest is disabled or
+// below its threshold.
+$retentionDays = getenv('ASC_SECURITY_RETENTION_DAYS');
+$retentionDays = ($retentionDays !== false && is_numeric($retentionDays) && (int) $retentionDays >= 7)
+    ? (int) $retentionDays
+    : 30;
+
+if ((int) date('w') === 0) {
+    $deleted = 0;
+    $stmt = $conn->prepare("DELETE FROM security_events WHERE created_at < NOW() - INTERVAL ? DAY");
+    if ($stmt) {
+        $stmt->bind_param('i', $retentionDays);
+        $stmt->execute();
+        $deleted = $stmt->affected_rows;
+        $stmt->close();
+    }
+    $stmt2 = $conn->prepare("DELETE FROM security_alert_log WHERE sent_at < NOW() - INTERVAL ? DAY");
+    if ($stmt2) {
+        $stmt2->bind_param('i', $retentionDays);
+        $stmt2->execute();
+        $stmt2->close();
+    }
+    echo "Retention cleanup: purged {$deleted} event(s) older than {$retentionDays} days.\n";
+} else {
+    echo "Retention cleanup: skipped (today is not Sunday).\n";
+}
+
 $to = getenv('ASC_SECURITY_EMAIL_TO');
 if ($to === false || trim($to) === '') {
     fwrite(STDERR, "ASC_SECURITY_EMAIL_TO not set in .env — security digest disabled. Nothing to do.\n");
@@ -117,12 +148,6 @@ if ($sent) {
 } else {
     fwrite(STDERR, "Security digest email FAILED to send to {$to} (check BREVO_API_KEY / CLUB_EMAIL_FROM).\n");
     exit(1);
-}
-
-// Retention: keep ~30 days of events (probabilistic cleanup to avoid a scan
-// on every run; the digest runs daily so this is fine).
-if (rand(1, 10) === 1) {
-    $conn->query("DELETE FROM security_events WHERE created_at < NOW() - INTERVAL 30 DAY");
 }
 
 $conn->close();
