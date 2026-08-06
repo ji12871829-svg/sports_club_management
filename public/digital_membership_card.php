@@ -14,8 +14,8 @@ $member_id = $_SESSION['member_id'];
 $card_manager = new DigitalMembershipCard($conn, $member_id);
 $card = $card_manager->getOrCreateCard();
 
-// Get member info
-$stmt = $conn->prepare("SELECT first_name, last_name, email, membership_status FROM members WHERE member_id = ?");
+// Get member info (membership_status lives on the digital card, not members)
+$stmt = $conn->prepare("SELECT m.first_name, m.last_name, m.email, COALESCE(dc.card_status, 'active') AS membership_status FROM members m LEFT JOIN digital_membership_cards dc ON dc.member_id = m.member_id WHERE m.member_id = ?");
 $stmt->bind_param("i", $member_id);
 $stmt->execute();
 $member = $stmt->get_result()->fetch_assoc();
@@ -49,11 +49,21 @@ $stats = $card_manager->getCardStats();
         }
 
         .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 20px;
             text-transform: uppercase;
             letter-spacing: 2px;
+        }
+
+        .card-header-logo {
+            width: 42px;
+            height: 42px;
+            display: block;
         }
 
         .card-member-name {
@@ -169,7 +179,10 @@ $stats = $card_manager->getCardStats();
 
         <?php if ($card): ?>
             <div class="membership-card">
-                <div class="card-header">Apex Sports Club</div>
+                <div class="card-header">
+                    <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo-light.svg', __DIR__ . '/../public/assets/logo-light.svg'); ?>" alt="" class="card-header-logo">
+                    Apex Sports Club
+                </div>
                 <div class="card-member-name"><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></div>
                 <div class="card-number">Card #: <?php echo htmlspecialchars($card['card_number']); ?></div>
                 

@@ -204,7 +204,11 @@ class ChurnWellnessAnalytics {
                 mcr.engagement_score,
                 m.first_name,
                 m.last_name,
-                m.email
+                m.email,
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM member_memberships mm
+                    WHERE mm.member_id = m.member_id AND mm.status = 'Active'
+                ) THEN 'Active' ELSE 'Inactive' END AS membership_status
             FROM member_churn_risk mcr
             JOIN members m ON mcr.member_id = m.member_id
             WHERE mcr.risk_level IN ('high', 'critical')

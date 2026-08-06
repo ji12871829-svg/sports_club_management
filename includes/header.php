@@ -23,8 +23,12 @@ require_once __DIR__ . '/assets.php'; ?>
     <link rel="stylesheet" href="<?php echo asc_asset(BASE_URL . '/public/css/style.css', __DIR__ . '/../public/css/style.css'); ?>">
     <link rel="stylesheet" href="<?php echo asc_asset(BASE_URL . '/public/css/portal.css', __DIR__ . '/../public/css/portal.css'); ?>">
 
-    <!-- Brand mark + favicon -->
-    <link rel="icon" type="image/svg+xml" href="<?php echo asc_asset(BASE_URL . '/public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>">
+    <!-- Brand mark + favicons -->
+    <link rel="icon" href="<?php echo asc_asset(BASE_URL . '/public/assets/favicon-32.png', __DIR__ . '/../public/assets/favicon-32.png'); ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo asc_asset(BASE_URL . '/public/assets/favicon-16.png', __DIR__ . '/../public/assets/favicon-16.png'); ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo asc_asset(BASE_URL . '/public/assets/favicon-32.png', __DIR__ . '/../public/assets/favicon-32.png'); ?>">
+    <link rel="icon" type="image/png" sizes="48x48" href="<?php echo asc_asset(BASE_URL . '/public/assets/favicon-48.png', __DIR__ . '/../public/assets/favicon-48.png'); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo asc_asset(BASE_URL . '/public/assets/favicon-180.png', __DIR__ . '/../public/assets/favicon-180.png'); ?>">
 </head>
 <body>
     <?php $asc_logged_in = isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true; ?>

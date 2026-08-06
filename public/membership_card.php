@@ -104,6 +104,14 @@ include '../includes/header.php';
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
         font-size: 1.1rem;
+        overflow: hidden;
+    }
+    .mc-club-logo {
+        width: 100%; height: 100%;
+        object-fit: contain;
+        padding: 4px;
+        box-sizing: border-box;
+        display: block;
     }
     .mc-club-name { font-weight: 700; font-size: 1rem; line-height: 1.2; }
     .mc-club-sub  { font-size: .72rem; opacity: .75; }
@@ -204,7 +212,9 @@ include '../includes/header.php';
 
             <!-- Club header -->
             <div class="mc-club">
-                <div class="mc-club-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="mc-club-icon">
+                    <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo-light.svg', __DIR__ . '/../public/assets/logo-light.svg'); ?>" alt="Apex Sports Club logo" class="mc-club-logo">
+                </div>
                 <div>
                     <div class="mc-club-name">Apex Sports Club</div>
                     <div class="mc-club-sub">Official Membership Card</div>

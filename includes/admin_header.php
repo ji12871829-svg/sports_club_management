@@ -151,8 +151,12 @@ if (isset($conn) && $conn instanceof mysqli) {
 
     <link rel="stylesheet" href="<?php echo asc_asset('../public/css/admin.css', __DIR__ . '/../public/css/admin.css'); ?>">
 
-    <!-- Brand mark + favicon -->
-    <link rel="icon" type="image/svg+xml" href="<?php echo asc_asset('../public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>">
+    <!-- Brand mark + favicons -->
+    <link rel="icon" href="<?php echo asc_asset('../public/assets/favicon-32.png', __DIR__ . '/../public/assets/favicon-32.png'); ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo asc_asset('../public/assets/favicon-16.png', __DIR__ . '/../public/assets/favicon-16.png'); ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo asc_asset('../public/assets/favicon-32.png', __DIR__ . '/../public/assets/favicon-32.png'); ?>">
+    <link rel="icon" type="image/png" sizes="48x48" href="<?php echo asc_asset('../public/assets/favicon-48.png', __DIR__ . '/../public/assets/favicon-48.png'); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo asc_asset('../public/assets/favicon-180.png', __DIR__ . '/../public/assets/favicon-180.png'); ?>">
 </head>
 <body>
 

@@ -77,10 +77,12 @@ function sendBookingConfirmationFromPost(array $post, string $toEmail, string $f
 // ── Email Templates ──────────────────────────────────────────
 
 function emailWelcome($firstName) {
+    $logo = "<img src='" . SITE_URL . "/public/assets/logo-light-180.png' alt='Apex Sports Club' style='width:56px;height:56px;display:inline-block;vertical-align:middle;margin-right:10px;'>";
     return "
     <div style='font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden'>
       <div style='background:#007bff;padding:24px;text-align:center'>
-        <h1 style='color:white;margin:0'>🏆 Welcome to Apex Sports Club!</h1>
+        <div style='margin-bottom:12px'>{$logo}</div>
+        <h1 style='color:white;margin:0'>Welcome to Apex Sports Club!</h1>
       </div>
       <div style='padding:24px'>
         <p style='font-size:16px'>Hi <strong>" . htmlspecialchars($firstName) . "</strong>,</p>
@@ -103,10 +105,12 @@ function emailWelcome($firstName) {
 }
 
 function emailBookingConfirmation($firstName, $sport, $facility, $date, $startTime, $endTime) {
+    $logo = "<img src='" . SITE_URL . "/public/assets/logo-light-180.png' alt='Apex Sports Club' style='width:56px;height:56px;display:inline-block;vertical-align:middle;margin-right:10px;'>";
     return "
     <div style='font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden'>
       <div style='background:#28a745;padding:24px;text-align:center'>
-        <h1 style='color:white;margin:0'>✅ Booking Confirmed!</h1>
+        <div style='margin-bottom:12px'>{$logo}</div>
+        <h1 style='color:white;margin:0'>Booking Confirmed!</h1>
       </div>
       <div style='padding:24px'>
         <p>Hi <strong>" . htmlspecialchars($firstName) . "</strong>, your booking is confirmed.</p>
@@ -146,9 +150,11 @@ function emailBookingConfirmation($firstName, $sport, $facility, $date, $startTi
 function emailBookingStatusUpdate($firstName, $sport, $date, $status) {
     $color  = $status === 'Approved' ? '#28a745' : ($status === 'Rejected' ? '#dc3545' : '#ffc107');
     $icon   = $status === 'Approved' ? '✅' : ($status === 'Rejected' ? '❌' : '🔄');
+    $logo   = "<img src='" . SITE_URL . "/public/assets/logo-light-180.png' alt='Apex Sports Club' style='width:56px;height:56px;display:inline-block;vertical-align:middle;margin-right:10px;'>";
     return "
     <div style='font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden'>
       <div style='background:{$color};padding:24px;text-align:center'>
+        <div style='margin-bottom:12px'>{$logo}</div>
         <h1 style='color:white;margin:0'>{$icon} Booking {$status}</h1>
       </div>
       <div style='padding:24px'>
@@ -168,10 +174,12 @@ function emailBookingStatusUpdate($firstName, $sport, $date, $status) {
 }
 
 function emailPaymentReceipt($firstName, $amount, $method, $description) {
+    $logo = "<img src='" . SITE_URL . "/public/assets/logo-light-180.png' alt='Apex Sports Club' style='width:56px;height:56px;display:inline-block;vertical-align:middle;margin-right:10px;'>";
     return "
     <div style='font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden'>
       <div style='background:#17a2b8;padding:24px;text-align:center'>
-        <h1 style='color:white;margin:0'>🧾 Payment Receipt</h1>
+        <div style='margin-bottom:12px'>{$logo}</div>
+        <h1 style='color:white;margin:0'>Payment Receipt</h1>
       </div>
       <div style='padding:24px'>
         <p>Hi <strong>" . htmlspecialchars($firstName) . "</strong>, we received your payment.</p>
