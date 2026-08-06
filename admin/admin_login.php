@@ -19,6 +19,7 @@ if (admin_2fa_pending_valid()) {
 
 require_once '../config/db_connect.php';
 require_once '../config/api_config.php';
+require_once '../includes/assets.php';
 require_once '../includes/csrf.php';
 require_once '../includes/rate_limiter.php';
 
@@ -187,9 +188,19 @@ spline-viewer {
     left: 0;
 }
 
+.hero-badge-logo {
+    width: 26px;
+    height: 26px;
+    display: block;
+    border-radius: 7px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.35);
+}
+
 .hero-badge {
     display: inline-flex;
-    padding: 10px 18px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -392,7 +403,10 @@ spline-viewer {
 
 <div class="page-layout">
     <div class="hero-section">
-        <div class="hero-badge">Apex Sports Club</div>
+        <div class="hero-badge">
+            <img src="<?php echo asc_asset('../public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>" alt="Apex Sports Club logo" class="hero-badge-logo">
+            Apex Sports Club
+        </div>
         <h1 class="hero-title">Admin <br>Control Centre.</h1>
         <p class="hero-text">Secure access to the administrator dashboard. Manage operations, monitor performance, and control all club activities from one place.</p>
         

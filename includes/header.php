@@ -22,20 +22,30 @@ require_once __DIR__ . '/assets.php'; ?>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo asc_asset(BASE_URL . '/public/css/style.css', __DIR__ . '/../public/css/style.css'); ?>">
     <link rel="stylesheet" href="<?php echo asc_asset(BASE_URL . '/public/css/portal.css', __DIR__ . '/../public/css/portal.css'); ?>">
+
+    <!-- Brand mark + favicon -->
+    <link rel="icon" type="image/svg+xml" href="<?php echo asc_asset(BASE_URL . '/public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>">
 </head>
 <body>
     <?php $asc_logged_in = isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true; ?>
     <nav class="navbar navbar-expand-lg navbar-public <?php echo $asc_logged_in ? 'navbar-portal' : ''; ?>">
         <div class="container">
             <?php if ($asc_logged_in): ?>
-                <!-- Portal brand (reference: stacked APEX / ATHLETIC CLUB) -->
+                <!-- Portal brand (stacked APEX / ATHLETIC CLUB + logo mark) -->
                 <a class="portal-brand" href="<?php echo BASE_URL; ?>/public/dashboard.php">
-                    <span class="portal-brand-apex">Apex</span>
-                    <span class="portal-brand-sub">Athletic Club</span>
+                    <span class="portal-brand-logo">
+                        <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>" alt="Apex Sports Club logo">
+                    </span>
+                    <span class="portal-brand-text">
+                        <span class="portal-brand-apex">Apex</span>
+                        <span class="portal-brand-sub">Athletic Club</span>
+                    </span>
                 </a>
             <?php else: ?>
                 <a class="brand-public" href="<?php echo BASE_URL; ?>/public/index.php">
-                    <span class="brand-icon-public"><i class="fas fa-trophy"></i></span>
+                    <span class="brand-icon-public">
+                        <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>" alt="Apex Sports Club logo" class="apex-logo-img">
+                    </span>
                     <span class="brand-name">Apex Sports Club</span>
                 </a>
             <?php endif; ?>

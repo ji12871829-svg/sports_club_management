@@ -150,6 +150,9 @@ if (isset($conn) && $conn instanceof mysqli) {
     <link rel="stylesheet" href="<?php echo asc_asset('../public/css/style.css', __DIR__ . '/../public/css/style.css'); ?>">
 
     <link rel="stylesheet" href="<?php echo asc_asset('../public/css/admin.css', __DIR__ . '/../public/css/admin.css'); ?>">
+
+    <!-- Brand mark + favicon -->
+    <link rel="icon" type="image/svg+xml" href="<?php echo asc_asset('../public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>">
 </head>
 <body>
 
@@ -402,7 +405,9 @@ function toggleTheme() {
 
         <!-- Brand -->
         <a class="brand-wrap" href="admin_dashboard.php">
-            <span class="brand-icon"><i class="fas fa-shield-halved"></i></span>
+            <span class="brand-icon">
+                <img src="<?php echo asc_asset('../public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>" alt="Apex Sports Club logo" class="apex-logo-img">
+            </span>
             <div>
                 <div class="brand-text">Apex Sports</div>
                 <div class="brand-sub">Admin Panel</div>
