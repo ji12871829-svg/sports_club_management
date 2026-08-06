@@ -1605,29 +1605,51 @@ body.theme-dark .asc-analysis-action i { color: #a5b4fc; }
     font-variant-numeric: tabular-nums;
 }
 
-/* ── Performance badge (footer) ──────────────────────────────────────── */
+/* ── Performance badge (footer) ────────────────────────────────────────
+   Collapsed to a small icon chip by default so it never covers card
+   content; expands to the full render-time stats on hover/focus. Hidden
+   on phones where it has no unobtrusive corner. */
 .asc-profiler-badge {
     position: fixed;
-    right: 14px;
+    right: 12px;
     bottom: 10px;
-    z-index: 1080;
+    z-index: 1070;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 5px 12px;
+    gap: 5px;
+    max-width: 30px;
+    height: 30px;
+    padding: 0 9px;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.82);
+    background: rgba(15, 23, 42, 0.6);
     color: #e2e8f0;
-    font-size: 0.7rem;
+    font-size: 0.62rem;
     font-weight: 600;
     letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(6px);
-    pointer-events: none;
+    cursor: default;
+    pointer-events: auto; /* overrides the legacy .asc-profiler-badge in style.css */
+    transition: max-width 0.25s ease, padding 0.25s ease, background 0.2s ease;
     font-variant-numeric: tabular-nums;
 }
 .asc-profiler-badge i {
     color: #fbbf24;
+    font-size: 0.68rem;
+    flex-shrink: 0;
+}
+.asc-profiler-badge:hover,
+.asc-profiler-badge:focus {
+    max-width: 280px;
+    padding: 0 12px;
+    background: rgba(15, 23, 42, 0.92);
+}
+@media (max-width: 575.98px) {
+    .asc-profiler-badge {
+        display: none;
+    }
 }
 
 /* ============ CONSOLE OVERVIEW (REFERENCE REDESIGN) ============ */

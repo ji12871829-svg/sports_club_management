@@ -75,7 +75,7 @@ if (!class_exists('AscProfiler', false)) {
             $ms  = round(self::elapsedMs(), 1);
             $mem = round(memory_get_peak_usage(true) / 1048576, 1);
             $q   = self::$queryCount;
-            return '<div class="asc-profiler-badge" title="Render time · DB queries · peak memory">'
+            return '<div class="asc-profiler-badge" title="Render time · DB queries · peak memory" tabindex="0" aria-label="Page performance: render time, database queries, peak memory">'
                 . '<i class="fas fa-bolt" style="font-size:0.6rem;margin-right:4px;"></i>'
                 . $ms . ' ms &middot; ' . $q . ' queries &middot; ' . $mem . ' MB</div>';
         }
