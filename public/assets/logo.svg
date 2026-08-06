@@ -1,34 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Apex Sports Club">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 108" width="100" height="108" role="img" aria-label="Apex Sports Club">
   <title>Apex Sports Club</title>
 
-  <!-- ══ Shield base (dark navy) ══
-       Flat top edge angled slightly down from center to right;
-       left side drops vertically then curves in; right side facets. -->
-  <path d="M22 15 L60 12 L100 16 L104 45 Q104 70 90 86 Q78 99 60 111 Q42 99 30 86 Q16 70 16 45 Z" fill="#1c2b4f"/>
+  <!-- ══ Shield silhouette (measured from reference) ══
+       Narrow flat top edge (angled slightly down from center to right),
+       sides flaring out to full width, straight vertical sides through the
+       middle, then a smooth taper to a sharp bottom point. -->
+  <path d="M 34.2 4.0
+           Q 50 3.4 65.6 4.4
+           C 73 5.5 86 9 95.0 12.2
+           L 95.4 13.8
+           L 95.4 49.9
+           C 95.0 51.5 94.3 55.9 93.2 60.3
+           C 91.9 64.7 90.1 69.0 87.8 73.4
+           C 84.9 77.8 81.7 82.1 77.8 86.5
+           C 73.2 90.9 67.5 95.3 60.5 99.6
+           C 56 103 52 103.8 50 104
+           C 48 103.8 44 103 39.5 99.6
+           C 32.5 95.3 26.8 90.9 22.2 86.5
+           C 18.3 82.1 15.1 77.8 12.2 73.4
+           C 9.9 69.0 8.1 64.7 6.8 60.3
+           C 5.7 55.9 5.0 51.5 4.6 49.9
+           L 4.6 13.8
+           C 14 9 26 5.5 34.2 4.0 Z"
+        fill="#04315a"/>
 
-  <!-- ══ Facets ══ -->
-  <!-- Upper-middle & upper-right: medium slate gray -->
-  <path d="M60 12 L100 16 L104 45 Q104 58 98 68 L78 56 Q66 48 60 48 Z" fill="#4d5d83"/>
+  <!-- ══ Facets (diagonal division, per reference) ══ -->
+  <!-- Upper-middle & upper-right: slate gray (bounded by diagonal seam) -->
+  <path d="M 50 4 L 65.6 4.4 C 73 5.5 86 9 95 12.2 L 95.4 49.9 L 12 49.9 Z" fill="#4d565d"/>
   <!-- Lower-left: slate gray -->
-  <path d="M16 45 L34 47 L50 57 Q58 63 60 68 L60 111 Q42 99 30 86 Q16 70 16 45 Z" fill="#64748b"/>
+  <path d="M 12 49.9 L 50 49.9 L 50 104 C 48 103.8 44 103 39.5 99.6
+           C 32.5 95.3 26.8 90.9 22.2 86.5 C 18.3 82.1 15.1 77.8 12.2 73.4
+           C 9.9 69.0 8.1 64.7 6.8 60.3 C 5.7 55.9 5.0 51.5 4.6 49.9 Z" fill="#4d565d"/>
 
   <!-- ══ Facet seams (thick white) ══ -->
-  <path d="M60 12 L60 111" stroke="#ffffff" stroke-width="2.5" fill="none"/>
-  <path d="M16 45 Q60 49 104 45" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+  <path d="M 50 4 L 12 49.9" stroke="#ffffff" stroke-width="2.4" fill="none"/>
+  <path d="M 12 49.9 L 95.4 49.9" stroke="#ffffff" stroke-width="2.4" fill="none"/>
+  <path d="M 50 49.9 L 50 104" stroke="#ffffff" stroke-width="2.4" fill="none"/>
 
   <!-- ══ Running figure (solid facets, thick white separators) ══ -->
-  <g stroke="#ffffff" stroke-width="2.6" stroke-linejoin="round">
+  <g stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round">
     <!-- Head: navy octagon, upper right -->
-    <polygon points="66,22 75,18 84,21 87,29 85,37 76,41 67,37 64,30" fill="#1c2b4f"/>
+    <polygon points="62,7 71,4 80,7 83,14 80,21 71,24 62,21 59,14" fill="#04315a"/>
     <!-- Torso: navy, angled forward -->
-    <polygon points="62,40 88,34 84,54 60,64 56,52" fill="#1c2b4f"/>
-    <!-- Front arm: bends up toward right edge, breaks the shield boundary -->
-    <polygon points="70,44 94,26 112,8 99,34 80,52" fill="#1c2b4f"/>
+    <polygon points="58,22 84,16 82,38 56,46 52,32" fill="#04315a"/>
+    <!-- Front arm: bends up, hand breaks the top edge near center, elbow near right edge -->
+    <polygon points="60,24 88,28 99,32 86,42 62,36" fill="#04315a"/>
+    <!-- Hand: raised above the top edge (slate tip) -->
+    <polygon points="48,3 58,1 63,7 55,11 45,9" fill="#4d565d"/>
     <!-- Back arm: sharp point down-left -->
-    <polygon points="58,44 30,56 18,66 34,60 62,52" fill="#1c2b4f"/>
-    <!-- Back leg: slate, strides out the bottom-left -->
-    <polygon points="54,64 64,76 50,94 26,113 44,86 50,70" fill="#64748b"/>
-    <!-- Front leg: navy, knee bends toward bottom center -->
-    <polygon points="60,66 74,80 80,96 68,110 60,92 56,72" fill="#1c2b4f"/>
+    <polygon points="54,32 28,44 16,54 32,48 58,40" fill="#04315a"/>
+    <!-- Left leg (navy): strides out the bottom-left, sharp point -->
+    <polygon points="46,46 56,58 44,76 20,97 38,68 42,52" fill="#04315a"/>
+    <!-- Right leg (slate): knee bends toward bottom center -->
+    <polygon points="48,48 62,62 70,80 58,94 50,76 44,54" fill="#4d565d"/>
   </g>
 </svg>
