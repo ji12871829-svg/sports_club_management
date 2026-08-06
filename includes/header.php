@@ -38,7 +38,7 @@ require_once __DIR__ . '/assets.php'; ?>
                 <!-- Portal brand (stacked APEX / ATHLETIC CLUB + logo mark) -->
                 <a class="portal-brand" href="<?php echo BASE_URL; ?>/public/dashboard.php">
                     <span class="portal-brand-logo">
-                        <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>" alt="Apex Sports Club logo">
+                        <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo.png', __DIR__ . '/../public/assets/logo.png'); ?>" alt="Apex Sports Club logo">
                     </span>
                     <span class="portal-brand-text">
                         <span class="portal-brand-apex">Apex</span>
@@ -48,7 +48,7 @@ require_once __DIR__ . '/assets.php'; ?>
             <?php else: ?>
                 <a class="brand-public" href="<?php echo BASE_URL; ?>/public/index.php">
                     <span class="brand-icon-public">
-                        <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>" alt="Apex Sports Club logo" class="apex-logo-img">
+                        <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo.png', __DIR__ . '/../public/assets/logo.png'); ?>" alt="Apex Sports Club logo" class="apex-logo-img">
                     </span>
                     <span class="brand-name">Apex Sports Club</span>
                 </a>

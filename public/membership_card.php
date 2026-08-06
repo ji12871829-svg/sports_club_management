@@ -213,7 +213,7 @@ include '../includes/header.php';
             <!-- Club header -->
             <div class="mc-club">
                 <div class="mc-club-icon">
-                    <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo-light.svg', __DIR__ . '/../public/assets/logo-light.svg'); ?>" alt="Apex Sports Club logo" class="mc-club-logo">
+                    <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo-light.png', __DIR__ . '/../public/assets/logo-light.png'); ?>" alt="Apex Sports Club logo" class="mc-club-logo">
                 </div>
                 <div>
                     <div class="mc-club-name">Apex Sports Club</div>

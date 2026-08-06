@@ -404,7 +404,7 @@ spline-viewer {
 <div class="page-layout">
     <div class="hero-section">
         <div class="hero-badge">
-            <img src="<?php echo asc_asset('../public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>" alt="Apex Sports Club logo" class="hero-badge-logo">
+            <img src="<?php echo asc_asset('../public/assets/logo-light.png', __DIR__ . '/../public/assets/logo-light.png'); ?>" alt="Apex Sports Club logo" class="hero-badge-logo">
             Apex Sports Club
         </div>
         <h1 class="hero-title">Admin <br>Control Centre.</h1>

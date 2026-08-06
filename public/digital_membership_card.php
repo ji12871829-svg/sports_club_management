@@ -180,7 +180,7 @@ $stats = $card_manager->getCardStats();
         <?php if ($card): ?>
             <div class="membership-card">
                 <div class="card-header">
-                    <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo-light.svg', __DIR__ . '/../public/assets/logo-light.svg'); ?>" alt="" class="card-header-logo">
+                    <img src="<?php echo asc_asset(BASE_URL . '/public/assets/logo-light.png', __DIR__ . '/../public/assets/logo-light.png'); ?>" alt="" class="card-header-logo">
                     Apex Sports Club
                 </div>
                 <div class="card-member-name"><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></div>

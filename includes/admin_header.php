@@ -428,7 +428,7 @@ function toggleTheme() {
         <!-- Brand -->
         <a class="brand-wrap" href="admin_dashboard.php">
             <span class="brand-icon">
-                <img src="<?php echo asc_asset('../public/assets/logo.svg', __DIR__ . '/../public/assets/logo.svg'); ?>" alt="Apex Sports Club logo" class="apex-logo-img">
+                <img src="<?php echo asc_asset('../public/assets/logo.png', __DIR__ . '/../public/assets/logo.png'); ?>" alt="Apex Sports Club logo" class="apex-logo-img">
             </span>
             <div>
                 <div class="brand-text">Apex Sports</div>
