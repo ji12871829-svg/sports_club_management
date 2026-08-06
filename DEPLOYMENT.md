@@ -45,18 +45,25 @@ the rsync), so no composer install is needed on the host.
 
 ## 2. Create a deploy key
 
-Generate a dedicated SSH key on your machine (or the server):
+A dedicated deploy keypair has already been generated for this project and
+sits in the git-ignored `output/` folder (never committed):
 
 ```bash
-ssh-keygen -t ed25519 -C "apex-deploy" -f ~/.ssh/apex_deploy -N ""
+# private key (do NOT share, do NOT commit)
+output/deploy/apex_deploy
+# public key (safe to share)
+output/deploy/apex_deploy.pub
 ```
+
+(To regenerate from scratch on any machine: `ssh-keygen -t ed25519 -C
+"apex-deploy" -f output/deploy/apex_deploy -N ""`)
 
 Install the public half on the server:
 
 ```bash
-ssh-copy-id -i ~/.ssh/apex_deploy.pub deploy@your-host.example
+ssh-copy-id -i output/deploy/apex_deploy.pub deploy@your-host.example
 # verify:
-ssh -i ~/.ssh/apex_deploy deploy@your-host.example 'echo ok'
+ssh -i output/deploy/apex_deploy deploy@your-host.example 'echo ok'
 ```
 
 ## 3. GitHub repository settings
@@ -82,7 +89,7 @@ Open **Settings → Secrets and variables → Actions** for the repo and add:
 
 | Name             | Value                                             |
 |------------------|---------------------------------------------------|
-| `DEPLOY_SSH_KEY` | the **private** key (`cat ~/.ssh/apex_deploy`)    |
+| `DEPLOY_SSH_KEY` | the **private** key — paste the full contents of `output/deploy/apex_deploy` (`cat output/deploy/apex_deploy`) |
 
 That's it. The next `push` to `main` runs the deploy job; branch
 protection can later mark `deploy` as a required check.
@@ -102,6 +109,11 @@ $EDITOR .env   # set real DB creds + payment keys + APP_ENV=production
 > `APP_ENV=production` on the host enables the `.env.production` overlay
 > convention (`config/api_config.php`): create `/var/www/apex/.env.production`
 > for anything that should win over `.env`.
+>
+> ⚠️ The local `.env` uses a placeholder ngrok domain for the payment
+> callbacks (fine for the dashboard's "Secure" badge). Before processing
+> live payments, set `MPESA_CALLBACK_URL` / `PAYSTACK_CALLBACK_URL` to the
+> real tunnel/production https URLs Safaricom & Paystack can reach.
 
 ## 5. First deploy (runbook)
 

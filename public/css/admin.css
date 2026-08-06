@@ -923,6 +923,44 @@ body.theme-dark .search-palette-shortcuts kbd { background: #334155; border-colo
     color: var(--asc-brand-600);
 }
 
+/* Console overview page actions — blue ladder per the reference */
+.asc-btn-blue-soft,
+.asc-btn-blue,
+.asc-btn-blue-deep {
+    color: #fff;
+    border: 1px solid transparent;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .18);
+}
+/* Contrast-safe ladder (all ≥ 4.5:1 with white text):
+   #2563eb 5.9:1 → #1d4ed8 6.9:1 → #1e40af 8.0:1 */
+.asc-btn-blue-soft {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+.asc-btn-blue-soft:hover {
+    background: #1d4ed8;
+    color: #fff;
+    transform: translateY(-1px);
+}
+.asc-btn-blue {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+.asc-btn-blue:hover {
+    background: #1e40af;
+    color: #fff;
+    transform: translateY(-1px);
+}
+.asc-btn-blue-deep {
+    background: #1e40af;
+    border-color: #1e40af;
+}
+.asc-btn-blue-deep:hover {
+    background: #172f7d;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
 /* ============ STAT CARDS ============ */
 
 .asc-stat-card {
@@ -1576,6 +1614,19 @@ body.theme-dark .asc-analysis-action i { color: #a5b4fc; }
 .asc-rev-line circle {
     fill: #34d399;
 }
+.asc-rev-values {
+    display: flex;
+    gap: .75rem;
+    margin-bottom: .3rem;
+}
+.asc-rev-values .asc-rev-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
 .asc-rev-labels {
     display: flex;
     gap: .75rem;
@@ -1755,6 +1806,10 @@ body.theme-dark .asc-analysis-action i { color: #a5b4fc; }
     background: var(--asc-warning-bg);
     color: var(--asc-warning-ink);
 }
+.asc-status-pill.pill-off {
+    background: var(--asc-line-soft);
+    color: var(--asc-muted);
+}
 
 /* ── Row 2: colored metric cards ── */
 .asc-stat-card.asc-stat-gold {
@@ -1834,6 +1889,18 @@ body.theme-dark .asc-analysis-action i { color: #a5b4fc; }
 }
 .asc-kpi-amber {
     color: #fbbf24 !important;
+}
+
+/* ── Card footer (Coach Availability action) ── */
+.asc-card-foot {
+    padding: .7rem 1.25rem;
+    border-top: 1px solid var(--asc-line);
+    background: var(--asc-surface-2);
+    text-align: right;
+}
+body.theme-dark .asc-card-foot {
+    background: #172032;
+    border-color: #334155;
 }
 
 /* ── Sport utilization tiles (Most Booked Sports) ── */

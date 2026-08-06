@@ -202,6 +202,25 @@ foreach ($coach_day_view as $c) {
     }
 }
 
+// Coaches NOT scheduled today — shown as "Off Duty" (grey) rows
+$coach_off_duty = [];
+if ($coach_has_avail) {
+    $stmt = $conn->prepare("SELECT c.first_name, c.last_name, c.specialization
+        FROM coaches c
+        LEFT JOIN coach_availability ca
+               ON ca.coach_id = c.coach_id AND ca.day_of_week = ? AND ca.is_available = 1
+        WHERE ca.coach_id IS NULL
+        ORDER BY c.first_name
+        LIMIT 3");
+    $stmt->bind_param('i', $today_dow);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) {
+        $coach_off_duty[] = $row;
+    }
+    $stmt->close();
+}
+
 // Slow pages recorded in the last 7 days (performance monitor card)
 $slow_page_count = 0;
 $avg_load_ms = 0;
@@ -339,13 +358,13 @@ $conn->close();
             <p class="asc-page-sub-date"><i class="fas fa-calendar-day"></i> <?php echo e(date('F j, Y')); ?></p>
         </div>
         <div class="asc-page-actions">
-            <a href="manage_bookings.php" class="asc-btn asc-btn-ghost">
+            <a href="manage_bookings.php" class="asc-btn asc-btn-blue-soft">
                 <i class="fas fa-calendar-check"></i> Review Bookings
             </a>
-            <a href="payments_overview.php" class="asc-btn asc-btn-outline">
+            <a href="payments_overview.php" class="asc-btn asc-btn-blue">
                 <i class="fas fa-arrow-right-arrow-left"></i> Payments Overview
             </a>
-            <a href="manage_payments.php" class="asc-btn asc-btn-primary">
+            <a href="manage_payments.php" class="asc-btn asc-btn-blue-deep">
                 <i class="fas fa-credit-card"></i> Manage Payments
             </a>
         </div>
@@ -712,16 +731,21 @@ $conn->close();
                     </div>
                 </div>
                 <p class="asc-finance-sub">Monthly Revenue Trend</p>
+                <?php
+                // Trend line points: one per month, at bar-top height (0 = bottom, 100 = top of track).
+                // No circle markers: under preserveAspectRatio="none" they would stretch into ellipses.
+                $line_points = [];
+                foreach ($monthly_revenue as $i => $mr) {
+                    $pct = round(($mr['total'] / $rev_max) * 100);
+                    $line_points[] = round((($i + 0.5) / 6) * 100, 1) . ',' . round(100 - $pct, 1);
+                }
+                ?>
+                <div class="asc-rev-values">
+                    <?php foreach ($monthly_revenue as $mr): ?>
+                    <div class="asc-rev-col"><span class="asc-rev-value"><?php echo e(asc_compact_kes((float) $mr['total'])); ?></span></div>
+                    <?php endforeach; ?>
+                </div>
                 <div class="asc-rev-plot">
-                    <?php
-                    // Trend line points: one per month, at bar-top height (0 = bottom, 100 = top of track).
-                    // No circle markers: under preserveAspectRatio="none" they would stretch into ellipses.
-                    $line_points = [];
-                    foreach ($monthly_revenue as $i => $mr) {
-                        $pct = round(($mr['total'] / $rev_max) * 100);
-                        $line_points[] = round((($i + 0.5) / 6) * 100, 1) . ',' . round(100 - $pct, 1);
-                    }
-                    ?>
                     <svg class="asc-rev-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                         <polyline points="<?php echo implode(' ', $line_points); ?>" />
                     </svg>
@@ -739,10 +763,7 @@ $conn->close();
                 </div>
                 <div class="asc-rev-labels">
                     <?php foreach ($monthly_revenue as $mr): ?>
-                    <div class="asc-rev-col">
-                        <span class="asc-rev-value"><?php echo e(asc_compact_kes((float) $mr['total'])); ?></span>
-                        <span class="asc-rev-label"><?php echo e(date('M', strtotime($mr['ym']))); ?></span>
-                    </div>
+                    <div class="asc-rev-col"><span class="asc-rev-label"><?php echo e(date('M', strtotime($mr['ym']))); ?></span></div>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -764,24 +785,17 @@ $conn->close();
                                 <th>Time</th>
                                 <th>Title</th>
                                 <th>Activity</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($today_schedule)): ?>
                                 <tr>
-                                    <td colspan="4">
+                                    <td colspan="3">
                                         <div class="asc-empty"><i class="fas fa-calendar-xmark"></i><p>No sessions scheduled for today.</p></div>
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($today_schedule as $s):
-                                    $s_lower = strtolower($s['status']);
-                                    $badge = in_array($s_lower, ['completed','approved','confirmed','paid']) ? 'asc-badge-success'
-                                        : ($s_lower === 'pending' ? 'asc-badge-warning'
-                                        : (in_array($s_lower, ['cancelled','rejected']) ? 'asc-badge-danger'
-                                        : 'asc-badge-neutral'));
-                                ?>
+                                <?php foreach ($today_schedule as $s): ?>
                                 <tr>
                                     <td class="mono fw-semibold"><?php echo e(date('g:i A', strtotime($s['start_time']))); ?></td>
                                     <td>
@@ -789,10 +803,8 @@ $conn->close();
                                         <span class="asc-tbl-sub"><?php echo e($s['member_first'] . ' ' . $s['member_last']); ?></span>
                                     </td>
                                     <td>
-                                        <?php echo e($s['facility_name'] ?: '—'); ?>
-                                        <span class="asc-tbl-sub"><?php echo e($s['coach_name']); ?></span>
+                                        <?php if (!empty($s['facility_name'])): ?><span class="fw-semibold"><?php echo e($s['facility_name']); ?></span>, <?php endif; ?><?php echo e($s['coach_name']); ?>
                                     </td>
-                                    <td><span class="asc-badge <?php echo $badge; ?>"><?php echo e($s['status']); ?></span></td>
                                 </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -840,15 +852,33 @@ $conn->close();
                                 </td>
                             </tr>
                             <?php endforeach; ?>
-                            <?php if (empty($coach_day_view)): ?>
+                            <?php if (empty($coach_day_view) && empty($coach_off_duty)): ?>
                             <tr>
                                 <td colspan="2">
                                     <div class="asc-empty"><i class="fas fa-calendar-xmark"></i><p>No coaches scheduled for today.</p></div>
                                 </td>
                             </tr>
                             <?php endif; ?>
+                            <?php foreach ($coach_off_duty as $c): ?>
+                            <tr>
+                                <td>
+                                    <?php echo e($c['first_name'] . ' ' . $c['last_name']); ?>
+                                    <span class="asc-tbl-sub"><?php echo e($c['specialization']); ?></span>
+                                </td>
+                                <td>
+                                    <span class="asc-status-pill pill-off">
+                                        <span class="dot"></span> Off Duty
+                                    </span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
+                </div>
+                <div class="asc-card-foot">
+                    <a href="manage_coach_availability.php" class="asc-card-link">
+                        <i class="fas fa-user-clock me-1"></i>Manage Availability
+                    </a>
                 </div>
             </div>
             <?php endif; ?>
