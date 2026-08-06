@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline — Apex Admin</title>
+    <meta name="theme-color" content="#0f172a">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, .08), 0 8px 24px rgba(15, 23, 42, .06);
+        }
+        .logo { width: 64px; height: 64px; margin: 0 auto 1.25rem; display: block; }
+        .icon {
+            width: 56px; height: 56px; border-radius: 14px;
+            background: #eef2ff; color: #6366f1;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.25rem; font-size: 1.5rem;
+        }
+        h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: .5rem; }
+        p { color: #64748b; font-size: .95rem; line-height: 1.55; margin-bottom: 1.5rem; }
+        button {
+            background: #2563eb; color: #fff; border: none;
+            padding: .65rem 1.75rem; border-radius: 8px;
+            font-weight: 600; font-size: .95rem; cursor: pointer;
+        }
+        button:hover { background: #1d4ed8; }
+        .hint { margin-top: 1.25rem; font-size: .75rem; color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="./favicon.png" alt="Apex Athletic Club" class="logo">
+        <div class="icon">📡</div>
+        <h1>You're offline</h1>
+        <p>The Apex Admin console needs a connection to load fresh data. Check your network, then retry.</p>
+        <button onclick="location.reload()">Retry</button>
+        <div class="hint">Apex Athletic Club · Admin Console</div>
+    </div>
+</body>
+</html>

@@ -151,6 +151,15 @@ if (isset($conn) && $conn instanceof mysqli) {
 
     <link rel="stylesheet" href="<?php echo asc_asset('../public/css/admin.css', __DIR__ . '/../public/css/admin.css'); ?>">
 
+    <!-- PWA: manifest + theme -->
+    <link rel="manifest" href="<?php echo asc_asset('manifest.json', __DIR__ . '/manifest.json'); ?>">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="application-name" content="Apex Admin">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Apex Admin">
+
     <!-- Brand mark + favicons -->
     <link rel="icon" href="<?php echo asc_asset('../public/assets/favicon-32.png', __DIR__ . '/../public/assets/favicon-32.png'); ?>">
     <link rel="icon" type="image/png" sizes="16x16" href="<?php echo asc_asset('../public/assets/favicon-16.png', __DIR__ . '/../public/assets/favicon-16.png'); ?>">
@@ -172,6 +181,15 @@ if (isset($conn) && $conn instanceof mysqli) {
 </div>
 
 <script>
+// ── PWA service worker (secure contexts only: https or localhost) ───────
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {
+            // Registration is best-effort — never block the admin console on it.
+        });
+    });
+}
+
 // ── CSRF auto-stamp ─────────────────────────────────────────────────────
 // Server-side, admin_header.php rejects admin POSTs without a valid CSRF
 // token. This interceptor transparently adds the token to every same-origin
