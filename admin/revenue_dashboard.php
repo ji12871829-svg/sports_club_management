@@ -106,8 +106,8 @@ $plan_data      = json_encode(array_map(fn($r) => round($r['total'], 2), $plans)
         $stats = [
             ['Total Revenue',    'KES ' . number_format($total_revenue, 2),  '#10b981', 'fa-coins'],
             ['Total Expenses',   'KES ' . number_format($total_expenses, 2), '#ef4444', 'fa-receipt'],
-            ['Net (approx)',     'KES ' . number_format($net, 2),          $net >= 0 ? '#3b82f6' : '#ef4444', 'fa-scale-balanced'],
-            ['This Month',       'KES ' . number_format($this_month, 2),     '#6366f1', 'fa-calendar'],
+            ['Net (approx)',     'KES ' . number_format($net, 2),          $net >= 0 ? '#2a6ba8' : '#ef4444', 'fa-scale-balanced'],
+            ['This Month',       'KES ' . number_format($this_month, 2),     '#1d5c8f', 'fa-calendar'],
         ];
         foreach ($stats as [$label, $value, $color, $icon]):
         ?>
@@ -180,7 +180,7 @@ $plan_data      = json_encode(array_map(fn($r) => round($r['total'], 2), $plans)
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16'];
+const colors = ['#2a6ba8','#10b981','#f59e0b','#ef4444','#2a6ba8','#06b6d4','#84cc16'];
 
 // Monthly bar chart
 new Chart(document.getElementById('monthlyChart'), {
@@ -195,7 +195,7 @@ new Chart(document.getElementById('monthlyChart'), {
             label: 'Expenses (KES)',
             data: <?php echo $expense_line; ?>,
             backgroundColor: '#ef444455',
-            borderColor: '#3b82f6',
+            borderColor: '#2a6ba8',
             borderWidth: 2,
             borderRadius: 6,
         }]

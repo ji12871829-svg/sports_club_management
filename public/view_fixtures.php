@@ -66,7 +66,7 @@ $conn->close();
 
 <style>
 :root {
-  --primary: #1d4ed8;
+  --primary: #14497a;
   --accent:  #16a34a;
   --gold:    #f59e0b;
 }
@@ -98,7 +98,7 @@ $conn->close();
 /* Standings table */
 .standings-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
 .pos-1 { background: linear-gradient(90deg,#dcfce7,#fff) !important; }
-.pos-2 { background: linear-gradient(90deg,#dbeafe,#fff) !important; }
+.pos-2 { background: linear-gradient(90deg,#d3e4f2,#fff) !important; }
 .pos-3 { background: linear-gradient(90deg,#fef9c3,#fff) !important; }
 .pts-badge {
   display: inline-block;
@@ -134,7 +134,7 @@ $conn->close();
   color: #111;
 }
 .score-block small { display: block; font-size: .7rem; font-weight: 400; color: #6b7280; }
-.badge-scheduled { background: #3b82f6; }
+.badge-scheduled { background: #2a6ba8; }
 .badge-postponed { background: #f59e0b; }
 .badge-cancelled { background: #ef4444; }
 .matchday-tag {

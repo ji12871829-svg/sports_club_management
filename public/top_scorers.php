@@ -13,7 +13,7 @@ $scorers = asc_top_scorers($conn, $league_id > 0 ? $league_id : null, 50);
 <style>
 :root {
   --primary: #0f172a;
-  --accent: #2563eb;
+  --accent: #1d5c8f;
   --ui-border: #e2e8f0;
   --surface-bg: #ffffff;
   --workspace-bg: #f8fafc;
@@ -83,11 +83,11 @@ body {
   padding: 0.3rem 0.5rem;
   border-radius: 6px;
   font-weight: 800;
-  background: #eff6ff;
+  background: #e8f1f8;
   color: var(--accent);
   text-align: center;
   font-size: 0.88rem;
-  border: 1px solid #dbeafe;
+  border: 1px solid #d3e4f2;
 }
 </style>
 

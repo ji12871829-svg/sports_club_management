@@ -161,13 +161,13 @@ include '../includes/header.php';
         border: 3px solid #e2e8f0;
     }
     .avatar-placeholder {
-        background: linear-gradient(135deg,#4f46e5,#6366f1);
+        background: linear-gradient(135deg,#14497a,#1d5c8f);
         display: flex; align-items: center; justify-content: center;
         font-size: 2.2rem; color: #fff; font-weight: 700;
     }
     .avatar-edit-btn {
         position: absolute; bottom: 2px; right: 2px;
-        background: #4f46e5; color: #fff;
+        background: #14497a; color: #fff;
         border-radius: 50%; width: 28px; height: 28px;
         display: flex; align-items: center; justify-content: center;
         font-size: .7rem; cursor: pointer; border: 2px solid #fff;
@@ -180,11 +180,11 @@ include '../includes/header.php';
         padding: .55rem .85rem;
     }
     .form-control:focus, .form-select:focus {
-        border-color: #4f46e5;
-        box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+        border-color: #14497a;
+        box-shadow: 0 0 0 3px rgba(20,73,122,.1);
     }
     .btn-save {
-        background: linear-gradient(135deg,#4f46e5,#6366f1);
+        background: linear-gradient(135deg,#14497a,#1d5c8f);
         color: #fff; border: none; border-radius: 9px;
         padding: .6rem 2rem; font-weight: 600;
         transition: opacity .15s;

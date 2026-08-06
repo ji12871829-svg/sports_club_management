@@ -270,7 +270,7 @@ function profile_image(string $path, string $name, string $class = 'rounded-circ
     }
     $initials = mb_substr($initials, 0, 2);
 
-    $bgColors = ['#4f46e5', '#7c3aed', '#2563eb', '#0891b2', '#059669', '#d97706', '#dc2626'];
+    $bgColors = ['#14497a', '#1a5a8c', '#1d5c8f', '#0891b2', '#059669', '#d97706', '#dc2626'];
     $colorIndex = crc32($name) % count($bgColors);
 
     return '<div class="' . htmlspecialchars($class) . ' d-inline-flex align-items-center justify-content-center"'

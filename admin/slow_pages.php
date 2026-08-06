@@ -247,7 +247,7 @@ function sp_query(array $overrides = []): string
                 ?>
                 <div class="asc-rev-col" title="<?php echo e($t['d']); ?>: <?php echo (int) $t['c']; ?> page(s), slowest <?php echo number_format((float) $t['mx'], 1); ?> ms">
                     <div class="asc-rev-bar-track">
-                        <div class="asc-rev-bar-fill" style="height:<?php echo (int) $pct; ?>%;background:linear-gradient(180deg,#6366f1,#8b5cf6);"></div>
+                        <div class="asc-rev-bar-fill" style="height:<?php echo (int) $pct; ?>%;background:linear-gradient(180deg,#1d5c8f,#2a6ba8);"></div>
                     </div>
                     <span class="asc-rev-label"><?php echo e(date('d M', strtotime($t['d']))); ?></span>
                     <span class="asc-rev-value"><?php echo (int) $t['c']; ?></span>

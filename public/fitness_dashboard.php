@@ -50,7 +50,7 @@ $monthly_calories = $wearable->getLeaderboard('monthly_calories', 10);
         transition: color 0.15s ease, border-color 0.15s ease;
     }
     .md-tab:hover { color: #111827; }
-    .md-tab.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+    .md-tab.active { color: #14497a; border-bottom-color: #14497a; }
     .md-tab-content { display: none; }
     .md-tab-content.active { display: block; }
 
@@ -60,7 +60,7 @@ $monthly_calories = $wearable->getLeaderboard('monthly_calories', 10);
         justify-content: center;
         width: 30px; height: 30px;
         border-radius: 50%;
-        background: #eef2ff; color: #4f46e5;
+        background: #e8f1f8; color: #14497a;
         font-weight: 800; font-size: 0.82rem;
     }
     .rank-1 { background: #fef9c3; color: #854d0e; }
@@ -91,7 +91,7 @@ $monthly_calories = $wearable->getLeaderboard('monthly_calories', 10);
     .md-activity-row h5 { font-size: 0.92rem; font-weight: 700; color: #111827; margin-bottom: 0.1rem; }
     .md-activity-row p { font-size: 0.8rem; color: #6b7280; margin: 0; }
     .md-activity-stats { display: flex; gap: 1rem; flex-shrink: 0; }
-    .md-activity-stat { font-size: 0.8rem; font-weight: 700; color: #4f46e5; }
+    .md-activity-stat { font-size: 0.8rem; font-weight: 700; color: #14497a; }
 </style>
 
 <div class="py-4">

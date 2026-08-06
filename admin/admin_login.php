@@ -127,12 +127,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
-<script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.2/build/spline-viewer.js"></script>
-
 <style>
 :root {
-    --primary: #4f46e5;
-    --primary-dark: #4338ca;
+    --primary: #14497a;
+    --primary-dark: #0e3a5f;
 }
 
 * {
@@ -144,7 +142,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 body {
     min-height: 100vh;
     font-family: 'Inter', sans-serif;
-    background: #0f172a;
+    background:
+        radial-gradient(1200px 600px at 85% -10%, rgba(29, 92, 143, .35), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(14, 58, 95, .55), transparent 55%),
+        #0f172a;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -166,26 +167,6 @@ body {
 .hero-section {
     color: white;
     padding-right: 40px;
-}
-
-.spline-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1;
-    pointer-events: none;
-    overflow: hidden;
-}
-
-spline-viewer {
-    width: 100%;
-    height: 100%;
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
 }
 
 .hero-badge-logo {
@@ -247,14 +228,14 @@ spline-viewer {
     width: 56px;
     height: 56px;
     border-radius: 16px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #1d5c8f, #2a6ba8);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-size: 22px;
     margin-bottom: 24px;
-    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 10px 20px rgba(20, 73, 122, 0.3);
 }
 
 .heading {
@@ -347,7 +328,7 @@ spline-viewer {
 .auth-button:hover {
     background: var(--primary-dark);
     transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 10px 20px rgba(20, 73, 122, 0.25);
 }
 
 .bottom-text {
@@ -395,11 +376,6 @@ spline-viewer {
 </style>
 </head>
 <body>
-
-<!-- Spline Background Layer -->
-<div class="spline-container">
-    <spline-viewer url="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode" events-target="global"></spline-viewer>
-</div>
 
 <div class="page-layout">
     <div class="hero-section">

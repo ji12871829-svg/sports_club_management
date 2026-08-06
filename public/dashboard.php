@@ -224,7 +224,7 @@ include_once("../includes/header.php");
                         <h4 class="md-card-title"><i class="fas fa-calendar-day"></i>Today's Schedule</h4>
                         <small class="text-muted">Your sessions booked for today</small>
                     </div>
-                    <span class="md-pill d-none d-md-inline-block" style="background:#eef2ff;color:#4f46e5;"><?php echo count($todays_sessions); ?> session<?php echo count($todays_sessions) === 1 ? '' : 's'; ?></span>
+                    <span class="md-pill d-none d-md-inline-block" style="background:#e8f1f8;color:#14497a;"><?php echo count($todays_sessions); ?> session<?php echo count($todays_sessions) === 1 ? '' : 's'; ?></span>
                 </div>
                 <?php if (empty($todays_sessions)): ?>
                     <div class="md-empty"><i class="fas fa-calendar-day"></i>No sessions booked for today. Enjoy your day!</div>

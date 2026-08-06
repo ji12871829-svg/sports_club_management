@@ -65,7 +65,7 @@ function asc_render_error_page(string $message, string $type = 'exception'): voi
         p { color: #64748b; font-size: .9rem; margin-bottom: .25rem; }
         .error-detail { font-size: .8rem; color: #94a3b8; word-break: break-word; margin: 1rem 0 1.5rem; background: #f8fafc; border-radius: 8px; padding: .75rem 1rem; text-align: left; }
         .error-detail code { font-size: .78rem; color: #475569; }
-        .btn-home { background: #2563eb; color: #fff; border: none; border-radius: 9px; padding: .6rem 1.5rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: .5rem; transition: opacity .15s; }
+        .btn-home { background: #1d5c8f; color: #fff; border: none; border-radius: 9px; padding: .6rem 1.5rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: .5rem; transition: opacity .15s; }
         .btn-home:hover { opacity: .85; color: #fff; }
         .btn-retry { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 9px; padding: .6rem 1.5rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: .5rem; margin-left: .5rem; transition: all .15s; }
         .btn-retry:hover { background: #e2e8f0; color: #334155; }

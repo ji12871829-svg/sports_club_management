@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $end_fmt     = date('l, d F Y', strtotime($row['end_date']));
             $html = "
             <div style='font-family:sans-serif;max-width:540px;margin:30px auto;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;background:#fff;'>
-              <div style='background:#2563eb;padding:28px 24px;text-align:center;'>
+              <div style='background:#1d5c8f;padding:28px 24px;text-align:center;'>
                 <h2 style='color:#fff;margin:0;font-size:20px;font-weight:800;'>⏰ Membership Expiring Soon</h2>
               </div>
               <div style='padding:28px 24px;color:#334155;'>
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Your <strong>" . e($row['plan_name']) . "</strong> membership expires on <strong>{$end_fmt}</strong> ({$days_left} day(s) remaining).</p>
                 <p>Renew now to keep your access to all club services.</p>
                 <div style='text-align:center;margin-top:24px;'>
-                  <a href='{$renew_url}' style='display:inline-block;background:#2563eb;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;'>Renew Membership →</a>
+                  <a href='{$renew_url}' style='display:inline-block;background:#1d5c8f;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;'>Renew Membership →</a>
                 </div>
               </div>
               <div style='background:#f8fafc;padding:14px;text-align:center;color:#94a3b8;font-size:12px;'>Apex Sports Club · Membership Reminders</div>
@@ -127,7 +127,7 @@ $conn->close();
     /* Premium Performance Stats Framework */
     .dashboard-stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; }
     .dashboard-stat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-    .stat-blue::before { background-color: #2563eb; }
+    .stat-blue::before { background-color: #1d5c8f; }
     .stat-amber::before { background-color: #d97706; }
     .stat-rose::before { background-color: #dc2626; }
     .stat-metric { font-size: 2rem; font-weight: 700; color: #0f172a; line-height: 1; margin-bottom: 0.25rem; }

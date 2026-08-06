@@ -74,7 +74,7 @@ include '../includes/header.php';
     .brand-accent-line {
         width: 40px;
         height: 4px;
-        background-color: #2563eb;
+        background-color: #1d5c8f;
         border-radius: 2px;
         margin-bottom: 1rem;
     }
@@ -149,12 +149,12 @@ include '../includes/header.php';
     }
 
     .btn-corporate-primary {
-        background-color: #2563eb;
+        background-color: #1d5c8f;
         color: #ffffff !important;
     }
 
     .btn-corporate-primary:hover {
-        background-color: #1d4ed8;
+        background-color: #14497a;
     }
 
     .btn-corporate-secondary {

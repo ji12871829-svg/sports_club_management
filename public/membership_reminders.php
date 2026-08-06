@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $end_fmt     = date('l, d F Y', strtotime($row['end_date']));
             $html = "
             <div style='font-family:sans-serif;max-width:540px;margin:30px auto;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;background:#fff;'>
-              <div style='background:#2563eb;padding:28px 24px;text-align:center;'>
+              <div style='background:#1d5c8f;padding:28px 24px;text-align:center;'>
                 <h2 style='color:#fff;margin:0;font-size:20px;font-weight:800;'>⏰ Membership Expiring Soon</h2>
               </div>
               <div style='padding:28px 24px;color:#334155;'>
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Your <strong>" . e($row['plan_name']) . "</strong> membership expires on <strong>{$end_fmt}</strong> ({$days_left} day(s) remaining).</p>
                 <p>Renew now to keep your access to all club services.</p>
                 <div style='text-align:center;margin-top:24px;'>
-                  <a href='{$renew_url}' style='display:inline-block;background:#2563eb;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;'>Renew Membership →</a>
+                  <a href='{$renew_url}' style='display:inline-block;background:#1d5c8f;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;'>Renew Membership →</a>
                 </div>
               </div>
               <div style='background:#f8fafc;padding:14px;text-align:center;color:#94a3b8;font-size:12px;'>Apex Sports Club · Membership Reminders</div>
@@ -103,7 +103,7 @@ $conn->close();
 <div class="container-fluid py-4">
     <div class="d-flex align-items-center gap-3 mb-4">
         <div class="rounded-circle d-flex align-items-center justify-content-center"
-             style="width:48px;height:48px;background:#2563eb;">
+             style="width:48px;height:48px;background:#1d5c8f;">
             <i class="fas fa-bell text-white"></i>
         </div>
         <div>
@@ -124,7 +124,7 @@ $conn->close();
     <!-- Stats -->
     <div class="row g-3 mb-4">
         <div class="col-sm-4">
-            <div class="stat-pill" style="background:#2563eb;">
+            <div class="stat-pill" style="background:#1d5c8f;">
                 <div class="fs-2 fw-bold"><?php echo $total_active; ?></div>
                 <div class="small opacity-75">Active Memberships</div>
             </div>

@@ -938,7 +938,8 @@ body.theme-dark .search-palette-shortcuts kbd { background: #334155; border-colo
     border: 1px solid transparent;
     box-shadow: 0 4px 12px rgba(20, 73, 122, .18);
 }
-/* Contrast-safe navy ladder — all steps ≥ 4.5:1 (WCAG AA) with white text */
+/* Contrast-safe ladder (all ≥ 4.5:1 with white text):
+   All three steps ≥ 4.5:1 (WCAG AA) with white text */
 .asc-btn-blue-soft {
     background: #1d5c8f;
     border-color: #1d5c8f;

@@ -825,9 +825,9 @@ $conn->close();
         transition: all 0.15s ease-in-out;
     }
     .select-interactive:focus {
-        border-color: #2563eb;
+        border-color: #1d5c8f;
         background-color: #ffffff;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        box-shadow: 0 0 0 3px rgba(20, 73, 122, 0.1);
         outline: none;
     }
     .btn-action-view {
@@ -874,9 +874,9 @@ $conn->close();
                 Review, approve, and monitor facility bookings across the club.
                 <span class="badge rounded-pill px-3 py-1" style="font-size:0.65rem;font-weight:600;
                     <?php
-                    $mode_colors = ['Conservative' => '#dc2626', 'Balanced' => '#7c3aed', 'Liberal' => '#16a34a', 'Custom' => '#2563eb'];
+                    $mode_colors = ['Conservative' => '#dc2626', 'Balanced' => '#1a5a8c', 'Liberal' => '#16a34a', 'Custom' => '#1d5c8f'];
                     $mode_effective_temp = $current_strictness === 'Conservative' ? 0.10 : ($current_strictness === 'Liberal' ? 0.40 : ($current_strictness === 'Custom' ? $custom_temperature : 0.20));
-                    $mode_color = $mode_colors[$current_strictness] ?? '#7c3aed';
+                    $mode_color = $mode_colors[$current_strictness] ?? '#1a5a8c';
                     ?>
                     background:<?php echo $mode_color; ?>;color:#fff;">
                     <?php echo $current_strictness; ?>
@@ -900,7 +900,7 @@ $conn->close();
                         <option value="Custom" <?php echo $current_strictness === 'Custom' ? 'selected' : ''; ?>>Custom</option>
                     </select>
                 </form>
-                <button type="button" class="btn btn-sm p-1 border-0" style="color:#7c3aed;font-size:0.8rem;"
+                <button type="button" class="btn btn-sm p-1 border-0" style="color:#1a5a8c;font-size:0.8rem;"
                         onclick="document.getElementById('aiPromptInfo').classList.toggle('d-none')"
                         title="View strictness prompts and temperature settings">
                     <i class="fas fa-info-circle"></i>
@@ -911,20 +911,20 @@ $conn->close();
                 <input type="hidden" name="action" value="ai_review_pending">
                 <button type="submit" class="btn text-decoration-none text-dark"
                         style="border:1px solid #cbd5e1;background:#ffffff;color:#475569;font-weight:600;font-size:0.8rem;padding:0.35rem 0.75rem;border-radius:6px;transition:all 0.15s ease;display:inline-flex;align-items:center;gap:0.4rem;">
-                    <i class="fas fa-robot me-1" style="color:#7c3aed;"></i> AI Review
+                    <i class="fas fa-robot me-1" style="color:#1a5a8c;"></i> AI Review
                 </button>
             </form>
             <form method="post" class="m-0">
                 <?php echo csrf_field('admin_csrf'); ?>
                 <input type="hidden" name="action" value="ai_cron_run_manual">
                 <button type="submit" class="btn text-decoration-none text-dark"
-                        style="border:1px solid #e2e8f0;background:#faf5ff;color:#7c3aed;font-weight:600;font-size:0.8rem;padding:0.35rem 0.75rem;border-radius:6px;transition:all 0.15s ease;display:inline-flex;align-items:center;gap:0.4rem;"
+                        style="border:1px solid #e2e8f0;background:#eef3f8;color:#1a5a8c;font-weight:600;font-size:0.8rem;padding:0.35rem 0.75rem;border-radius:6px;transition:all 0.15s ease;display:inline-flex;align-items:center;gap:0.4rem;"
                         onclick="return confirm('Run automated AI review now? This will process ALL pending bookings using the configured strictness and send notifications.');">
                     <i class="fas fa-play me-1"></i> Run Cron AI
                 </button>
             </form>
             <a href="cron_ai_settings.php" class="btn" style="border:1px solid #e2e8f0;background:#ffffff;color:#475569;font-weight:600;font-size:0.8rem;padding:0.35rem 0.75rem;border-radius:6px;">
-                <i class="fas fa-clock me-1" style="color:#7c3aed;"></i>
+                <i class="fas fa-clock me-1" style="color:#1a5a8c;"></i>
             </a>
             <a href="admin_dashboard.php" class="btn btn-action-view text-decoration-none text-dark">
                 <i class="fas fa-arrow-left me-2 small"></i>Console Workspace
@@ -936,7 +936,7 @@ $conn->close();
     <div id="aiPromptInfo" class="card border-0 shadow-sm mb-4 d-none" style="border:1px solid #e9d5ff !important;border-radius:10px;">
         <div class="card-body p-3">
             <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="mb-0 fw-bold" style="color:#7c3aed;"><i class="fas fa-robot me-2"></i>AI Strictness &amp; Temperature Guide</h6>
+                <h6 class="mb-0 fw-bold" style="color:#1a5a8c;"><i class="fas fa-robot me-2"></i>AI Strictness &amp; Temperature Guide</h6>
                 <button type="button" class="btn-close btn-sm" onclick="document.getElementById('aiPromptInfo').classList.add('d-none')"></button>
             </div>
             <div class="row g-3">
@@ -953,13 +953,13 @@ $conn->close();
                 </div>
                 <!-- Balanced -->
                 <div class="col-md-4">
-                    <div class="p-3 rounded-3 h-100" style="background:#faf5ff;border:1px solid #e9d5ff;">
+                    <div class="p-3 rounded-3 h-100" style="background:#eef3f8;border:1px solid #e9d5ff;">
                         <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="badge" style="background:#7c3aed;font-size:0.7rem;">Balanced</span>
+                            <span class="badge" style="background:#1a5a8c;font-size:0.7rem;">Balanced</span>
                             <span class="badge bg-dark font-monospace" style="font-size:0.65rem;">Temp: 0.20</span>
                         </div>
                         <p class="mb-1 small text-muted" style="font-size:0.8rem;"><strong>Prompt:</strong> Review each booking fairly. Time 06:00–22:00, facility type should match sport, coach should match where possible, valid contact details, duration up to 4 hours is fine.</p>
-                        <p class="mb-0 small" style="font-size:0.75rem;color:#7c3aed;"><i class="fas fa-thermometer-half me-1"></i>Moderate temperature = balanced, fair decisions</p>
+                        <p class="mb-0 small" style="font-size:0.75rem;color:#1a5a8c;"><i class="fas fa-thermometer-half me-1"></i>Moderate temperature = balanced, fair decisions</p>
                     </div>
                 </div>
                 <!-- Liberal -->
@@ -985,11 +985,11 @@ $conn->close();
 
     <!-- ── CUSTOM PROMPT EDITOR (shown only when Custom is selected) ────── -->
     <?php if ($current_strictness === 'Custom'): ?>
-    <div class="card border-0 shadow-sm mb-4" style="border:1px solid #e9d5ff !important;border-radius:10px;background:#faf5ff;">
+    <div class="card border-0 shadow-sm mb-4" style="border:1px solid #e9d5ff !important;border-radius:10px;background:#eef3f8;">
         <div class="card-body p-3">
             <div class="d-flex align-items-center gap-2 mb-2">
-                <i class="fas fa-pen-fancy" style="color:#7c3aed;"></i>
-                <h6 class="mb-0 fw-bold" style="color:#7c3aed;">Custom AI Prompt Editor</h6>
+                <i class="fas fa-pen-fancy" style="color:#1a5a8c;"></i>
+                <h6 class="mb-0 fw-bold" style="color:#1a5a8c;">Custom AI Prompt Editor</h6>
             </div>
             <p class="small text-muted mb-3">
                 Write your own AI review guidelines. The AI will follow these instructions instead of the predefined levels.
@@ -1022,7 +1022,7 @@ $conn->close();
                     </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <button type="submit" class="btn btn-sm" style="background:#7c3aed;color:#fff;font-weight:600;border:none;"
+                    <button type="submit" class="btn btn-sm" style="background:#1a5a8c;color:#fff;font-weight:600;border:none;"
                             onclick="return confirm('Save this custom prompt? This will replace your current AI review guidelines with the text above.');">
                         <i class="fas fa-save me-1"></i> Save Custom Prompt
                     </button>
@@ -1097,7 +1097,7 @@ $conn->close();
 
                             <?php if (!empty($ai_results)): ?>
                                 <div class="card border-0 shadow-sm mb-4" style="border: 1px solid #e2e8f0 !important; border-radius: 12px; overflow: hidden;">
-                                    <div class="px-4 py-3" style="background: linear-gradient(135deg, #7c3aed, #6366f1); color: #ffffff;">
+                                    <div class="px-4 py-3" style="background: linear-gradient(135deg, #1a5a8c, #1d5c8f); color: #ffffff;">
                                         <div class="d-flex align-items-center gap-2">
                                             <i class="fas fa-robot fa-lg"></i>
                                             <strong>Gemini AI Review Results</strong>
@@ -1109,7 +1109,7 @@ $conn->close();
                                             Review the AI suggestions below, then click "Apply Selected" to process them.
                                         </p>
                                     </div>
-                                    <div style="background: #faf5ff; border-bottom: 1px solid #e9d5ff;">
+                                    <div style="background: #eef3f8; border-bottom: 1px solid #e9d5ff;">
                                         <form method="post" class="m-0">
                                             <?php echo csrf_field('admin_csrf'); ?>
                                             <input type="hidden" name="action" value="apply_ai_results">
@@ -1153,7 +1153,7 @@ $conn->close();
                                                 </table>
                                             </div>
                                             <div class="p-3 d-flex justify-content-end gap-2" style="background: #ffffff; border-top: 1px solid #f1f5f9;">
-                                                <button type="submit" class="btn" style="background:#7c3aed;color:#ffffff;font-weight:600;font-size:0.85rem;padding:0.45rem 1.2rem;border-radius:6px;border:none;">
+                                                <button type="submit" class="btn" style="background:#1a5a8c;color:#ffffff;font-weight:600;font-size:0.85rem;padding:0.45rem 1.2rem;border-radius:6px;border:none;">
                                                     <i class="fas fa-check-double me-1"></i> Apply Selected (<?php echo count($ai_results); ?>)
                                                 </button>
                                             </div>

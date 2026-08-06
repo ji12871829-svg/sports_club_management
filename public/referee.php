@@ -306,7 +306,7 @@ $conn->close();
             gap: 10px;
         }
         .goal-btn:active { transform: scale(.95); filter: brightness(.85); }
-        .goal-btn-home { background: #2563eb; color: #fff; }
+        .goal-btn-home { background: #1d5c8f; color: #fff; }
         .goal-btn-away { background: #16a34a; color: #fff; }
 
         .undo-btn {
@@ -339,7 +339,7 @@ $conn->close();
             width: 100%;
             font-size: .95rem;
         }
-        .info-input:focus { outline: none; border-color: #3b82f6; }
+        .info-input:focus { outline: none; border-color: #2a6ba8; }
 
         .update-info-btn {
             background: #334155;

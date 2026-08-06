@@ -39,7 +39,7 @@ body {
     font-size: 8rem;
     font-weight: 800;
     line-height: 1;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #1d5c8f, #2a6ba8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -50,14 +50,14 @@ body {
     width: 80px;
     height: 80px;
     border-radius: 24px;
-    background: rgba(99, 102, 241, 0.15);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(20, 73, 122, 0.15);
+    border: 1px solid rgba(20, 73, 122, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 32px;
     font-size: 32px;
-    color: #818cf8;
+    color: #4a8cb9;
 }
 h1 {
     font-size: 1.8rem;
@@ -89,13 +89,13 @@ p {
     transition: all 0.2s ease;
 }
 .btn-primary {
-    background: #4f46e5;
+    background: #14497a;
     color: white;
 }
 .btn-primary:hover {
-    background: #4338ca;
+    background: #0e3a5f;
     transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 8px 20px rgba(20, 73, 122, 0.3);
 }
 .btn-outline {
     border: 1px solid rgba(255,255,255,0.15);

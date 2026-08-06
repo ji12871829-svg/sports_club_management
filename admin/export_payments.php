@@ -61,7 +61,7 @@ $conn->close();
 <div class="container-fluid py-4" style="max-width:680px;">
     <div class="d-flex align-items-center gap-3 mb-4">
         <div class="rounded-circle d-flex align-items-center justify-content-center"
-             style="width:48px;height:48px;background:#6366f1;">
+             style="width:48px;height:48px;background:#1d5c8f;">
             <i class="fas fa-file-csv text-white"></i>
         </div>
         <div>

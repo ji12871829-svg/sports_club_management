@@ -202,7 +202,7 @@ $conn->close();
 ?>
 
 <style>
-.badge-scheduled  { background:#3b82f6; }
+.badge-scheduled  { background:#2a6ba8; }
 .badge-completed  { background:#22c55e; }
 .badge-postponed  { background:#f59e0b; }
 .badge-cancelled  { background:#ef4444; }

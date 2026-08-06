@@ -129,7 +129,7 @@ $conn->close();
 .check-box.checked { background:#059669; border-color:#059669; color:#fff; }
 .progress-bar-event { height:8px; border-radius:4px; background:#e2e8f0; overflow:hidden; }
 .progress-fill { height:100%; background:linear-gradient(90deg,#059669,#10b981); transition:width .3s; border-radius:4px; }
-.btn-ai-cl { background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border:none; border-radius:8px; padding:.5rem 1rem; font-weight:600; font-size:.85rem; }
+.btn-ai-cl { background:linear-gradient(135deg,#14497a,#1a5a8c); color:#fff; border:none; border-radius:8px; padding:.5rem 1rem; font-weight:600; font-size:.85rem; }
 .btn-ai-cl:hover { opacity:.88; color:#fff; }
 .item-delete { color:#cbd5e1; cursor:pointer; padding:.25rem; border-radius:4px; transition:color .1s; flex-shrink:0; }
 .item-delete:hover { color:#ef4444; }

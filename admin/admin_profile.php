@@ -178,7 +178,7 @@ $conn->close();
     .brand-accent-line {
         width: 40px;
         height: 4px;
-        background-color: #2563eb;
+        background-color: #1d5c8f;
         border-radius: 2px;
         margin-bottom: 1rem;
     }
@@ -224,12 +224,12 @@ $conn->close();
     }
 
     .form-control-corporate:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: #1d5c8f;
+        box-shadow: 0 0 0 3px rgba(20, 73, 122, 0.1);
     }
 
     .btn-corporate-primary {
-        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        background: linear-gradient(135deg, #1d5c8f, #2a6ba8);
         color: #fff;
         border: none;
         border-radius: 8px;
@@ -338,7 +338,7 @@ $conn->close();
                 <span class="detail-label"><i class="fas fa-users-cog me-2 text-muted" style="width: 16px;"></i>Role</span>
                 <span class="detail-value">
                     <?php if ($admin_role): ?>
-                        <span class="badge" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff;">
+                        <span class="badge" style="background: linear-gradient(135deg, #1d5c8f, #2a6ba8); color:#fff;">
                             <i class="fas fa-tag me-1"></i><?php echo e($admin_role['name'] ?? 'Unassigned'); ?>
                         </span>
                         <?php if (!empty($admin_role['description'])): ?>

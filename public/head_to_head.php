@@ -27,7 +27,7 @@ foreach ($teams as $t) {
 <style>
 :root {
   --primary: #0f172a;
-  --accent: #2563eb;
+  --accent: #1d5c8f;
   --ui-border: #e2e8f0;
   --surface-bg: #ffffff;
   --workspace-bg: #f8fafc;

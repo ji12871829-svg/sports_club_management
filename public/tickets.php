@@ -194,8 +194,8 @@ include '../includes/header.php';
         border-radius: 6px;
     }
     .form-control-premium:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: #1d5c8f;
+        box-shadow: 0 0 0 3px rgba(20, 73, 122, 0.1);
         outline: none;
     }
     .total-display-box {
@@ -211,7 +211,7 @@ include '../includes/header.php';
         align-items: center;
     }
     .btn-premium-primary {
-        background-color: #2563eb;
+        background-color: #1d5c8f;
         color: #ffffff;
         font-weight: 600;
         border: none;
@@ -220,7 +220,7 @@ include '../includes/header.php';
         transition: background 0.15s ease;
     }
     .btn-premium-primary:hover {
-        background-color: #1d4ed8;
+        background-color: #14497a;
         color: #ffffff;
     }
     .btn-premium-outline {

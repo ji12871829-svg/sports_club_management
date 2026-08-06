@@ -189,8 +189,8 @@ include '../includes/header.php';
         cursor: pointer; transition: border-color .15s, box-shadow .15s;
         padding: 1.2rem; background: #fff;
     }
-    .plan-card:hover { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79,70,229,.07); }
-    .plan-card.selected { border-color: #4f46e5; background: #f5f3ff; }
+    .plan-card:hover { border-color: #14497a; box-shadow: 0 0 0 4px rgba(20,73,122,.07); }
+    .plan-card.selected { border-color: #14497a; background: #f0f4f9; }
     .plan-price { font-size: 1.4rem; font-weight: 700; color: #1e293b; }
     .plan-name  { font-weight: 600; color: #334155; }
     .plan-dur   { font-size: .78rem; color: #94a3b8; }
@@ -201,10 +201,10 @@ include '../includes/header.php';
         transition: border-color .15s, background .15s;
         background: #fff; text-align: center; font-weight: 600;
     }
-    .method-btn.active { border-color: #4f46e5; background: #f5f3ff; }
+    .method-btn.active { border-color: #14497a; background: #f0f4f9; }
     .method-mpesa.active { border-color: #00a550; background: #f0fdf4; }
     .btn-pay {
-        background: linear-gradient(135deg,#4f46e5,#6366f1);
+        background: linear-gradient(135deg,#14497a,#1d5c8f);
         color: #fff; border: none; border-radius: 9px;
         padding: .65rem 2rem; font-weight: 600;
         transition: opacity .15s;
@@ -231,7 +231,7 @@ include '../includes/header.php';
     </div>
 
     <?php if ($active): ?>
-    <div class="alert alert-info border-0 rounded-3 mb-4" style="background:#eff6ff;">
+    <div class="alert alert-info border-0 rounded-3 mb-4" style="background:#e8f1f8;">
         <i class="fas fa-info-circle me-2"></i>
         Your current plan <strong><?php echo e($active['plan_name']); ?></strong> expires on
         <strong><?php echo e(date('d M Y', strtotime($active['end_date']))); ?></strong>.

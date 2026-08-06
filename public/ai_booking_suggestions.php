@@ -210,7 +210,7 @@ include_once("../includes/header.php");
     .accent-glow {
         width: 48px;
         height: 4px;
-        background: linear-gradient(90deg, #7c3aed, #a78bfa);
+        background: linear-gradient(90deg, #1a5a8c, #7da8cf);
         border-radius: 2px;
         margin-bottom: 1rem;
     }
@@ -248,7 +248,7 @@ include_once("../includes/header.php");
         line-height: 1.6;
     }
     .btn-book {
-        background: #7c3aed;
+        background: #1a5a8c;
         color: #fff;
         font-weight: 600;
         font-size: 0.8rem;
@@ -258,12 +258,12 @@ include_once("../includes/header.php");
         transition: all 0.15s ease;
     }
     .btn-book:hover {
-        background: #6d28d9;
+        background: #14497a;
         color: #fff;
         transform: scale(1.02);
     }
     .btn-generate {
-        background: #7c3aed;
+        background: #1a5a8c;
         color: #fff;
         font-weight: 700;
         border: none;
@@ -273,10 +273,10 @@ include_once("../includes/header.php");
         transition: all 0.15s ease;
     }
     .btn-generate:hover {
-        background: #6d28d9;
+        background: #14497a;
         color: #fff;
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(124,58,237,0.3);
+        box-shadow: 0 6px 20px rgba(26,90,140,0.3);
     }
     .profile-stat {
         font-size: 0.75rem;
@@ -405,7 +405,7 @@ include_once("../includes/header.php");
         </h5>
         <div class="row g-4 mb-4">
             <?php foreach ($suggestions as $i => $s): 
-                $colors = ['#7c3aed', '#2563eb', '#16a34a'];
+                $colors = ['#1a5a8c', '#1d5c8f', '#16a34a'];
                 $color = $colors[$i % count($colors)];
                 // Map AI text responses to numeric IDs
                 $sid = $sport_map[strtolower(trim($s['sport'] ?? ''))] ?? 0;
@@ -443,7 +443,7 @@ include_once("../includes/header.php");
                             <form method="post" class="m-0 flex-grow-1">
                                 <input type="hidden" name="action" value="save_suggestion">
                                 <input type="hidden" name="data" value="<?php echo htmlspecialchars(json_encode($s)); ?>">
-                                <button type="submit" class="btn-book text-decoration-none text-center d-block w-100" style="background:transparent;color:#7c3aed;border:1px solid #7c3aed;">
+                                <button type="submit" class="btn-book text-decoration-none text-center d-block w-100" style="background:transparent;color:#1a5a8c;border:1px solid #1a5a8c;">
                                     <i class="far fa-bookmark me-1"></i> Save
                                 </button>
                             </form>
@@ -475,7 +475,7 @@ include_once("../includes/header.php");
     <div class="card card-suggest mt-4">
         <div class="card-header bg-white px-4 py-3 border-bottom d-flex justify-content-between align-items-center">
             <h6 class="fw-bold mb-0" style="font-size:0.9rem;"><i class="far fa-clock me-2" style="color:#64748b;"></i>Your Recent Bookings</h6>
-            <a href="view_bookings.php" class="text-decoration-none small fw-semibold" style="color:#7c3aed;">View All →</a>
+            <a href="view_bookings.php" class="text-decoration-none small fw-semibold" style="color:#1a5a8c;">View All →</a>
         </div>
         <div class="table-responsive">
             <table class="table align-middle mb-0" style="font-size:0.8rem;">

@@ -498,14 +498,14 @@ $conn->close();
     <?php if (!empty($ai_results)): ?>
     <div class="asc-dark-panel mb-4">
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h5 class="mb-0 fw-bold" style="color:#fff;"><i class="fas fa-robot me-2" style="color:#a5b4fc;"></i><?php echo !empty($ai_results['analysis']['risk_summary']) && str_contains($ai_results['analysis']['risk_summary'], 'Rule-based') ? 'Rule-based Retention Analysis' : 'AI Retention Analysis'; ?></h5>
+            <h5 class="mb-0 fw-bold" style="color:#fff;"><i class="fas fa-robot me-2" style="color:#7da8cf;"></i><?php echo !empty($ai_results['analysis']['risk_summary']) && str_contains($ai_results['analysis']['risk_summary'], 'Rule-based') ? 'Rule-based Retention Analysis' : 'AI Retention Analysis'; ?></h5>
             <span class="badge font-monospace" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);font-size:.72rem;">
                 <?php echo htmlspecialchars($ai_results['member_name']); ?>
             </span>
         </div>
         <p class="mb-3" style="color:rgba(226,232,240,.75);font-size:.88rem;line-height:1.5;max-width:70ch;"><?php echo htmlspecialchars($ai_results['analysis']['risk_summary'] ?? ''); ?></p>
         <?php if (!empty($ai_results['analysis']['retention_actions'])): ?>
-            <h6 class="fw-semibold mb-2" style="color:#a5b4fc;font-size:.82rem;">Recommended Actions</h6>
+            <h6 class="fw-semibold mb-2" style="color:#7da8cf;font-size:.82rem;">Recommended Actions</h6>
             <div class="asc-analysis-actions mb-3">
                 <?php foreach ($ai_results['analysis']['retention_actions'] as $action): ?>
                     <div class="asc-analysis-action">

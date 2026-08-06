@@ -51,7 +51,7 @@ if (str_contains($plan, 'gold') || str_contains($plan, 'premium') || str_contain
     $card_bg    = 'linear-gradient(135deg,#374151 0%,#6b7280 100%)';
     $badge_text = 'SILVER';
 } else {
-    $card_bg    = 'linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%)';
+    $card_bg    = 'linear-gradient(135deg,#1e3a5f 0%,#1d5c8f 100%)';
     $badge_text = 'MEMBER';
 }
 

@@ -73,7 +73,7 @@ $conn->close();
     .brand-accent-line {
         width: 40px;
         height: 4px;
-        background-color: #2563eb;
+        background-color: #1d5c8f;
         border-radius: 2px;
         margin-bottom: 1rem;
     }
@@ -129,8 +129,8 @@ $conn->close();
     }
 
     .form-select-corporate:focus, .form-control-corporate:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 1px #2563eb;
+        border-color: #1d5c8f;
+        box-shadow: 0 0 0 1px #1d5c8f;
         outline: 0;
     }
 
@@ -178,8 +178,8 @@ $conn->close();
     .time-badge {
         font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-weight: 600;
-        color: #2563eb;
-        background-color: #eff6ff;
+        color: #1d5c8f;
+        background-color: #e8f1f8;
         padding: 0.25rem 0.5rem;
         border-radius: 4px;
         font-size: 0.85rem;
@@ -200,12 +200,12 @@ $conn->close();
     }
 
     .btn-corporate-primary {
-        background-color: #2563eb;
+        background-color: #1d5c8f;
         color: #ffffff !important;
     }
 
     .btn-corporate-primary:hover {
-        background-color: #1d4ed8;
+        background-color: #14497a;
     }
 
     .btn-corporate-secondary {

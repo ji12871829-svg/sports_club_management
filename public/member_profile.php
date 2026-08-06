@@ -139,8 +139,8 @@ $initials = strtoupper(substr($member['first_name'], 0, 1) . substr($member['las
     }
 
     .tier-badge-premium {
-        background-color: #eff6ff;
-        color: #2563eb;
+        background-color: #e8f1f8;
+        color: #1d5c8f;
         font-weight: 700;
         font-size: 0.78rem;
         padding: 0.35rem 0.75rem;

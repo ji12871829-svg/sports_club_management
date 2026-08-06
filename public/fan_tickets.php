@@ -171,20 +171,20 @@ include '../includes/header.php';
         transition: all 0.2s ease;
     }
     .form-control-ticket:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        border-color: #1d5c8f;
+        box-shadow: 0 0 0 4px rgba(20, 73, 122, 0.1);
         background-color: #fff;
     }
     .btn-ticket-primary {
-        background: #2563eb;
-        border: 1px solid #2563eb;
+        background: #1d5c8f;
+        border: 1px solid #1d5c8f;
         color: #ffffff;
         border-radius: 8px;
         font-weight: 600;
         padding: 0.65rem 1.25rem;
         transition: all 0.15s ease;
     }
-    .btn-ticket-primary:hover { background: #1d4ed8; border-color: #1d4ed8; color: #ffffff; transform: translateY(-1px); }
+    .btn-ticket-primary:hover { background: #14497a; border-color: #14497a; color: #ffffff; transform: translateY(-1px); }
     .btn-ticket-outline {
         background: #ffffff;
         border: 1px solid #cbd5e1;
@@ -215,8 +215,8 @@ include '../includes/header.php';
         align-items: center;
     }
     .sport-badge {
-        background-color: #eff6ff;
-        color: #1d4ed8;
+        background-color: #e8f1f8;
+        color: #14497a;
         font-weight: 600;
         font-size: 0.75rem;
         padding: 0.35rem 0.75rem;
@@ -226,8 +226,8 @@ include '../includes/header.php';
     }
     .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: #64748b; }
     .sport-ticket-nav .btn { border-radius: 999px; font-weight: 600; }
-    .accordion-button:not(.collapsed) { background: #eff6ff; color: #1e40af; box-shadow: none; }
-    .accordion-button:focus { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .accordion-button:not(.collapsed) { background: #e8f1f8; color: #0e3a5f; box-shadow: none; }
+    .accordion-button:focus { box-shadow: 0 0 0 3px rgba(20, 73, 122, 0.15); }
 </style>
 
 <div class="container my-5">

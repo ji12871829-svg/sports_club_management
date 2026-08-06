@@ -144,12 +144,12 @@ include '../includes/header.php';
         transition: border-color .15s, background .15s;
         background: #fff;
     }
-    .coach-card:hover { border-color: #4f46e5; background: #f5f3ff; }
-    .coach-card.selected { border-color: #4f46e5; background: #f5f3ff; }
+    .coach-card:hover { border-color: #14497a; background: #f0f4f9; }
+    .coach-card.selected { border-color: #14497a; background: #f0f4f9; }
     .coach-card input[type=radio] { display: none; }
     .coach-avatar {
         width: 42px; height: 42px; border-radius: 50%;
-        background: linear-gradient(135deg,#4f46e5,#6366f1);
+        background: linear-gradient(135deg,#14497a,#1d5c8f);
         display: flex; align-items: center; justify-content: center;
         color: #fff; font-weight: 700; font-size: .95rem;
         flex-shrink: 0;
@@ -162,10 +162,10 @@ include '../includes/header.php';
         font-size: .9rem; padding: .55rem .85rem;
     }
     .form-control:focus, .form-select:focus {
-        border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+        border-color: #14497a; box-shadow: 0 0 0 3px rgba(20,73,122,.1);
     }
     .btn-book {
-        background: linear-gradient(135deg,#4f46e5,#6366f1);
+        background: linear-gradient(135deg,#14497a,#1d5c8f);
         color: #fff; border: none; border-radius: 9px;
         padding: .65rem 2rem; font-weight: 600;
     }

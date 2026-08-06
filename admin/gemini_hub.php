@@ -98,7 +98,7 @@ $shortcuts = [
         'text' => 'Win, draw, and loss analysis for upcoming fixtures.',
         'href' => 'ai_predictions.php',
         'icon' => 'fa-chart-line',
-        'color' => '#2563eb',
+        'color' => '#1d5c8f',
     ],
     [
         'title' => 'Match Reports',
@@ -112,7 +112,7 @@ $shortcuts = [
         'text' => 'Check API key, cURL, SSL, and Gemini connectivity.',
         'href' => 'gemini_test.php',
         'icon' => 'fa-plug',
-        'color' => '#7c3aed',
+        'color' => '#1a5a8c',
     ],
 ];
 

@@ -47,7 +47,7 @@
     margin: 0;
 }
 .md-card-title i {
-    color: #6366f1;
+    color: #1d5c8f;
     margin-right: 0.5rem;
 }
 .md-card .md-card-body {
@@ -77,10 +77,10 @@
     left: 30%; bottom: -110px;
     width: 220px; height: 220px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0) 70%);
+    background: radial-gradient(circle, rgba(42, 107, 168, 0.18) 0%, rgba(42, 107, 168, 0) 70%);
 }
 .md-banner h1 { font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.25rem; }
-.md-banner .md-banner-sub { color: #a5b4fc; font-size: 0.95rem; }
+.md-banner .md-banner-sub { color: #7da8cf; font-size: 0.95rem; }
 
 /* ── Summary stat cards ───────────────────────────────────────── */
 .md-stat {
@@ -102,7 +102,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 1.25rem;
 }
-.md-stat-icon-blue   { background: #eff6ff; color: #2563eb; }
+.md-stat-icon-blue   { background: #e8f1f8; color: #1d5c8f; }
 .md-stat-icon-amber  { background: #fffbeb; color: #d97706; }
 .md-stat-icon-green  { background: #ecfdf5; color: #059669; }
 .md-stat-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; color: #6b7280; text-transform: uppercase; }
@@ -110,7 +110,7 @@
 .md-stat-sub { font-size: 0.82rem; color: #6b7280; }
 .md-plan-badge {
     display: inline-block;
-    background: #eff6ff; color: #2563eb;
+    background: #e8f1f8; color: #1d5c8f;
     border: 1px solid #bfdbfe;
     border-radius: 8px;
     padding: 0.15rem 0.7rem;
@@ -150,7 +150,7 @@
 .md-pill-amber { background: #fef3c7; color: #b45309; }
 .md-pill-red   { background: #fee2e2; color: #b91c1c; }
 .md-pill-gray  { background: #f3f4f6; color: #6b7280; }
-.md-pill-blue  { background: #eef2ff; color: #4f46e5; }
+.md-pill-blue  { background: #e8f1f8; color: #14497a; }
 
 /* ── Activity timeline ────────────────────────────────────────── */
 .md-timeline { position: relative; padding-left: 1.25rem; }
@@ -177,7 +177,7 @@
     color: #6b7280;
     position: relative; z-index: 1;
 }
-.md-activity.booking  .md-activity-icon { color: #2563eb; background: #eff6ff; border-color: #dbeafe; }
+.md-activity.booking  .md-activity-icon { color: #1d5c8f; background: #e8f1f8; border-color: #d3e4f2; }
 .md-activity.payment  .md-activity-icon { color: #059669; background: #ecfdf5; border-color: #d1fae5; }
 .md-activity.ticket   .md-activity-icon { color: #d97706; background: #fffbeb; border-color: #fde68a; }
 .md-activity-ts { font-size: 0.72rem; font-weight: 600; color: #9ca3af; }
@@ -201,10 +201,10 @@
     text-decoration: none;
     transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
-.md-action i { color: #6366f1; width: 18px; text-align: center; font-size: 0.95rem; }
+.md-action i { color: #1d5c8f; width: 18px; text-align: center; font-size: 0.95rem; }
 .md-action:hover {
-    border-color: #c7d2fe;
-    color: #4f46e5;
+    border-color: #b8d2e8;
+    color: #14497a;
     background: #fafaff;
     transform: translateX(3px);
     text-decoration: none;
@@ -247,8 +247,8 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .md-input:focus, .md-select:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    border-color: #1d5c8f;
+    box-shadow: 0 0 0 3px rgba(20, 73, 122, 0.12);
     outline: 0;
 }
 .md-btn {
@@ -265,7 +265,7 @@
     transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 .md-btn:hover { text-decoration: none; transform: translateY(-1px); }
-.md-btn-primary { background: #2563eb; color: #fff !important; }
-.md-btn-primary:hover { background: #1d4ed8; color: #fff !important; }
+.md-btn-primary { background: #1d5c8f; color: #fff !important; }
+.md-btn-primary:hover { background: #14497a; color: #fff !important; }
 .md-btn-dark { background: #111827; color: #fff !important; }
 .md-btn-dark:hover { background: #1f2937; color: #fff !important; }

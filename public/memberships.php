@@ -63,10 +63,10 @@ $conn->close();
     .pricing-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 20px -6px rgba(16, 24, 40, 0.08);
-        border-color: #c7d2fe;
+        border-color: #b8d2e8;
     }
     .tier-title { font-size: 1.05rem; font-weight: 700; color: #111827; }
-    .tier-rate { font-size: 1.55rem; font-weight: 800; color: #2563eb; letter-spacing: -0.5px; }
+    .tier-rate { font-size: 1.55rem; font-weight: 800; color: #1d5c8f; letter-spacing: -0.5px; }
     .tier-duration { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; color: #6b7280; }
     .tier-description { font-size: 0.86rem; color: #6b7280; line-height: 1.5; }
 

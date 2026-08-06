@@ -157,7 +157,7 @@ $conn->close();
     .brand-accent-line {
         width: 40px;
         height: 4px;
-        background-color: #7c3aed;
+        background-color: #1a5a8c;
         border-radius: 2px;
         margin-bottom: 1rem;
     }
@@ -337,11 +337,11 @@ $conn->close();
         <div class="col-md-3">
             <div class="stat-card d-flex align-items-center gap-3">
                 <div class="rounded-circle d-flex align-items-center justify-content-center"
-                     style="width: 44px; height: 44px; background: #f3e8ff;">
-                    <i class="fas fa-robot text-purple-600" style="color:#7c3aed;"></i>
+                     style="width: 44px; height: 44px; background: #e2eaf3;">
+                    <i class="fas fa-robot text-purple-600" style="color:#1a5a8c;"></i>
                 </div>
                 <div>
-                    <div class="stat-value" style="color:#7c3aed;"><?php echo $total_count; ?></div>
+                    <div class="stat-value" style="color:#1a5a8c;"><?php echo $total_count; ?></div>
                     <div class="stat-label">Total Reviews</div>
                 </div>
             </div>
@@ -351,7 +351,7 @@ $conn->close();
     <!-- Filters -->
     <div class="corporate-block-wrapper mb-4">
         <div class="corporate-block-header">
-            <i class="fas fa-filter" style="color:#7c3aed;"></i> Filters
+            <i class="fas fa-filter" style="color:#1a5a8c;"></i> Filters
         </div>
         <div class="p-3">
             <form method="get" class="row g-3 align-items-end">
@@ -387,7 +387,7 @@ $conn->close();
                 </div>
                 <div class="col-md-1">
                     <button type="submit" class="btn btn-sm w-100"
-                            style="background:#7c3aed;color:#fff;border:none;font-weight:600;padding:0.45rem;border-radius:6px;">
+                            style="background:#1a5a8c;color:#fff;border:none;font-weight:600;padding:0.45rem;border-radius:6px;">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
@@ -405,7 +405,7 @@ $conn->close();
     <!-- Log Table -->
     <div class="corporate-block-wrapper">
         <div class="corporate-block-header">
-            <i class="fas fa-history text-purple-600" style="color:#7c3aed;"></i> Review History
+            <i class="fas fa-history text-purple-600" style="color:#1a5a8c;"></i> Review History
             <?php if (!empty($where_clauses)): ?>
                 <span class="badge bg-light text-dark font-monospace ms-auto small px-2 py-1" style="font-size:0.7rem;">
                     FILTERED
@@ -435,7 +435,7 @@ $conn->close();
                                 </td>
                                 <td>
                                     <a href="manage_bookings.php?booking_id=<?php echo (int)$log['booking_id']; ?>"
-                                       class="font-monospace text-decoration-none" style="color:#2563eb;font-weight:600;">
+                                       class="font-monospace text-decoration-none" style="color:#1d5c8f;font-weight:600;">
                                         #<?php echo (int)$log['booking_id']; ?>
                                     </a>
                                 </td>
@@ -475,7 +475,7 @@ $conn->close();
                                 <h5 class="fw-bold text-dark mb-1">No AI Reviews Yet</h5>
                                 <p class="mb-0 small text-muted">
                                     Run an AI review on the
-                                    <a href="manage_bookings.php" class="text-decoration-none fw-semibold" style="color:#7c3aed;">
+                                    <a href="manage_bookings.php" class="text-decoration-none fw-semibold" style="color:#1a5a8c;">
                                         Bookings page
                                     </a>
                                     to see results here.
@@ -531,7 +531,7 @@ $conn->close();
                     </ul>
                 </nav>
             <?php endif; ?>
-            <a href="manage_bookings.php" class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;font-weight:600;padding:0.4rem 1rem;border-radius:6px;">
+            <a href="manage_bookings.php" class="btn btn-sm" style="background:#1a5a8c;color:#fff;border:none;font-weight:600;padding:0.4rem 1rem;border-radius:6px;">
                 <i class="fas fa-arrow-left me-1"></i> Back to Bookings
             </a>
         </div>

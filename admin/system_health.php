@@ -91,10 +91,10 @@ $conn->close();
     <div class="row g-3 mb-4">
         <?php
         $items = [
-            ['Pending Bookings',    $pending_bookings,  'fa-calendar-check', '#3b82f6', 'manage_bookings.php'],
+            ['Pending Bookings',    $pending_bookings,  'fa-calendar-check', '#2a6ba8', 'manage_bookings.php'],
             ['Pending Payments',    $pending_payments,  'fa-credit-card',    '#f59e0b', 'manage_payments.php'],
             ['Open Damage Reports', $open_damage,       'fa-tools',          '#ef4444', 'manage_damage_reports.php'],
-            ['Memberships Expiring (7d)', $expiring_members, 'fa-clock',     '#8b5cf6', 'membership_reminders.php'],
+            ['Memberships Expiring (7d)', $expiring_members, 'fa-clock',     '#2a6ba8', 'membership_reminders.php'],
         ];
         foreach ($items as [$label, $count, $icon, $color, $link]):
         ?>

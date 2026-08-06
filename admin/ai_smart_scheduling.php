@@ -217,14 +217,14 @@ body { background-color: #f8fafc !important; color: #334155; font-family: -apple
 .card-smart { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all .15s ease; }
 .card-smart:hover { border-color: #cbd5e1; }
 .ai-badge { font-weight: 700; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 0.15rem 0.5rem; border-radius: 4px; }
-.suggestion-row { border-left: 4px solid #7c3aed; background: #faf5ff; padding: 0.75rem 1rem; border-radius: 8px; }
+.suggestion-row { border-left: 4px solid #1a5a8c; background: #eef3f8; padding: 0.75rem 1rem; border-radius: 8px; }
 .booking-row { border-left: 4px solid #e2e8f0; padding: 0.75rem 1rem; }
 </style>
 
 <div class="container-fluid my-4 px-md-4">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-3 border-bottom border-light">
         <div>
-            <h2 class="page-title mb-1"><i class="fas fa-robot me-2" style="color:#7c3aed;"></i>AI Smart Scheduling</h2>
+            <h2 class="page-title mb-1"><i class="fas fa-robot me-2" style="color:#1a5a8c;"></i>AI Smart Scheduling</h2>
             <p class="text-muted small mb-0">Intelligent coach & facility assignment for pending bookings using AI optimization.</p>
         </div>
         <div class="d-flex gap-2">
@@ -257,7 +257,7 @@ body { background-color: #f8fafc !important; color: #334155; font-family: -apple
                 <form method="post" class="m-0">
                     <?php echo csrf_field('admin_csrf'); ?>
                     <input type="hidden" name="action" value="get_schedule">
-                    <button type="submit" class="btn btn-sm" style="background:#7c3aed;color:#fff;font-weight:600;border:none;font-size:0.75rem;padding:0.35rem 0.9rem;border-radius:6px;">
+                    <button type="submit" class="btn btn-sm" style="background:#1a5a8c;color:#fff;font-weight:600;border:none;font-size:0.75rem;padding:0.35rem 0.9rem;border-radius:6px;">
                         <i class="fas fa-wand-magic-sparkles me-1"></i> Generate AI Schedule
                     </button>
                 </form>
@@ -315,7 +315,7 @@ body { background-color: #f8fafc !important; color: #334155; font-family: -apple
                                 <td>
                                     <?php if ($suggestion): ?>
                                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                                            <span class="ai-badge" style="background:#f3e8ff;color:#7c3aed;">
+                                            <span class="ai-badge" style="background:#e2eaf3;color:#1a5a8c;">
                                                 <i class="fas fa-user-check me-1"></i><?php echo htmlspecialchars($sug_coach_name); ?>
                                             </span>
                                             <form method="post" class="m-0">

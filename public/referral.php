@@ -76,11 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ref_action']) && csrf
 <p><strong>{$memberName}</strong> thinks you'd love <strong>Apex Sports Club</strong> and has personally invited you to join.</p>
 <p>Click below to register and use their referral code:</p>
 <div style='text-align:center;margin:1.5rem 0;'>
-    <a href='{$referralLink}' style='background:#4f46e5;color:#fff;padding:.75rem 2rem;border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem;'>
+    <a href='{$referralLink}' style='background:#14497a;color:#fff;padding:.75rem 2rem;border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem;'>
         Join Apex Sports Club →
     </a>
 </div>
-<p style='text-align:center;color:#64748b;'>Referral Code: <strong style='font-size:1.3rem;color:#4f46e5;letter-spacing:.15em;'>{$myCode}</strong></p>
+<p style='text-align:center;color:#64748b;'>Referral Code: <strong style='font-size:1.3rem;color:#14497a;letter-spacing:.15em;'>{$myCode}</strong></p>
 <p>As a new member, you'll get access to world-class facilities, expert coaching, and an amazing community.</p>
 <p>— The Apex Sports Club Team</p>
 ";
@@ -105,10 +105,10 @@ include_once '../includes/header.php';
 ?>
 
 <style>
-.ref-hero { background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); border-radius:16px; color:#fff; padding:2rem; margin-bottom:1.5rem; }
+.ref-hero { background:linear-gradient(135deg,#14497a 0%,#1a5a8c 100%); border-radius:16px; color:#fff; padding:2rem; margin-bottom:1.5rem; }
 .ref-card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:1.5rem; box-shadow:0 4px 20px rgba(0,0,0,.05); }
-.code-box { background:#eff6ff; border:2px dashed #bfdbfe; border-radius:12px; padding:1.5rem; text-align:center; }
-.referral-code { font-size:2.5rem; font-weight:900; letter-spacing:.2em; color:#4f46e5; font-family:monospace; }
+.code-box { background:#e8f1f8; border:2px dashed #bfdbfe; border-radius:12px; padding:1.5rem; text-align:center; }
+.referral-code { font-size:2.5rem; font-weight:900; letter-spacing:.2em; color:#14497a; font-family:monospace; }
 .stat-tile { border:1px solid #e2e8f0; border-radius:12px; padding:1rem 1.5rem; text-align:center; flex:1; }
 .stat-tile .num  { font-size:2rem; font-weight:800; }
 .stat-tile .lbl  { font-size:.75rem; color:#64748b; text-transform:uppercase; font-weight:600; }
@@ -116,10 +116,10 @@ include_once '../includes/header.php';
 .ref-row:last-child { border-bottom:none; }
 .status-badge { font-size:.75rem; font-weight:700; padding:.2rem .7rem; border-radius:12px; }
 .s-pending  { background:#fef3c7; color:#d97706; }
-.s-joined   { background:#dbeafe; color:#2563eb; }
+.s-joined   { background:#d3e4f2; color:#1d5c8f; }
 .s-rewarded { background:#dcfce7; color:#16a34a; }
-.btn-copy { border:1.5px solid #4f46e5; color:#4f46e5; background:#fff; border-radius:8px; padding:.45rem .9rem; font-size:.85rem; font-weight:600; cursor:pointer; transition:all .15s; }
-.btn-copy:hover { background:#4f46e5; color:#fff; }
+.btn-copy { border:1.5px solid #14497a; color:#14497a; background:#fff; border-radius:8px; padding:.45rem .9rem; font-size:.85rem; font-weight:600; cursor:pointer; transition:all .15s; }
+.btn-copy:hover { background:#14497a; color:#fff; }
 .btn-whatsapp { background:#25d366; color:#fff; border:none; border-radius:8px; padding:.45rem .9rem; font-size:.85rem; font-weight:600; }
 </style>
 

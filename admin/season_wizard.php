@@ -120,24 +120,24 @@ $conn->close();
 ?>
 
 <style>
-.wizard-hero { background:linear-gradient(135deg,#4338ca,#6366f1); color:#fff; border-radius:14px; padding:1.75rem 2rem; margin-bottom:1.5rem; }
+.wizard-hero { background:linear-gradient(135deg,#0e3a5f,#1d5c8f); color:#fff; border-radius:14px; padding:1.75rem 2rem; margin-bottom:1.5rem; }
 .wizard-card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:2rem; box-shadow:0 4px 20px rgba(0,0,0,.06); }
 .step-bar { display:flex; gap:0; margin-bottom:2rem; }
 .step-item { flex:1; text-align:center; position:relative; }
 .step-item::after { content:''; position:absolute; top:18px; left:50%; width:100%; height:2px; background:#e2e8f0; z-index:0; }
 .step-item:last-child::after { display:none; }
 .step-circle { width:36px; height:36px; border-radius:50%; border:2px solid #e2e8f0; background:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto .5rem; font-weight:700; font-size:.85rem; position:relative; z-index:1; transition:all .25s; }
-.step-item.active .step-circle { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+.step-item.active .step-circle { background:#14497a; border-color:#14497a; color:#fff; }
 .step-item.done .step-circle   { background:#059669; border-color:#059669; color:#fff; }
 .step-label { font-size:.72rem; color:#64748b; font-weight:600; }
-.step-item.active .step-label  { color:#4f46e5; }
+.step-item.active .step-label  { color:#14497a; }
 .step-panel { display:none; }
 .step-panel.active { display:block; animation: fadeIn .2s ease-out; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
 .team-checkbox { padding:.5rem .75rem; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; transition:all .15s; }
-.team-checkbox:has(input:checked) { border-color:#4f46e5; background:#eff6ff; }
+.team-checkbox:has(input:checked) { border-color:#14497a; background:#e8f1f8; }
 .fixture-row { background:#f8fafc; border-radius:6px; padding:.5rem .75rem; font-size:.85rem; }
-.btn-wizard-next { background:linear-gradient(135deg,#4f46e5,#6366f1); color:#fff; border:none; border-radius:10px; padding:.65rem 1.5rem; font-weight:700; }
+.btn-wizard-next { background:linear-gradient(135deg,#14497a,#1d5c8f); color:#fff; border:none; border-radius:10px; padding:.65rem 1.5rem; font-weight:700; }
 .btn-wizard-back { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; border-radius:10px; padding:.65rem 1.5rem; font-weight:700; }
 </style>
 

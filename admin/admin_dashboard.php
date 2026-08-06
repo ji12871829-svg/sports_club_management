@@ -747,15 +747,18 @@ $conn->close();
                 </div>
                 <div class="asc-rev-plot">
                     <svg class="asc-rev-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                        <line class="asc-rev-grid" x1="0" y1="33" x2="100" y2="33" />
+                        <line class="asc-rev-grid" x1="0" y1="66" x2="100" y2="66" />
                         <polyline points="<?php echo implode(' ', $line_points); ?>" />
                     </svg>
                     <div class="asc-rev-chart">
-                        <?php foreach ($monthly_revenue as $mr):
+                        <?php foreach ($monthly_revenue as $i => $mr):
                             $pct = round(($mr['total'] / $rev_max) * 100);
+                            $is_peak = $mr['total'] > 0 && $i === array_search($rev_max, array_column($monthly_revenue, 'total'));
                         ?>
                         <div class="asc-rev-col" title="<?php echo e(date('M Y', strtotime($mr['ym']))); ?>: KES <?php echo number_format($mr['total'], 0); ?>">
                             <div class="asc-rev-bar-track">
-                                <div class="asc-rev-bar-fill" style="height:<?php echo (int) $pct; ?>%;"></div>
+                                <div class="asc-rev-bar-fill <?php echo $is_peak ? 'asc-rev-peak' : ''; ?>" style="height:<?php echo (int) $pct; ?>%;"></div>
                             </div>
                         </div>
                         <?php endforeach; ?>

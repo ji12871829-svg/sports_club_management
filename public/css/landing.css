@@ -6,16 +6,16 @@
 /* ── 1. Design Tokens ───────────────────────────────────────────────────────────────────────────────── */
 :root {
   /* Brand */
-  --brand-50:  #eef2ff;
-  --brand-100: #e0e7ff;
-  --brand-200: #c7d2fe;
-  --brand-300: #a5b4fc;
-  --brand-400: #818cf8;
-  --brand-500: #6366f1;
-  --brand-600: #4f46e5;
-  --brand-700: #4338ca;
-  --brand-800: #3730a3;
-  --brand-900: #312e81;
+  --brand-50:  #e8f1f8;
+  --brand-100: #d3e4f2;
+  --brand-200: #b8d2e8;
+  --brand-300: #7da8cf;
+  --brand-400: #4a8cb9;
+  --brand-500: #1d5c8f;
+  --brand-600: #14497a;
+  --brand-700: #0e3a5f;
+  --brand-800: #0b2f4d;
+  --brand-900: #07223a;
 
   --accent-500: #38bdf8;
 
@@ -29,7 +29,7 @@
   --border-subtle:  rgba(255,255,255,0.06);
   --border-default: rgba(255,255,255,0.10);
   --border-strong:  rgba(255,255,255,0.18);
-  --border-brand:   rgba(99,102,241,0.35);
+  --border-brand:   rgba(29,92,143,0.35);
 
   /* Text */
   --text-primary:   #f8fafc;
@@ -44,13 +44,13 @@
   --info:    #38bdf8;
 
   /* Focus */
-  --focus-ring: 0 0 0 3px rgba(99,102,241,0.35);
+  --focus-ring: 0 0 0 3px rgba(29,92,143,0.35);
 
   /* Shadows */
   --shadow-sm:  0 1px 2px rgba(0,0,0,0.35);
   --shadow-md:  0 4px 12px rgba(0,0,0,0.4);
   --shadow-lg:  0 12px 32px rgba(0,0,0,0.5);
-  --shadow-glow: 0 0 40px rgba(99,102,241,0.15);
+  --shadow-glow: 0 0 40px rgba(29,92,143,0.15);
 
   /* Radius */
   --radius-sm:  6px;
@@ -290,13 +290,13 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-md);
   display: flex; align-items: center; justify-content: center;
   font-size: 0.95rem;
-  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  box-shadow: 0 4px 12px rgba(29,92,143,0.3);
   transition: transform var(--duration-fast) var(--easing-out),
               box-shadow var(--duration-fast) var(--easing-out);
 }
 .brand-public:hover .brand-icon-public {
   transform: scale(1.05) rotate(-3deg);
-  box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+  box-shadow: 0 6px 16px rgba(29,92,143,0.4);
 }
 
 .navbar-public .nav-link {
@@ -311,7 +311,7 @@ h1, h2, h3, h4, h5, h6 {
 .navbar-public .nav-link i { font-size: 0.85rem; color: var(--text-muted); transition: color var(--duration-fast); }
 .navbar-public .nav-link:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
 .navbar-public .nav-link:hover i { color: var(--brand-400); }
-.navbar-public .nav-link.active { color: var(--brand-300); background: rgba(99,102,241,0.12); font-weight: 600; }
+.navbar-public .nav-link.active { color: var(--brand-300); background: rgba(29,92,143,0.12); font-weight: 600; }
 .navbar-public .nav-link.active i { color: var(--brand-400); }
 
 .navbar-public .dropdown-menu {
@@ -333,7 +333,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: background var(--duration-fast), color var(--duration-fast), transform var(--duration-fast);
 }
 .navbar-public .dropdown-item:hover {
-  background: rgba(99,102,241,0.12);
+  background: rgba(29,92,143,0.12);
   color: var(--brand-300);
   transform: translateX(4px);
 }
@@ -357,7 +357,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all var(--duration-fast);
   border: 1.5px solid transparent;
 }
-.btn-nav-login:hover { background: rgba(99,102,241,0.12); color: var(--brand-300); border-color: var(--border-brand); }
+.btn-nav-login:hover { background: rgba(29,92,143,0.12); color: var(--brand-300); border-color: var(--border-brand); }
 
 .btn-nav-register {
   background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
@@ -365,12 +365,12 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600; font-size: 0.88rem;
   padding: var(--space-2) var(--space-5);
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  box-shadow: 0 4px 12px rgba(29,92,143,0.3);
   transition: all var(--duration-fast);
 }
 .btn-nav-register:hover {
   background: linear-gradient(135deg, var(--brand-600), var(--brand-800));
-  box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+  box-shadow: 0 6px 20px rgba(29,92,143,0.4);
   transform: translateY(-1px);
   color: white;
 }
@@ -419,7 +419,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Club Badge */
 .club-badge {
   display: inline-flex; align-items: center; gap: var(--space-2);
-  background: rgba(99,102,241,0.18);
+  background: rgba(29,92,143,0.18);
   border: 1px solid var(--border-brand);
   color: var(--brand-300);
   padding: var(--space-2) var(--space-4);
@@ -459,7 +459,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: var(--space-4) var(--space-6);
   border-radius: var(--radius-md);
   font-weight: 700; font-size: 1rem;
-  box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+  box-shadow: 0 8px 24px rgba(29,92,143,0.4);
   transition: all var(--duration-base) var(--easing-out);
   white-space: nowrap; text-decoration: none;
   display: inline-flex; align-items: center; gap: var(--space-2);
@@ -467,7 +467,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-hero-primary:hover {
   background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
   color: white; transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(99,102,241,0.5);
+  box-shadow: 0 12px 32px rgba(29,92,143,0.5);
 }
 .btn-hero-primary:active { transform: translateY(0) scale(0.98); }
 
@@ -560,7 +560,7 @@ h1, h2, h3, h4, h5, h6 {
 .feature-icon-wrap {
   width: 48px; height: 48px;
   border-radius: var(--radius-md);
-  background: rgba(99,102,241,0.15);
+  background: rgba(29,92,143,0.15);
   border: 1px solid var(--border-brand);
   display: flex; align-items: center; justify-content: center;
   color: var(--brand-300); font-size: 1.1rem;
@@ -568,7 +568,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all var(--duration-base) var(--easing-out);
 }
 .feature-card:hover .feature-icon-wrap {
-  background: rgba(99,102,241,0.25);
+  background: rgba(29,92,143,0.25);
   border-color: var(--brand-500);
   color: var(--brand-400);
   transform: scale(1.05);
@@ -647,7 +647,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.7rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--brand-400);
-  background: rgba(99,102,241,0.12);
+  background: rgba(29,92,143,0.12);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-full);
   margin-bottom: var(--space-3);
@@ -735,7 +735,7 @@ h1, h2, h3, h4, h5, h6 {
   content: '';
   position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   width: 600px; height: 600px;
-  background: radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(29,92,143,0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 .cta-content { position: relative; z-index: 1; text-align: center; max-width: 640px; margin: 0 auto; }

@@ -118,8 +118,8 @@ $conn->close();
         transition: border-color 0.15s ease;
     }
     .form-control-custom:focus {
-        border-color: #7c3aed;
-        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        border-color: #1a5a8c;
+        box-shadow: 0 0 0 3px rgba(20, 73, 122, 0.1);
     }
     .form-check-custom {
         width: 48px;
@@ -132,7 +132,7 @@ $conn->close();
         margin-top: 0.25rem;
     }
     .accent-purple {
-        color: #7c3aed;
+        color: #1a5a8c;
     }
     .cron-schedule-example {
         background: #f8fafc;
@@ -218,7 +218,7 @@ $conn->close();
                             <input class="form-check-input form-check-custom" type="checkbox" role="switch"
                                    id="enabled" name="enabled" value="1"
                                    <?php echo $cron_enabled === '1' ? 'checked' : ''; ?>
-                                   style="cursor:pointer;border-color:<?php echo $cron_enabled === '1' ? '#7c3aed' : '#cbd5e1'; ?>;">
+                                   style="cursor:pointer;border-color:<?php echo $cron_enabled === '1' ? '#1a5a8c' : '#cbd5e1'; ?>;">
                         </div>
                         <div>
                             <label for="enabled" class="form-label-custom mb-0" style="cursor:pointer;">
@@ -305,7 +305,7 @@ $conn->close();
                 <a href="manage_bookings.php" class="btn btn-sm" style="border:1px solid #e2e8f0;background:#fff;color:#475569;font-weight:600;padding:0.5rem 1.25rem;border-radius:6px;">
                     Cancel
                 </a>
-                <button type="submit" class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;font-weight:600;padding:0.5rem 1.25rem;border-radius:6px;">
+                <button type="submit" class="btn btn-sm" style="background:#1a5a8c;color:#fff;border:none;font-weight:600;padding:0.5rem 1.25rem;border-radius:6px;">
                     <i class="fas fa-save me-1"></i> Save Settings
                 </button>
             </div>
@@ -325,7 +325,7 @@ $conn->close();
             <form method="post" action="manage_bookings.php" class="d-inline">
                 <?php echo csrf_field('admin_csrf'); ?>
                 <input type="hidden" name="action" value="ai_cron_run_manual">
-                <button type="submit" class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;font-weight:600;padding:0.5rem 1.25rem;border-radius:6px;">
+                <button type="submit" class="btn btn-sm" style="background:#1a5a8c;color:#fff;border:none;font-weight:600;padding:0.5rem 1.25rem;border-radius:6px;">
                     <i class="fas fa-robot me-1"></i> Run AI Review Now
                 </button>
             </form>

@@ -111,7 +111,7 @@ $alreadyPaused = $pauseInfo && ($pauseInfo['pause_days_used'] ?? 0) > 0 && empty
 .pill-active { background:#dcfce7; color:#16a34a; }
 .pill-paused { background:#fef3c7; color:#d97706; }
 .days-slider { width:100%; }
-.days-display { font-size:2rem; font-weight:800; color:#4f46e5; }
+.days-display { font-size:2rem; font-weight:800; color:#14497a; }
 .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
 .info-row { background:#f8fafc; border-radius:8px; padding:.75rem 1rem; }
 .info-label { font-size:.72rem; text-transform:uppercase; font-weight:700; color:#64748b; margin-bottom:.2rem; }

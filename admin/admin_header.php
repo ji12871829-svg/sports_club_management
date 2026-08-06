@@ -75,7 +75,7 @@ if ($__admin_id > 0 && !in_array($current_page, ['admin_login.php','admin_logout
             echo '<!DOCTYPE html><html lang="en"><head><title>Access Denied - Apex Sports Club</title>';
             echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">';
             echo '<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">';
-            echo '<style>body{background:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;margin:0;}.error-card{background:white;border-radius:16px;padding:3rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.1);max-width:480px;margin:1rem;}.error-card .icon{font-size:3.5rem;color:#ef4444;margin-bottom:1rem;}.error-card h1{font-size:1.75rem;font-weight:700;color:#0f172a;margin-bottom:.5rem;}.error-card p{color:#64748b;margin-bottom:1.5rem;}.error-card .btn{background:#2563eb;color:white;border:none;border-radius:8px;padding:.6rem 1.5rem;text-decoration:none;font-weight:600;display:inline-block;}</style>';
+            echo '<style>body{background:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,sans-serif;margin:0;}.error-card{background:white;border-radius:16px;padding:3rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.1);max-width:480px;margin:1rem;}.error-card .icon{font-size:3.5rem;color:#ef4444;margin-bottom:1rem;}.error-card h1{font-size:1.75rem;font-weight:700;color:#0f172a;margin-bottom:.5rem;}.error-card p{color:#64748b;margin-bottom:1.5rem;}.error-card .btn{background:#1d5c8f;color:white;border:none;border-radius:8px;padding:.6rem 1.5rem;text-decoration:none;font-weight:600;display:inline-block;}</style>';
             echo '</head><body><div class="error-card">';
             echo '<div class="icon"><i class="fas fa-shield-halved"></i></div>';
             echo '<h1>Access Denied</h1>';
@@ -116,7 +116,7 @@ if (!$admin_initials) $admin_initials = 'A';
 <body>
 
 <!-- Skip to main content (accessibility) -->
-<a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 px-3 py-2 rounded-bottom" style="z-index:10000;background:#6366f1;color:#fff;font-weight:600;text-decoration:none;">Skip to content</a>
+<a href="#main-content" class="visually-hidden-focusable position-absolute top-0 start-0 m-2 px-3 py-2 rounded-bottom" style="z-index:10000;background:#1d5c8f;color:#fff;font-weight:600;text-decoration:none;">Skip to content</a>
 
 <!-- ══ Loading Overlay ══ -->
 <div id="page-loader">
@@ -200,7 +200,7 @@ document.addEventListener('keydown', function(e) {
 
 function highlightSearchItem(items, idx) {
     for (var i = 0; i < items.length; i++) {
-        items[i].style.background = (i === idx) ? '#eef2ff' : '';
+        items[i].style.background = (i === idx) ? '#e8f1f8' : '';
     }
     if (items[idx]) {
         items[idx].scrollIntoView({ block: 'nearest' });
@@ -362,7 +362,7 @@ function toggleTheme() {
                         <li><a class="dropdown-item <?php echo ($current_page == 'manage_maintenance.php') ? 'active' : ''; ?>" href="manage_maintenance.php"><i class="fas fa-tools"></i>Facility Maintenance</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item <?php echo ($current_page == 'todo_list.php') ? 'active' : ''; ?>" href="todo_list.php"><i class="fas fa-list-check"></i>To-Do List</a></li>
-                        <li><a class="dropdown-item <?php echo ($current_page == 'ai_smart_scheduling.php') ? 'active' : ''; ?>" href="ai_smart_scheduling.php"><i class="fas fa-wand-magic-sparkles" style="color:#7c3aed;"></i>AI Smart Scheduling <span class="badge bg-danger ms-1" style="font-size:0.5rem;">NEW</span></a></li>
+                        <li><a class="dropdown-item <?php echo ($current_page == 'ai_smart_scheduling.php') ? 'active' : ''; ?>" href="ai_smart_scheduling.php"><i class="fas fa-wand-magic-sparkles" style="color:#1a5a8c;"></i>AI Smart Scheduling <span class="badge bg-danger ms-1" style="font-size:0.5rem;">NEW</span></a></li>
                     </ul>
                 </li>
 

@@ -78,7 +78,7 @@ if ($todos_table_exists) {
 }
 $conn->close();
 
-$priorityColors = ['urgent'=>'#ef4444','high'=>'#f97316','medium'=>'#3b82f6','low'=>'#94a3b8'];
+$priorityColors = ['urgent'=>'#ef4444','high'=>'#f97316','medium'=>'#2a6ba8','low'=>'#94a3b8'];
 $priorityLabels = ['urgent'=>'Urgent','high'=>'High','medium'=>'Medium','low'=>'Low'];
 ?>
 
@@ -98,7 +98,7 @@ $priorityLabels = ['urgent'=>'Urgent','high'=>'High','medium'=>'Medium','low'=>'
 .btn-status { font-size:.75rem; border-radius:6px; padding:.2rem .6rem; border:1px solid #e2e8f0; background:#f8fafc; cursor:pointer; transition:all .1s; }
 .btn-status:hover { background:#e2e8f0; }
 .col-count { background:rgba(0,0,0,.08); border-radius:10px; padding:.1rem .5rem; font-size:.75rem; font-weight:700; }
-.btn-ai { background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border:none; border-radius:8px; padding:.5rem 1rem; font-size:.85rem; font-weight:600; transition:opacity .15s; }
+.btn-ai { background:linear-gradient(135deg,#14497a,#1a5a8c); color:#fff; border:none; border-radius:8px; padding:.5rem 1rem; font-size:.85rem; font-weight:600; transition:opacity .15s; }
 .btn-ai:hover { opacity:.88; color:#fff; }
 </style>
 
@@ -132,7 +132,7 @@ $priorityLabels = ['urgent'=>'Urgent','high'=>'High','medium'=>'Medium','low'=>'
     <div class="row g-3">
         <?php
         $cols = [
-            'open'        => ['label'=>'Open', 'icon'=>'fa-circle-dot', 'color'=>'#3b82f6'],
+            'open'        => ['label'=>'Open', 'icon'=>'fa-circle-dot', 'color'=>'#2a6ba8'],
             'in_progress' => ['label'=>'In Progress', 'icon'=>'fa-spinner', 'color'=>'#f97316'],
             'done'        => ['label'=>'Done', 'icon'=>'fa-circle-check', 'color'=>'#059669'],
         ];
@@ -218,7 +218,7 @@ $priorityLabels = ['urgent'=>'Urgent','high'=>'High','medium'=>'Medium','low'=>'
 <div class="modal fade" id="aiModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;">
+      <div class="modal-header" style="background:linear-gradient(135deg,#14497a,#1a5a8c);color:#fff;">
         <h5 class="modal-title"><i class="fas fa-wand-magic-sparkles me-2"></i>AI Suggested Tasks</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
@@ -275,7 +275,7 @@ async function aiSuggest() {
     const data = await res.json();
     const body = document.getElementById('aiModalBody');
     if (data.success && data.tasks) {
-        const pColors = {urgent:'#ef4444',high:'#f97316',medium:'#3b82f6',low:'#94a3b8'};
+        const pColors = {urgent:'#ef4444',high:'#f97316',medium:'#2a6ba8',low:'#94a3b8'};
         let html = '<div class="d-flex flex-column gap-2">';
         data.tasks.forEach((t,i) => {
             const pc = pColors[t.priority] || '#94a3b8';

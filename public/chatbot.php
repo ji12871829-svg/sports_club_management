@@ -110,12 +110,12 @@ include_once '../includes/header.php';
     }
 
     .chat-hero {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        background: linear-gradient(135deg, #14497a 0%, #1a5a8c 100%);
         border-radius: 16px;
         color: #fff;
         padding: 1.75rem 2rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 8px 30px rgba(79,70,229,.3);
+        box-shadow: 0 8px 30px rgba(20,73,122,.3);
     }
 
     .chat-hero h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
@@ -152,7 +152,7 @@ include_once '../includes/header.php';
         font-size: .85rem;
         flex-shrink: 0;
     }
-    .msg-avatar.ai   { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
+    .msg-avatar.ai   { background: linear-gradient(135deg, #14497a, #1a5a8c); color: #fff; }
     .msg-avatar.user { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #fff; }
 
     .msg-bubble {
@@ -163,7 +163,7 @@ include_once '../includes/header.php';
         line-height: 1.55;
     }
     .msg-bubble.ai   { background: #f1f5f9; color: #1e293b; border-bottom-left-radius: 4px; }
-    .msg-bubble.user { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; border-bottom-right-radius: 4px; }
+    .msg-bubble.user { background: linear-gradient(135deg, #14497a, #1a5a8c); color: #fff; border-bottom-right-radius: 4px; }
 
     .msg-time { font-size: .72rem; color: #94a3b8; margin-top: .25rem; }
 
@@ -201,10 +201,10 @@ include_once '../includes/header.php';
         max-height: 120px;
         overflow-y: auto;
     }
-    .chat-textarea:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+    .chat-textarea:focus { outline: none; border-color: #14497a; box-shadow: 0 0 0 3px rgba(20,73,122,.12); }
 
     .btn-send {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        background: linear-gradient(135deg, #14497a, #1a5a8c);
         color: #fff;
         border: none;
         border-radius: 12px;
@@ -221,9 +221,9 @@ include_once '../includes/header.php';
         display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem;
     }
     .chip {
-        background: #eff6ff;
+        background: #e8f1f8;
         border: 1px solid #bfdbfe;
-        color: #2563eb;
+        color: #1d5c8f;
         font-size: .8rem;
         font-weight: 600;
         padding: .35rem .8rem;
@@ -232,7 +232,7 @@ include_once '../includes/header.php';
         transition: all .15s;
         user-select: none;
     }
-    .chip:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .chip:hover { background: #1d5c8f; color: #fff; border-color: #1d5c8f; }
 
     .chat-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; }
     .msg-count { font-size: .78rem; color: #94a3b8; }

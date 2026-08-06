@@ -58,7 +58,7 @@ function render_feed_items($conn) {
                    af.member_id,
                    af.link_url,
                    COALESCE(NULLIF(af.icon, ''), 'AI') AS icon,
-                   COALESCE(NULLIF(af.color, ''), '#2563eb') AS color
+                   COALESCE(NULLIF(af.color, ''), '#1d5c8f') AS color
             FROM activity_feed af
             LEFT JOIN fixtures f ON f.fixture_id = af.fixture_id
             LEFT JOIN leagues l ON l.league_id = f.league_id
@@ -110,7 +110,7 @@ function render_feed_items($conn) {
         LIMIT 15
     ")->fetch_all(MYSQLI_ASSOC);
     foreach ($new_members as $nm) {
-        $feed[] = array_merge($nm, ['icon'=>'👋', 'color'=>'#3b82f6']);
+        $feed[] = array_merge($nm, ['icon'=>'👋', 'color'=>'#2a6ba8']);
     }
 
     // 4. MOTM leaders 
@@ -247,7 +247,7 @@ body { background-color: var(--workspace-bg) !important; }
     transform: translateX(4px); 
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
-.hover-accent:hover { color: #2563eb !important; text-decoration: underline !important; }
+.hover-accent:hover { color: #1d5c8f !important; text-decoration: underline !important; }
 .feed-icon { font-size: 1.35rem; min-width: 40px; text-align: center; }
 .feed-time { font-size: .7rem; color: #94a3b8; letter-spacing: 0.5px; }
 .feed-body {

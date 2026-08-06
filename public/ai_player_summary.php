@@ -130,7 +130,7 @@ include_once '../includes/header.php';
 .stat-pill .lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: rgba(255,255,255,.6); }
 .summary-card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; box-shadow:0 4px 20px rgba(0,0,0,.05); }
 .summary-text { line-height: 1.75; font-size: .95rem; color: #334155; white-space: pre-wrap; }
-.ai-badge { background: linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; font-size:.72rem; font-weight:700; padding:.2rem .6rem; border-radius:20px; }
+.ai-badge { background: linear-gradient(135deg,#14497a,#1a5a8c); color:#fff; font-size:.72rem; font-weight:700; padding:.2rem .6rem; border-radius:20px; }
 .btn-generate { background: linear-gradient(135deg, #059669, #10b981); color:#fff; border:none; border-radius:10px; padding:.7rem 1.5rem; font-weight:700; transition: all .15s; }
 .btn-generate:hover { opacity:.9; transform:translateY(-1px); color:#fff; }
 </style>

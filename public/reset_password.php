@@ -90,7 +90,7 @@ include_once '../includes/header.php';
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
         overflow: hidden;
     }
-    .auth-accent { height: 6px; background: linear-gradient(90deg, #2563eb, #3b82f6); }
+    .auth-accent { height: 6px; background: linear-gradient(90deg, #1d5c8f, #2a6ba8); }
 </style>
 
 <div class="container py-5">

@@ -214,8 +214,8 @@ $reset_url  = 'payments_overview.php';
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm p-4">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:44px;height:44px;background:#6366f120;">
-                        <i class="fas fa-coins" style="color:#6366f1;"></i>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:44px;height:44px;background:#1d5c8f20;">
+                        <i class="fas fa-coins" style="color:#1d5c8f;"></i>
                     </div>
                     <div>
                         <div class="fw-bold fs-5">KES <?php echo number_format($total_all, 2); ?></div>

@@ -136,7 +136,7 @@ include '../includes/header.php';
     }
     .ach-progress-bar {
         height: 100%; border-radius: 20px;
-        background: linear-gradient(90deg, #4f46e5, #6366f1);
+        background: linear-gradient(90deg, #14497a, #1d5c8f);
     }
     .empty-state {
         text-align: center; padding: 3rem 1rem; color: #94a3b8;

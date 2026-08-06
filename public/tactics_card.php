@@ -184,7 +184,7 @@ $formationPositions = [
         <div class="tactics-output">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold mb-0">Tactics Brief</h5>
-                <span class="badge" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);font-size:.72rem;" id="formBadge">4-4-2</span>
+                <span class="badge" style="background:linear-gradient(135deg,#14497a,#1a5a8c);font-size:.72rem;" id="formBadge">4-4-2</span>
             </div>
             <div id="tacticsContent">
                 <div class="text-center py-5 text-muted">

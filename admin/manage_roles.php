@@ -167,7 +167,7 @@ $conn->close();
     .brand-accent-line {
         width: 40px;
         height: 4px;
-        background-color: #2563eb;
+        background-color: #1d5c8f;
         border-radius: 2px;
         margin-bottom: 1rem;
     }
@@ -206,12 +206,12 @@ $conn->close();
         transition: all 0.15s ease;
     }
     .form-control:focus, .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: #1d5c8f;
+        box-shadow: 0 0 0 3px rgba(20, 73, 122, 0.1);
         outline: 0;
     }
     .btn-primary-custom {
-        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        background: linear-gradient(135deg, #1d5c8f, #2a6ba8);
         color: #fff;
         border: none;
         border-radius: 8px;

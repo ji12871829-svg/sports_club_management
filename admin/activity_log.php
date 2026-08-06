@@ -71,8 +71,8 @@ $conn->close();
 
 // Module → icon + color map
 $module_style = [
-    'Auth'          => ['icon' => 'fa-key',           'color' => '#8b5cf6'],
-    'Members'       => ['icon' => 'fa-users',          'color' => '#3b82f6'],
+    'Auth'          => ['icon' => 'fa-key',           'color' => '#2a6ba8'],
+    'Members'       => ['icon' => 'fa-users',          'color' => '#2a6ba8'],
     'Fixtures'      => ['icon' => 'fa-calendar-alt',   'color' => '#f59e0b'],
     'Payments'      => ['icon' => 'fa-credit-card',    'color' => '#10b981'],
     'Bookings'      => ['icon' => 'fa-book',           'color' => '#06b6d4'],

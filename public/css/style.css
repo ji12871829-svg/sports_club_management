@@ -67,7 +67,7 @@ body {
 
 .brand-public:hover .brand-icon-public {
     transform: scale(1.05) rotate(-3deg);
-    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+    box-shadow: 0 6px 16px rgba(20, 73, 122, 0.4);
 }
 
 /* ── Nav Links ─────────────────────────────────────────────── */
@@ -91,22 +91,22 @@ body {
 }
 
 .navbar-public .nav-link:hover {
-    color: #4f46e5;
+    color: #14497a;
     background-color: #f1f5f9;
 }
 
 .navbar-public .nav-link:hover i {
-    color: #6366f1;
+    color: #1d5c8f;
 }
 
 .navbar-public .nav-link.active {
-    color: #4f46e5;
-    background-color: #eef2ff;
+    color: #14497a;
+    background-color: #e8f1f8;
     font-weight: 600;
 }
 
 .navbar-public .nav-link.active i {
-    color: #6366f1;
+    color: #1d5c8f;
 }
 
 .navbar-public .nav-link.active::after {
@@ -114,7 +114,7 @@ body {
     position: absolute;
     bottom: 2px; left: 50%;
     width: 18px; height: 2.5px;
-    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    background: linear-gradient(90deg, #14497a, #1a5a8c);
     border-radius: 2px;
     transform: translateX(-50%);
 }
@@ -150,7 +150,7 @@ body {
 
 .navbar-public .dropdown-item:hover {
     background-color: #f1f5f9;
-    color: #4f46e5;
+    color: #14497a;
     transform: translateX(3px);
 }
 
@@ -162,7 +162,7 @@ body {
 }
 
 .navbar-public .dropdown-item:hover i {
-    color: #6366f1;
+    color: #1d5c8f;
 }
 
 .dropdown-header-custom {
@@ -181,7 +181,7 @@ body {
 
 /* ── Auth Buttons ──────────────────────────────────────────── */
 .btn-login {
-    color: #4f46e5;
+    color: #14497a;
     font-weight: 600;
     font-size: 0.88rem;
     padding: 0.4rem 1rem;
@@ -191,26 +191,26 @@ body {
 }
 
 .btn-login:hover {
-    background-color: #eef2ff;
-    color: #4338ca;
-    border-color: #c7d2fe;
+    background-color: #e8f1f8;
+    color: #0e3a5f;
+    border-color: #b8d2e8;
 }
 
 .btn-register {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #14497a 0%, #1a5a8c 100%);
     color: white;
     border: none;
     font-weight: 600;
     font-size: 0.88rem;
     padding: 0.5rem 1.2rem;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(20, 73, 122, 0.3);
     transition: all 0.2s;
 }
 
 .btn-register:hover {
-    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+    background: linear-gradient(135deg, #0e3a5f 0%, #1d5c8f 100%);
+    box-shadow: 0 6px 20px rgba(20, 73, 122, 0.4);
     color: white;
     transform: translateY(-1px);
 }
@@ -278,7 +278,7 @@ body {
 .public-loader-spinner {
     width: 44px; height: 44px;
     border: 3.5px solid #e2e8f0;
-    border-top-color: #4f46e5;
+    border-top-color: #14497a;
     border-radius: 50%;
     animation: public-spin 0.75s linear infinite;
 }
@@ -307,7 +307,7 @@ body {
     transition: color 0.15s ease;
 }
 .breadcrumb-public .breadcrumb-item a:hover {
-    color: #4f46e5;
+    color: #14497a;
 }
 .breadcrumb-public .breadcrumb-item.active {
     color: #1e293b;
@@ -401,7 +401,7 @@ body {
     font-weight: 800;
     font-size: 1.25rem;
     letter-spacing: 0.14em;
-    color: #1e3a8a;
+    color: #0b2f4d;
 }
 .portal-brand-sub {
     font-size: 0.62rem;
@@ -433,7 +433,7 @@ body {
 .portal-search:focus {
     outline: none;
     background: #fff;
-    box-shadow: 0 0 0 2px #c7d2fe;
+    box-shadow: 0 0 0 2px #b8d2e8;
 }
 .portal-search-wrap i {
     position: absolute;
@@ -459,7 +459,7 @@ body {
 }
 .portal-bell:hover {
     background: #f3f4f6;
-    color: #1e3a8a;
+    color: #0b2f4d;
 }
 .portal-bell-dot {
     position: absolute;
@@ -491,7 +491,7 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2563eb 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, #1d5c8f 0%, #0e3a5f 100%);
     color: #fff;
     font-weight: 700;
     font-size: 0.8rem;

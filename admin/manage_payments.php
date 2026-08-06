@@ -123,7 +123,7 @@ $conn->close();
     /* Custom Color Accents */
     .accent-total { background-color: #f1f5f9; color: #334155; }
     .accent-mpesa { background-color: #ecfdf5; color: #059669; }
-    .accent-paystack { background-color: #e0e7ff; color: #4f46e5; }
+    .accent-paystack { background-color: #d3e4f2; color: #14497a; }
     .accent-cash { background-color: #fff7ed; color: #ea580c; }
 
     /* Modern Card Layouts */
@@ -133,11 +133,11 @@ $conn->close();
     /* Styled Form Inputs */
     .form-label-custom { font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; }
     .form-control-modern, .form-select-modern { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.65rem 1rem; font-size: 0.95rem; color: #1e293b; transition: all 0.2s; }
-    .form-control-modern:focus, .form-select-modern:focus { background-color: #fff; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); outline: none; }
+    .form-control-modern:focus, .form-select-modern:focus { background-color: #fff; border-color: #1d5c8f; box-shadow: 0 0 0 4px rgba(20, 73, 122, 0.1); outline: none; }
     
     /* Buttons */
-    .btn-indigo-premium { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #fff; border: none; border-radius: 10px; padding: 0.7rem 1.5rem; font-weight: 500; transition: all 0.2s; }
-    .btn-indigo-premium:hover { background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%); color: #fff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
+    .btn-indigo-premium { background: linear-gradient(135deg, #14497a 0%, #1d5c8f 100%); color: #fff; border: none; border-radius: 10px; padding: 0.7rem 1.5rem; font-weight: 500; transition: all 0.2s; }
+    .btn-indigo-premium:hover { background: linear-gradient(135deg, #0e3a5f 0%, #14497a 100%); color: #fff; box-shadow: 0 4px 12px rgba(20, 73, 122, 0.25); }
     
     /* Table Enhancements */
     .table-modern thead th { background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem 1.5rem; }
@@ -146,7 +146,7 @@ $conn->close();
     /* Badges */
     .badge-premium { padding: 0.45em 0.75em; font-size: 0.8rem; font-weight: 600; border-radius: 8px; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.35rem; }
     .badge-mpesa { background-color: #e6fbf1; color: #065f46; border-color: #a7f3d0; }
-    .badge-paystack { background-color: #edf2ff; color: #3730a3; border-color: #c7d2fe; }
+    .badge-paystack { background-color: #e8f1f8; color: #14497a; border-color: #b8d2e8; }
     .badge-cash { background-color: #f8fafc; color: #334155; border-color: #e2e8f0; }
     
     .search-wrapper { position: relative; max-width: 320px; width: 100%; }

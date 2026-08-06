@@ -331,7 +331,7 @@ function asc_publish_match_report_by_fixture(mysqli $conn, int $fixtureId, ?int 
     $description = $report['body'];
     $eventType = 'match_report';
     $icon = 'AI';
-    $color = '#2563eb';
+    $color = '#1d5c8f';
     $linkUrl = 'fixture_detail.php?id=' . $fixtureId;
     $memberId = null;
 
