@@ -1,6 +1,6 @@
 # Apex Sports Club — System Design & Quality Audit (v2.0 Re-Run)
 
-**Date:** August 5, 2026
+**Date:** August 6, 2026 (blocker-closure update on top of the Aug 5 v2.0 re-run)
 **Scope:** Full codebase re-audit against the v2.0 Master Evaluation prompt, following the payment/security/perf rounds merged through `0cbbb8c`.
 **Baseline:** Last full audit (v1.0) produced `PRR.md` (PASS-WITH-RISKS), `THREAT_MODEL.md`, `SECURITY_AUDIT.md`.
 **Method:** Static review of the live repo (223 PHP files, 61 migrations), CI workflows, existing tests, and the audit documents; dynamic verification of key checks via `public/health.php` and the admin panel.
@@ -15,10 +15,10 @@
 | Security | ✅ Strong (see §3) — all STRIDE open actions closed |
 | Payments | ✅ Webhook-signed, idempotent, monitored (see §4) |
 | Data integrity | ✅ ACID payments, unique provider references, migration chain verified |
-| Performance | ⚠️ Good; no load-test evidence yet |
-| Testing | ✅ 32 PHPUnit tests + smoke harness + 6-job CI |
+| Performance | ✅ p95 132–288 ms @ 50 concurrent (`output/load_test/report_20260806_230148.md`) |
+| Testing | ✅ 32 PHPUnit tests + smoke harness + 8-job CI (incl. feature-flagged deploy) |
 | Compliance | ⚠️ DPA addressed; PCI not formally attested |
-| **PRR sign-off** | ❌ **Not ready** — 4 concrete blockers remain (see §9) |
+| **PRR sign-off** | ⚠️ **Close** — all 4 operational blockers closed; CI-green-7-runs + lead sign-off remain (see §9) |
 
 **One-line verdict:** Production-hardening is effectively complete; what blocks sign-off is **operational evidence** (backup restore, load tests, env parity, staged deploy), not missing code.
 
@@ -74,7 +74,7 @@ All previously-open THREAT_MODEL actions are **closed** and code-verified this r
 | Indexes | Migration 055 covers WHERE/JOIN/ORDER BY; unique index 061 |
 | Assets | `asc_asset()` filemtime cache-busting; HTTP/2 config in prod compose |
 | Concurrency | Booking `SELECT ... FOR UPDATE`; renewal cron `GET_LOCK` |
-| **Load evidence** | ❌ **None captured** — no `ab`/k6 run, no p95 data |
+| **Load evidence** | ✅ **Captured** — `bin/load_test.sh` (ApacheBench): homepage p95 176 ms, login 288 ms, registration 132 ms @ 50 concurrent, 0 failed; report in `output/load_test/` (git-ignored) |
 
 ---
 
@@ -91,7 +91,7 @@ All previously-open THREAT_MODEL actions are **closed** and code-verified this r
 
 - Observability: ⚠️ request profiler + health endpoints + security events, but no structured logs/tracing/metrics stack.
 - Compliance: Kenya DPA addressed (privacy policy, consent, deletion flow); no card data stored (PCI scope minimal); field-level encryption of PII ❌ not implemented.
-- Operations: backup/restore ❌ not scripted or tested; single-server no failover; no SLOs/error budgets.
+- Operations: backup/restore ✅ scripted (`bin/backup.sh`/`bin/restore.sh`) and drill-verified (120 tables, exact row parity); env parity ✅ `APP_ENV` + `.env.{env}` overlays; staged deploy ✅ feature-flagged CI job; single-server no failover; no SLOs/error budgets.
 
 ---
 
@@ -110,14 +110,14 @@ All previously-open THREAT_MODEL actions are **closed** and code-verified this r
 
 The code is in good shape; these are the **documented PRR sign-off criteria still unmet** (all operational/verification items — no critical code gaps found):
 
-| # | Blocker | What it takes | Effort |
+| # | Blocker | Status | Evidence |
 |---|---|---|---|
-| 1 | **No backup restore verification** | `bin/backup.sh` (mysqldump + uploads/) and `bin/restore.sh` + a documented restore drill; run it once and record output | S |
-| 2 | **No load-test evidence** | Run ApacheBench/k6 against a local/staging deploy: p95 < 2 s at 50 concurrent users; save the report (e.g. `output/load_test/`) | M |
-| 3 | **No env parity (dev/staging/prod)** | Add `APP_ENV` and per-env config overlays (or at minimum document single-env limitation); keep secrets in `.env` only | M |
-| 4 | **No staged CI/CD to a live host** | Wire deploy job (e.g. rsync/SCP to cPanel or the prod compose stack) + required checks; enable staging security-smoke with secrets | M |
-| 5 | *CI green 7 consecutive runs* | Operational — pending repo activity | — |
-| 6 | *PRR sign-off by lead developer* | Human step | — |
+| 1 | **No backup restore verification** | ✅ **Closed** | `bin/backup.sh` + `bin/restore.sh`; live drill: 120 tables backed up, restored into scratch DB, exact row-count parity (members 682, payments 8, bookings 8, plans 5) |
+| 2 | **No load-test evidence** | ✅ **Closed** | `bin/load_test.sh` (ApacheBench @ 50 concurrent): homepage p95 176 ms, login 288 ms, registration 132 ms, 0 failed → `output/load_test/report_20260806_230148.md` |
+| 3 | **No env parity (dev/staging/prod)** | ✅ **Closed** | `APP_ENV` (development/staging/production) + `.env.{env}` overlay loader in `config/api_config.php` (overrides win over base `.env`); committed `.env.example`; secrets stay in git-ignored `.env` |
+| 4 | **No staged CI/CD to a live host** | ✅ **Closed (feature-flagged)** | `deploy` job in `.github/workflows/ci.yml`: rsync + migration run + optional health check on main, gated on `DEPLOY_HOST`/`DEPLOY_SSH_KEY` secrets (no-op until configured); `.env` never overwritten |
+| 5 | *CI green 7 consecutive runs* | ⏳ Operational | — pending repo activity |
+| 6 | *PRR sign-off by lead developer* | ⏳ Human step | — |
 
 **Recommended order:** 1 → 2 → 3 → 4 (cheapest evidence first).
 
@@ -125,10 +125,10 @@ The code is in good shape; these are the **documented PRR sign-off criteria stil
 
 ## 10. Prioritized Action List
 
-1. **P0 — backup script + one restore drill** (data loss is the only remaining real risk).
-2. **P1 — load test** against the prod compose stack or a cPanel staging; publish results.
-3. **P1 — APP_ENV parity** + document the deployment matrix.
-4. **P2 — staged deploy job** in CI (feature-flagged behind secrets).
+1. ✅ **P0 — backup script + one restore drill** — `bin/backup.sh`/`bin/restore.sh`, drill recorded (Aug 6).
+2. ✅ **P1 — load test** — `bin/load_test.sh`, p95 132–288 ms @ 50 concurrent; report in `output/load_test/`.
+3. ✅ **P1 — APP_ENV parity** — `APP_ENV` + `.env.{env}` overlays + `.env.example`.
+4. ✅ **P2 — staged deploy job** — feature-flagged `deploy` job in CI.
 5. **P2 — field-level encryption** for PII columns if the club stores sensitive member data beyond what's necessary (data-minimization currently mitigates).
 6. **P3 — structured logging** (JSON error handler output) for easier alerting/tracing.
 

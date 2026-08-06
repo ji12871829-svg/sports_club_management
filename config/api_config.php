@@ -6,6 +6,27 @@
 
 load_dotenv(__DIR__ . '/../.env');
 
+// ── Environment (dev | staging | production) ─────────────────────────────
+// Twelve-Factor config: the environment is read from APP_ENV in .env (or a
+// real env var) and selects an optional per-env overlay file (.env.staging /
+// .env.production) whose values WIN over the base .env. This gives cheap
+// dev/staging/prod parity without code changes.
+if (!defined('APP_ENV')) {
+    $appEnv = strtolower(trim(config_value('APP_ENV', 'development')));
+    if (!in_array($appEnv, ['development', 'staging', 'production'], true)) {
+        $appEnv = 'development';
+    }
+    define('APP_ENV', $appEnv);
+    unset($appEnv);
+}
+
+// Per-environment overlay: .env.staging / .env.production override .env.
+$overlayPath = __DIR__ . '/../.env.' . APP_ENV;
+if (is_file($overlayPath) && is_readable($overlayPath)) {
+    load_dotenv_overrides($overlayPath);
+}
+unset($overlayPath);
+
 // Base URL of the app, auto-detected from the current request so the project
 // works regardless of the folder name it is deployed under (e.g. /Apex Sports Club/,
 // /sports_club_management/, or the web root). Used by includes/header.php and footer.php.
@@ -80,6 +101,39 @@ function config_value(string $name, string $default = ''): string
     }
 
     return $default;
+}
+
+// Same parser as load_dotenv() but UNCONDITIONALLY overrides any existing
+// value (used for per-env overlays so .env.staging can beat .env).
+function load_dotenv_overrides(string $path): void
+{
+    if (!file_exists($path) || !is_readable($path)) {
+        return;
+    }
+
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') {
+            continue;
+        }
+
+        [$name, $value] = array_map('trim', explode('=', $line, 2) + [1 => '']);
+        if ($name === '') {
+            continue;
+        }
+
+        if (
+            strlen($value) >= 2
+            && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === "'" && substr($value, -1) === "'"))
+        ) {
+            $value = substr($value, 1, -1);
+        }
+
+        putenv("{$name}={$value}");
+        $_ENV[$name] = $value;
+        $_SERVER[$name] = $value;
+    }
 }
 
 function load_dotenv(string $path): void

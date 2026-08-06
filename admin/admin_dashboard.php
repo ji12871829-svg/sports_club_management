@@ -92,6 +92,13 @@ if ($ai_cron_result && $row = $ai_cron_result->fetch_assoc()) {
 }
 $ai_review_count = admin_scalar($conn, "SELECT COUNT(*) FROM ai_review_log", 0);
 
+// AI decision accuracy (share of logged decisions that were APPROVE)
+$ai_accuracy = 0;
+if ($ai_review_count > 0) {
+    $ai_approves = admin_scalar($conn, "SELECT COUNT(*) FROM ai_review_log WHERE decision = 'APPROVE'", 0);
+    $ai_accuracy = (int) round(($ai_approves / $ai_review_count) * 100);
+}
+
 $recent_bookings = [];
 $sql = "SELECT b.booking_date, b.start_time, b.status,
                m.first_name, m.last_name,
@@ -111,7 +118,7 @@ if ($result = $conn->query($sql)) {
 }
 
 $recent_payments = [];
-$sql = "SELECT p.amount, p.payment_date, p.payment_method,
+$sql = "SELECT p.amount, p.payment_date, p.payment_method, p.payment_status, p.description,
                m.first_name, m.last_name
         FROM payments p
         LEFT JOIN members m ON m.member_id = p.member_id
@@ -137,6 +144,8 @@ if ($result = $conn->query($sql)) {
     }
     $result->free();
 }
+$total_bookings_all = admin_scalar($conn, "SELECT COUNT(*) FROM bookings", 0);
+$total_bookings_all = $total_bookings_all > 0 ? $total_bookings_all : 1;
 
 // ── Today's schedule (all members' sessions) ────────────────────
 $today_schedule = [];
@@ -195,10 +204,12 @@ foreach ($coach_day_view as $c) {
 
 // Slow pages recorded in the last 7 days (performance monitor card)
 $slow_page_count = 0;
+$avg_load_ms = 0;
 if (db_table_exists($conn, 'page_timings')) {
     $sp = $conn->query("SELECT COUNT(*) FROM page_timings WHERE created_at >= NOW() - INTERVAL 7 DAY");
     if ($sp && $row = $sp->fetch_row()) { $slow_page_count = (int) $row[0]; }
     if ($sp) { $sp->free(); }
+    $avg_load_ms = (int) round((float) admin_scalar($conn, "SELECT COALESCE(AVG(duration_ms), 0) FROM page_timings WHERE created_at >= NOW() - INTERVAL 7 DAY", 0));
 }
 
 // ── PAYMENT HEALTH (payment-config checks + duplicate memberships) ──────
@@ -216,7 +227,7 @@ if ($phMpesaCb === '') {
     if ($phErr !== null) $payment_health_problems[] = $phErr;
 }
 $phPaystackCb = defined('PAYSTACK_CALLBACK_URL') ? trim(PAYSTACK_CALLBACK_URL) : '';
-if ($phPaystackCb === '' || preg_match('/your-ngrok-domain|example\.com|placeholder/i', $phPaystackCb)) {
+if ($phPaystackCb === '' || preg_match('/your-ngrok-domain|example\\.com|placeholder/i', $phPaystackCb)) {
     $payment_health_problems[] = 'PAYSTACK_CALLBACK_URL is empty or a placeholder domain';
 }
 if (!defined('MPESA_CONSUMER_KEY') || trim(MPESA_CONSUMER_KEY) === '' || MPESA_CONSUMER_KEY === 'test') {
@@ -237,6 +248,62 @@ if (db_table_exists($conn, 'security_alert_log')) {
     $ph_r = $conn->query("SELECT MAX(sent_at) FROM security_alert_log WHERE alert_type = 'payment_health'");
     if ($ph_r && $row = $ph_r->fetch_row()) { $payment_health_alert_at = $row[0] ?? ''; }
     if ($ph_r) { $ph_r->free(); }
+}
+
+$payment_health_ok = empty($payment_health_problems) && $dup_member_count === 0;
+
+// ── Derived headline stats (reference dashboard copy) ──────────────────
+// Member growth this month
+$members_this_month = admin_scalar($conn, "SELECT COUNT(*) FROM members WHERE date_joined >= DATE_FORMAT(CURDATE(), '%Y-%m-01')", 0);
+
+// Revenue growth vs last month
+$last_month_revenue = admin_scalar($conn, "SELECT COALESCE(SUM(amount), 0) FROM payments
+    WHERE payment_date >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
+      AND payment_date <  DATE_FORMAT(CURDATE(), '%Y-%m-01')", 0);
+$rev_growth_pct = null;
+if ($last_month_revenue > 0) {
+    $rev_growth_pct = (int) round((($stats['month_revenue'] - $last_month_revenue) / $last_month_revenue) * 100);
+}
+
+// Membership utilization vs member base
+$utilization_pct = ($stats['members'] > 0 && $has_memberships)
+    ? (int) round($stats['active_memberships'] / $stats['members'] * 100) : 0;
+
+// YTD revenue + outstanding (unsettled) invoices
+$ytd_revenue = admin_scalar($conn, "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE YEAR(payment_date) = YEAR(CURDATE())", 0);
+$outstanding_invoices = admin_scalar($conn, "SELECT COALESCE(SUM(amount), 0) FROM payments
+    WHERE LOWER(payment_status) NOT IN ('paid','completed','success','refunded')", 0);
+
+// Descriptor counts used by the operations lists
+$teams_count     = admin_scalar($conn, "SELECT COUNT(*) FROM teams", 0);
+$facilities_count = admin_scalar($conn, "SELECT COUNT(*) FROM facilities", 0);
+$coaches_total   = admin_scalar($conn, "SELECT COUNT(*) FROM coaches", 0);
+
+// Sport → icon mapping for the utilization tiles
+function asc_sport_icon(string $name): string
+{
+    $n = strtolower($name);
+    if (strpos($n, 'tennis') !== false || strpos($n, 'badminton') !== false) return 'fa-table-tennis-paddle-ball';
+    if (strpos($n, 'basketball') !== false) return 'fa-basketball';
+    if (strpos($n, 'swim') !== false) return 'fa-person-swimming';
+    if (strpos($n, 'gym') !== false || strpos($n, 'fitness') !== false) return 'fa-dumbbell';
+    if (strpos($n, 'football') !== false || strpos($n, 'soccer') !== false) return 'fa-futbol';
+    if (strpos($n, 'rugby') !== false) return 'fa-football';
+    if (strpos($n, 'hockey') !== false) return 'fa-hockey-stick';
+    if (strpos($n, 'volley') !== false) return 'fa-volleyball';
+    if (strpos($n, 'chess') !== false) return 'fa-chess-knight';
+    if (strpos($n, 'horse') !== false || strpos($n, 'rid') !== false) return 'fa-horse';
+    return 'fa-medal';
+}
+
+// Compact currency label for the chart ("50k" / "52.8k")
+function asc_compact_kes(float $amount): string
+{
+    if ($amount >= 1000) {
+        $k = $amount / 1000;
+        return rtrim(rtrim(number_format($k, 1, '.', ''), '0'), '.') . 'k';
+    }
+    return number_format($amount, 0);
 }
 
 $conn->close();
@@ -267,8 +334,9 @@ $conn->close();
     ?>
     <div class="asc-page-head">
         <div>
-            <h1 class="asc-page-title">Administrative Console</h1>
-            <p class="asc-page-sub"><?php echo $greeting; ?>, <span class="asc-accent"><?php echo e($admin_name); ?></span> - <?php echo e(date('l, j F Y')); ?></p>
+            <h1 class="asc-page-title">Administrative Console Overview</h1>
+            <p class="asc-page-sub"><?php echo $greeting; ?>, <span class="asc-accent"><?php echo e($admin_name); ?></span></p>
+            <p class="asc-page-sub-date"><i class="fas fa-calendar-day"></i> <?php echo e(date('F j, Y')); ?></p>
         </div>
         <div class="asc-page-actions">
             <a href="manage_bookings.php" class="asc-btn asc-btn-ghost">
@@ -283,93 +351,68 @@ $conn->close();
         </div>
     </div>
 
-    <!-- AI review status -->
-    <div class="asc-card mb-4">
-        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3 py-3 px-4">
-            <div class="d-flex align-items-center gap-3">
-                <div class="asc-stat-icon asc-icon-brand">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <div>
-                    <h5 class="mb-0 fw-bold asc-text-ink">AI Booking Review</h5>
-                    <p class="mb-0 small asc-text-muted">
-                        <?php echo (int) $ai_review_count; ?> decisions logged
-                        <?php if ($ai_pending_count > 0): ?>
-                            <span class="asc-badge asc-badge-warning ms-1"><?php echo (int) $ai_pending_count; ?> pending</span>
+    <!-- Status cards: AI review / performance / payment health -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-4">
+            <div class="asc-status-card">
+                <div class="asc-status-icon asc-icon-brand"><i class="fas fa-robot"></i></div>
+                <div class="asc-status-body">
+                    <h5 class="asc-status-title">AI Booking Review</h5>
+                    <p class="asc-status-sub">
+                        <strong><?php echo (int) $ai_accuracy; ?>% Accuracy</strong>, <?php echo (int) $ai_pending_count; ?> Flagged
+                        <?php if ($ai_review_count > 0): ?>
+                            <span class="asc-tbl-sub">· <?php echo (int) $ai_review_count; ?> decisions logged</span>
                         <?php endif; ?>
-                        <?php if ($ai_last_cron_run): ?>
-                            <span class="text-muted ms-1">Last cron: <?php echo date('d M H:i', strtotime($ai_last_cron_run)); ?></span>
+                    </p>
+                </div>
+                <a href="manage_bookings.php" class="asc-btn asc-btn-primary asc-status-action">
+                    <i class="fas fa-arrow-right"></i> Run AI
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="asc-status-card">
+                <div class="asc-status-icon asc-icon-info"><i class="fas fa-gauge-high"></i></div>
+                <div class="asc-status-body">
+                    <h5 class="asc-status-title">Performance Monitor</h5>
+                    <p class="asc-status-sub">
+                        <?php if ($slow_page_count > 0 || $avg_load_ms > 0): ?>
+                            Avg Slow Load <strong><?php echo (int) $avg_load_ms; ?>ms</strong>, <?php echo (int) $slow_page_count; ?> Slow Page<?php echo $slow_page_count === 1 ? '' : 's'; ?>
                         <?php else: ?>
-                            <span class="text-muted ms-1">Cron not yet run</span>
+                            No slow pages recorded in the last 7 days
                         <?php endif; ?>
                     </p>
                 </div>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="cron_ai_settings.php" class="asc-btn asc-btn-ghost btn-sm">
-                    <i class="fas fa-clock"></i> Cron Settings
-                </a>
-                <a href="ai_review_log.php" class="asc-btn asc-btn-ghost btn-sm">
-                    <i class="fas fa-history"></i> Review Log
-                </a>
-                <a href="manage_bookings.php" class="asc-btn asc-btn-primary btn-sm">
-                    <i class="fas fa-arrow-right"></i> Run AI Review
+                <a href="slow_pages.php" class="asc-status-pill <?php echo $slow_page_count > 0 ? 'pill-warning' : 'pill-ok'; ?>">
+                    <span class="dot"></span> Check
                 </a>
             </div>
         </div>
-    </div>
-
-    <!-- Performance monitor quick link -->
-    <div class="asc-card mb-4">
-        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3 py-3 px-4">
-            <div class="d-flex align-items-center gap-3">
-                <div class="asc-stat-icon asc-icon-info"><i class="fas fa-gauge-high"></i></div>
-                <div>
-                    <h5 class="mb-0 fw-bold asc-text-ink">Performance Monitor</h5>
-                    <p class="mb-0 small asc-text-muted">
-                        <?php echo (int) $slow_page_count; ?> slow page<?php echo $slow_page_count === 1 ? '' : 's'; ?> recorded in the last 7 days
-                        <span class="text-muted ms-1">(&gt;100 ms, from the request profiler)</span>
-                    </p>
-                </div>
-            </div>
-            <a href="slow_pages.php" class="asc-btn asc-btn-ghost btn-sm">
-                <i class="fas fa-chart-line"></i> View Slow Pages
-            </a>
-        </div>
-    </div>
-
-    <!-- Payment health status -->
-    <div class="asc-card mb-4">
-        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3 py-3 px-4">
-            <div class="d-flex align-items-center gap-3">
-                <div class="asc-stat-icon <?php echo (empty($payment_health_problems) && $dup_member_count === 0) ? 'asc-icon-success' : 'asc-icon-warning'; ?>">
+        <div class="col-lg-4">
+            <div class="asc-status-card">
+                <div class="asc-status-icon <?php echo $payment_health_ok ? 'asc-icon-success' : 'asc-icon-warning'; ?>">
                     <i class="fas fa-shield-heart"></i>
                 </div>
-                <div>
-                    <h5 class="mb-0 fw-bold asc-text-ink">Payment Health</h5>
-                    <p class="mb-0 small asc-text-muted">
-                        <?php if (empty($payment_health_problems) && $dup_member_count === 0): ?>
-                            All payment checks passing
+                <div class="asc-status-body">
+                    <h5 class="asc-status-title">Payment Health</h5>
+                    <p class="asc-status-sub">
+                        <?php if ($payment_health_ok): ?>
+                            All Systems Configured, No Errors
                             <?php if ($payment_health_alert_at): ?>
-                                <span class="text-muted ms-1">Last alert: <?php echo date('d M H:i', strtotime($payment_health_alert_at)); ?></span>
+                                <span class="asc-tbl-sub">· Last alert: <?php echo date('d M H:i', strtotime($payment_health_alert_at)); ?></span>
                             <?php endif; ?>
                         <?php else: ?>
                             <?php foreach ($payment_health_problems as $phProblem): ?>
                                 <span class="asc-badge asc-badge-danger me-1"><?php echo e($phProblem); ?></span>
                             <?php endforeach; ?>
                             <?php if ($dup_member_count > 0): ?>
-                                <span class="asc-badge asc-badge-warning me-1"><?php echo (int) $dup_member_count; ?> member<?php echo $dup_member_count === 1 ? '' : 's'; ?> with overlapping active membership<?php echo $dup_member_count === 1 ? '' : 's'; ?></span>
+                                <span class="asc-badge asc-badge-warning me-1"><?php echo (int) $dup_member_count; ?> member<?php echo $dup_member_count === 1 ? '' : 's'; ?> with overlapping memberships</span>
                             <?php endif; ?>
                         <?php endif; ?>
                     </p>
                 </div>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="manage_members.php" class="asc-btn asc-btn-ghost btn-sm">
-                    <i class="fas fa-users"></i> Members
-                </a>
-                <a href="../public/health.php" class="asc-btn asc-btn-ghost btn-sm">
-                    <i class="fas fa-stethoscope"></i> Health Endpoint
+                <a href="manage_payments.php" class="asc-status-pill <?php echo $payment_health_ok ? 'pill-secure' : 'pill-warning'; ?>">
+                    <span class="dot"></span> <?php echo $payment_health_ok ? 'Secure' : 'Attention'; ?>
                 </a>
             </div>
         </div>
@@ -380,48 +423,54 @@ $conn->close();
         <div class="col-sm-6 col-xl-3">
             <div class="asc-stat-card">
                 <div class="asc-stat-top">
-                    <span class="asc-stat-icon asc-icon-brand"><i class="fas fa-users"></i></span>
+                    <span class="asc-stat-label">Total Members</span>
+                    <span class="asc-stat-icon asc-icon-success"><i class="fas fa-chart-line"></i></span>
                 </div>
-                <p class="asc-stat-label">Members</p>
                 <p class="asc-stat-value"><?php echo number_format((int) $stats['members']); ?></p>
-                <p class="asc-stat-note">Registered members</p>
+                <p class="asc-stat-note asc-note-up"><i class="fas fa-arrow-up"></i> +<?php echo number_format((int) $members_this_month); ?> This Month</p>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <div class="asc-stat-card">
+            <div class="asc-stat-card asc-stat-gold">
                 <div class="asc-stat-top">
-                    <span class="asc-stat-icon asc-icon-warning"><i class="fas fa-hourglass-half"></i></span>
+                    <span class="asc-stat-label">Pending Bookings</span>
+                    <span class="asc-stat-icon asc-icon-glass"><i class="fas fa-hourglass-half"></i></span>
                 </div>
-                <p class="asc-stat-label">Pending Bookings</p>
                 <p class="asc-stat-value"><?php echo number_format((int) $stats['pending_bookings']); ?></p>
                 <p class="asc-stat-note">Awaiting approval</p>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <div class="asc-stat-card">
+            <div class="asc-stat-card asc-stat-green">
                 <div class="asc-stat-top">
-                    <span class="asc-stat-icon asc-icon-success"><i class="fas fa-chart-line"></i></span>
+                    <span class="asc-stat-label">Revenue This Month</span>
+                    <span class="asc-stat-icon asc-icon-glass"><i class="fas fa-coins"></i></span>
                 </div>
-                <p class="asc-stat-label">Revenue This Month</p>
                 <p class="asc-stat-value">KES <?php echo number_format((float) $stats['month_revenue'], 0); ?></p>
-                <p class="asc-stat-note">Month to date</p>
+                <p class="asc-stat-note">
+                    <?php if ($rev_growth_pct !== null): ?>
+                        <i class="fas fa-arrow-up"></i> +<?php echo (int) $rev_growth_pct; ?>% from last month
+                    <?php else: ?>
+                        Month to date
+                    <?php endif; ?>
+                </p>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <div class="asc-stat-card">
+            <div class="asc-stat-card asc-stat-blue">
                 <div class="asc-stat-top">
-                    <span class="asc-stat-icon asc-icon-info"><i class="fas fa-id-card"></i></span>
+                    <span class="asc-stat-label">Active Memberships</span>
+                    <span class="asc-stat-icon asc-icon-glass"><i class="fas fa-handshake"></i></span>
                 </div>
-                <p class="asc-stat-label">Active Memberships</p>
                 <p class="asc-stat-value"><?php echo number_format((int) $stats['active_memberships']); ?></p>
-                <p class="asc-stat-note">Current subscriptions</p>
+                <p class="asc-stat-note"><?php echo (int) $utilization_pct; ?>% Utilization</p>
             </div>
         </div>
     </div>
 
-    <!-- Operations & League Engine -->
+    <!-- Core operations & league engine (left) / recent activity (right) -->
     <div class="row g-3 mb-4">
-        <div class="col-lg-6">
+        <div class="col-xl-6">
             <div class="asc-card h-100">
                 <div class="asc-card-head">
                     <h4 class="asc-card-title">Core Operations</h4>
@@ -430,10 +479,10 @@ $conn->close();
                 <ul class="asc-ops">
                     <li>
                         <a href="manage_members.php">
-                            <i class="fas fa-id-badge"></i>
+                            <i class="fas fa-user"></i>
                             <div>
-                                <div class="asc-ops-name">Members</div>
-                                <div class="asc-ops-desc">Manage member profiles</div>
+                                <div class="asc-ops-name">Member Profiles</div>
+                                <div class="asc-ops-desc">Manage <?php echo number_format((int) $stats['members']); ?> profiles</div>
                             </div>
                             <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
                         </a>
@@ -443,7 +492,7 @@ $conn->close();
                             <i class="fas fa-calendar-check"></i>
                             <div>
                                 <div class="asc-ops-name">Reservations</div>
-                                <div class="asc-ops-desc">Approve and manage bookings</div>
+                                <div class="asc-ops-desc">View <?php echo number_format((int) $stats['upcoming_bookings']); ?> active bookings</div>
                             </div>
                             <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
                         </a>
@@ -453,7 +502,7 @@ $conn->close();
                             <i class="fas fa-building"></i>
                             <div>
                                 <div class="asc-ops-name">Facilities</div>
-                                <div class="asc-ops-desc">Manage club facilities</div>
+                                <div class="asc-ops-desc">Configure <?php echo (int) $facilities_count; ?> resources</div>
                             </div>
                             <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
                         </a>
@@ -463,26 +512,25 @@ $conn->close();
                             <i class="fas fa-whistle"></i>
                             <div>
                                 <div class="asc-ops-name">Coaches</div>
-                                <div class="asc-ops-desc">Manage coaching staff</div>
+                                <div class="asc-ops-desc">Manage <?php echo (int) $coaches_total; ?> coaching staff</div>
                             </div>
                             <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
                         </a>
                     </li>
                     <li>
                         <a class="asc-ops-featured" href="ai_smart_scheduling.php">
-                            <i class="fas fa-wand-magic-sparkles"></i>
+                            <i class="fas fa-brain"></i>
                             <div>
                                 <div class="asc-ops-name">AI Smart Scheduling</div>
-                                <div class="asc-ops-desc">Auto-assign coaches</div>
+                                <div class="asc-ops-desc">Optimize facility usage</div>
                             </div>
                             <span class="asc-badge asc-badge-brand">AI</span>
                         </a>
                     </li>
                 </ul>
             </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="asc-card h-100">
+
+            <div class="asc-card h-100 mt-3">
                 <div class="asc-card-head">
                     <h4 class="asc-card-title">League Engine</h4>
                     <i class="fas fa-trophy text-muted"></i>
@@ -490,20 +538,30 @@ $conn->close();
                 <ul class="asc-ops">
                     <li>
                         <a href="manage_leagues.php">
-                            <i class="fas fa-medal"></i>
+                            <i class="fas fa-trophy"></i>
                             <div>
-                                <div class="asc-ops-name">Active Leagues</div>
-                                <div class="asc-ops-desc">Manage leagues and seasons</div>
+                                <div class="asc-ops-name">Leagues</div>
+                                <div class="asc-ops-desc">Manage <?php echo (int) $stats['active_leagues']; ?> active leagues</div>
+                            </div>
+                            <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="manage_leagues.php">
+                            <i class="fas fa-users"></i>
+                            <div>
+                                <div class="asc-ops-name">Teams &amp; Rosters</div>
+                                <div class="asc-ops-desc">Oversee <?php echo number_format((int) $teams_count); ?> teams</div>
                             </div>
                             <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
                         </a>
                     </li>
                     <li>
                         <a href="manage_fixtures.php">
-                            <i class="fas fa-calendar-alt"></i>
+                            <i class="fas fa-clipboard-list"></i>
                             <div>
-                                <div class="asc-ops-name">Match Fixtures</div>
-                                <div class="asc-ops-desc">Schedule matches</div>
+                                <div class="asc-ops-name">Fixtures &amp; Results</div>
+                                <div class="asc-ops-desc">Update match outcomes</div>
                             </div>
                             <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
                         </a>
@@ -518,63 +576,10 @@ $conn->close();
                             <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
                         </a>
                     </li>
-                    <li>
-                        <a href="manage_sports.php">
-                            <i class="fas fa-futbol"></i>
-                            <div>
-                                <div class="asc-ops-name">Tracked Sports</div>
-                                <div class="asc-ops-desc">Sports disciplines</div>
-                            </div>
-                            <span class="asc-ops-meta"><i class="fas fa-chevron-right"></i></span>
-                        </a>
-                    </li>
                 </ul>
             </div>
         </div>
-    </div>
 
-    <!-- Financial snapshot -->
-    <div class="asc-dark-panel mb-4">
-        <div class="row g-4">
-            <div class="col-sm-6 col-xl-3">
-                <p class="asc-kpi-label">Total Revenue</p>
-                <p class="asc-kpi-value">KES <?php echo number_format((float) $stats['total_revenue'], 0); ?></p>
-                <p class="asc-kpi-note">Settled to date</p>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <p class="asc-kpi-label">This Month</p>
-                <p class="asc-kpi-value asc-text-accent">KES <?php echo number_format((float) $stats['month_revenue'], 0); ?></p>
-                <p class="asc-kpi-note">Settlements processing</p>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <p class="asc-kpi-label">Upcoming Bookings</p>
-                <p class="asc-kpi-value"><?php echo number_format((int) $stats['upcoming_bookings']); ?></p>
-                <p class="asc-kpi-note">Scheduled ahead</p>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <p class="asc-kpi-label">Active Leagues</p>
-                <p class="asc-kpi-value"><?php echo number_format((int) $stats['active_leagues']); ?></p>
-                <p class="asc-kpi-note">In-season play</p>
-            </div>
-        </div>
-        <div class="asc-rev-chart">
-            <?php foreach ($monthly_revenue as $mr):
-                $pct = round(($mr['total'] / $rev_max) * 100);
-                $short = date('M', strtotime($mr['ym']));
-            ?>
-            <div class="asc-rev-col" title="<?php echo e(date('M Y', strtotime($mr['ym']))); ?>: KES <?php echo number_format($mr['total'], 0); ?>">
-                <div class="asc-rev-bar-track">
-                    <div class="asc-rev-bar-fill" style="height:<?php echo (int) $pct; ?>%;"></div>
-                </div>
-                <span class="asc-rev-label"><?php echo e($short); ?></span>
-                <span class="asc-rev-value"><?php echo number_format($mr['total'], 0); ?></span>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-
-    <!-- Recent bookings & payments -->
-    <div class="row g-3 mb-4">
         <div class="col-xl-6">
             <div class="asc-card h-100">
                 <div class="asc-card-head">
@@ -586,15 +591,16 @@ $conn->close();
                         <thead>
                             <tr>
                                 <th>Member</th>
-                                <th>Sport &amp; Facility</th>
+                                <th>Facility</th>
                                 <th>Date</th>
+                                <th>Time</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($recent_bookings)): ?>
                                 <tr>
-                                    <td colspan="4">
+                                    <td colspan="5">
                                         <div class="asc-empty"><i class="fas fa-calendar-xmark"></i><p>No bookings yet.</p></div>
                                     </td>
                                 </tr>
@@ -602,29 +608,34 @@ $conn->close();
                             <?php foreach ($recent_bookings as $booking): ?>
                                 <tr>
                                     <td class="fw-semibold"><?php echo e($booking['first_name'] . ' ' . $booking['last_name']); ?></td>
-                                    <td class="text-muted"><?php echo e($booking['sport_name']); ?> / <?php echo e($booking['facility_name']); ?></td>
-                                    <td class="text-muted"><?php echo e(date('d M', strtotime($booking['booking_date'])) . ' @ ' . date('H:i', strtotime($booking['start_time']))); ?></td>
-                        <td>
-                            <?php
-                            $bStatus = strtolower($booking['status']);
-                            $bClass = in_array($bStatus, ['completed', 'approved', 'confirmed', 'paid']) ? 'asc-badge-success'
-                                : ($bStatus === 'pending' ? 'asc-badge-warning'
-                                : (in_array($bStatus, ['cancelled', 'rejected', 'refunded', 'failed', 'declined']) ? 'asc-badge-danger'
-                                : 'asc-badge-neutral'));
-                            ?>
-                            <span class="asc-badge <?php echo $bClass; ?>">
-                                <?php echo e($booking['status']); ?>
-                            </span>
-                        </td>
+                                    <td>
+                                        <?php echo e($booking['facility_name']); ?>
+                                        <?php if (!empty($booking['sport_name'])): ?>
+                                            <span class="asc-tbl-sub"><?php echo e($booking['sport_name']); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="mono"><?php echo e(date('d/m/y', strtotime($booking['booking_date']))); ?></td>
+                                    <td class="mono"><?php echo e(date('g:i A', strtotime($booking['start_time']))); ?></td>
+                                    <td>
+                                        <?php
+                                        $bStatus = strtolower($booking['status']);
+                                        $bClass = in_array($bStatus, ['completed', 'approved', 'confirmed', 'paid']) ? 'asc-badge-success'
+                                            : ($bStatus === 'pending' ? 'asc-badge-warning'
+                                            : (in_array($bStatus, ['cancelled', 'rejected', 'refunded', 'failed', 'declined']) ? 'asc-badge-danger'
+                                            : 'asc-badge-neutral'));
+                                        ?>
+                                        <span class="asc-badge <?php echo $bClass; ?>">
+                                            <?php echo e($booking['status']); ?>
+                                        </span>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
-        <div class="col-xl-6">
-            <div class="asc-card h-100">
+
+            <div class="asc-card h-100 mt-3">
                 <div class="asc-card-head">
                     <h4 class="asc-card-title">Recent Payments</h4>
                     <a href="manage_payments.php" class="asc-card-link">View all</a>
@@ -634,25 +645,43 @@ $conn->close();
                         <thead>
                             <tr>
                                 <th>Member</th>
+                                <th>Description</th>
                                 <th>Amount</th>
-                                <th>Method</th>
                                 <th>Date</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($recent_payments)): ?>
                                 <tr>
-                                    <td colspan="4">
+                                    <td colspan="5">
                                         <div class="asc-empty"><i class="fas fa-wallet"></i><p>No payments yet.</p></div>
                                     </td>
                                 </tr>
                             <?php endif; ?>
-                            <?php foreach ($recent_payments as $payment): ?>
+                            <?php foreach ($recent_payments as $payment):
+                                $ps = strtolower($payment['payment_status'] ?? 'paid');
+                                if (in_array($ps, ['paid', 'completed', 'success', 'processed'])) {
+                                    $psLabel = 'Processed'; $psClass = 'asc-badge-success';
+                                } elseif ($ps === 'pending') {
+                                    $psLabel = 'Pending'; $psClass = 'asc-badge-warning';
+                                } elseif (in_array($ps, ['failed', 'declined', 'rejected'])) {
+                                    $psLabel = 'Failed'; $psClass = 'asc-badge-danger';
+                                } elseif ($ps === 'refunded') {
+                                    $psLabel = 'Refunded'; $psClass = 'asc-badge-neutral';
+                                } else {
+                                    $psLabel = $payment['payment_status'] ? ucfirst(strtolower($payment['payment_status'])) : 'Processed';
+                                    $psClass = 'asc-badge-neutral';
+                                }
+                            ?>
                                 <tr>
                                     <td class="fw-semibold"><?php echo e($payment['first_name'] . ' ' . $payment['last_name']); ?></td>
-                                    <td class="fw-bold asc-text-success">KES <?php echo number_format((float) $payment['amount'], 0); ?></td>
-                                    <td class="text-muted"><?php echo e($payment['payment_method']); ?></td>
-                                    <td class="text-muted"><?php echo e(date('M d, H:i', strtotime($payment['payment_date']))); ?></td>
+                                    <td>
+                                        <?php echo e($payment['description'] ?: ($payment['payment_method'] ?: 'Membership fee')); ?>
+                                    </td>
+                                    <td class="fw-bold asc-text-success">KES <?php echo number_format((float) $payment['amount'], 2); ?></td>
+                                    <td class="mono"><?php echo e(date('d/m/y', strtotime($payment['payment_date']))); ?></td>
+                                    <td><span class="asc-badge <?php echo $psClass; ?>"><?php echo e($psLabel); ?></span></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -662,143 +691,200 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Today's schedule -->
-    <div class="asc-card mb-4">
-        <div class="asc-card-head">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-calendar-day asc-card-head-icon"></i>
-                <h4 class="asc-card-title mb-0">Today's Schedule</h4>
-            </div>
-            <span class="text-muted small"><?php echo date('l, j F Y'); ?></span>
-        </div>
-        <div class="asc-table-wrap">
-            <table class="asc-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Member</th>
-                        <th>Sport</th>
-                        <th>Facility</th>
-                        <th>Coach</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($today_schedule)): ?>
-                        <tr>
-                            <td colspan="6">
-                                <div class="asc-empty"><i class="fas fa-calendar-xmark"></i><p>No sessions scheduled for today.</p></div>
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($today_schedule as $s):
-                            $s_lower = strtolower($s['status']);
-                            $badge = in_array($s_lower, ['completed','approved','confirmed','paid']) ? 'asc-badge-success'
-                                : ($s_lower === 'pending' ? 'asc-badge-warning'
-                                : (in_array($s_lower, ['cancelled','rejected']) ? 'asc-badge-danger'
-                                : 'asc-badge-neutral'));
-                        ?>
-                        <tr>
-                            <td class="mono"><?php echo e(substr($s['start_time'], 0, 5) . ' - ' . substr($s['end_time'], 0, 5)); ?></td>
-                            <td class="fw-semibold"><?php echo e($s['member_first'] . ' ' . $s['member_last']); ?></td>
-                            <td><span class="asc-badge asc-badge-neutral"><?php echo e($s['sport_name']); ?></span></td>
-                            <td class="text-muted"><?php echo e($s['facility_name']); ?></td>
-                            <td class="text-muted"><?php echo e($s['coach_name']); ?></td>
-                            <td><span class="asc-badge <?php echo $badge; ?>"><?php echo e($s['status']); ?></span></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Coach availability today -->
-    <?php if ($coach_has_avail): ?>
-    <div class="asc-card mb-4">
-        <div class="asc-card-head">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-whistle asc-card-head-icon"></i>
-                <h4 class="asc-card-title mb-0">Coach Availability Today</h4>
-            </div>
-            <span class="text-muted small"><?php echo (int) $coaches_today_count; ?> coaches scheduled</span>
-        </div>
-        <div class="asc-table-wrap">
-            <table class="asc-table">
-                <thead>
-                    <tr>
-                        <th>Coach</th>
-                        <th>Specialization</th>
-                        <th>Schedule</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <!-- Financial overview (dark) + today's schedule / coach availability -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-7">
+            <div class="asc-dark-panel asc-finance-panel h-100">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <h4 class="asc-finance-title mb-0">Financial Overview</h4>
+                    <a href="revenue_dashboard.php" class="asc-btn asc-btn-ghost btn-sm">
+                        <i class="fas fa-chart-pie"></i> Revenue Dashboard
+                    </a>
+                </div>
+                <div class="row g-4 mb-4">
+                    <div class="col-sm-6">
+                        <p class="asc-kpi-label">Total YTD Revenue</p>
+                        <p class="asc-kpi-value">KES <?php echo number_format((float) $ytd_revenue, 0); ?></p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="asc-kpi-label">Outstanding Invoices</p>
+                        <p class="asc-kpi-value asc-kpi-amber">KES <?php echo number_format((float) $outstanding_invoices, 0); ?></p>
+                    </div>
+                </div>
+                <p class="asc-finance-sub">Monthly Revenue Trend</p>
+                <div class="asc-rev-plot">
                     <?php
-                    $displayed_coaches = [];
-                    foreach ($coach_day_view as $c):
-                        $cid = $c['coach_id'];
-                        $is_booked = isset($today_booked_coach_ids[$cid]);
-                        if (isset($displayed_coaches[$cid])) {
-                            $is_first = false;
-                        } else {
-                            $displayed_coaches[$cid] = true;
-                            $is_first = true;
-                        }
+                    // Trend line points: one per month, at bar-top height (0 = bottom, 100 = top of track).
+                    // No circle markers: under preserveAspectRatio="none" they would stretch into ellipses.
+                    $line_points = [];
+                    foreach ($monthly_revenue as $i => $mr) {
+                        $pct = round(($mr['total'] / $rev_max) * 100);
+                        $line_points[] = round((($i + 0.5) / 6) * 100, 1) . ',' . round(100 - $pct, 1);
+                    }
                     ?>
-                    <tr>
-                        <td class="fw-semibold">
-                            <?php echo e($c['first_name'] . ' ' . $c['last_name']); ?>
-                            <?php if ($is_first && $is_booked): ?>
-                                <span class="asc-badge asc-badge-info ms-1">Booked</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="text-muted"><?php echo e($c['specialization']); ?></td>
-                        <td class="mono"><?php echo e(substr($c['start_time'], 0, 5) . ' - ' . substr($c['end_time'], 0, 5)); ?></td>
-                        <td>
-                            <span class="asc-badge <?php echo $is_booked ? 'asc-badge-warning' : 'asc-badge-success'; ?>">
-                                <?php echo $is_booked ? 'Partially Booked' : 'Available'; ?>
-                            </span>
-                        </td>
-                    </tr>
+                    <svg class="asc-rev-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                        <polyline points="<?php echo implode(' ', $line_points); ?>" />
+                    </svg>
+                    <div class="asc-rev-chart">
+                        <?php foreach ($monthly_revenue as $mr):
+                            $pct = round(($mr['total'] / $rev_max) * 100);
+                        ?>
+                        <div class="asc-rev-col" title="<?php echo e(date('M Y', strtotime($mr['ym']))); ?>: KES <?php echo number_format($mr['total'], 0); ?>">
+                            <div class="asc-rev-bar-track">
+                                <div class="asc-rev-bar-fill" style="height:<?php echo (int) $pct; ?>%;"></div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <div class="asc-rev-labels">
+                    <?php foreach ($monthly_revenue as $mr): ?>
+                    <div class="asc-rev-col">
+                        <span class="asc-rev-value"><?php echo e(asc_compact_kes((float) $mr['total'])); ?></span>
+                        <span class="asc-rev-label"><?php echo e(date('M', strtotime($mr['ym']))); ?></span>
+                    </div>
                     <?php endforeach; ?>
-                    <?php if (empty($coach_day_view)): ?>
-                    <tr>
-                        <td colspan="4">
-                            <div class="asc-empty"><i class="fas fa-calendar-xmark"></i><p>No coaches scheduled for today.</p></div>
-                        </td>
-                    </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="asc-card">
+                <div class="asc-card-head">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-calendar-day asc-card-head-icon"></i>
+                        <h4 class="asc-card-title mb-0">Today's Schedule</h4>
+                    </div>
+                    <span class="text-muted small"><?php echo date('l, j F'); ?></span>
+                </div>
+                <div class="asc-table-wrap">
+                    <table class="asc-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Title</th>
+                                <th>Activity</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($today_schedule)): ?>
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="asc-empty"><i class="fas fa-calendar-xmark"></i><p>No sessions scheduled for today.</p></div>
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($today_schedule as $s):
+                                    $s_lower = strtolower($s['status']);
+                                    $badge = in_array($s_lower, ['completed','approved','confirmed','paid']) ? 'asc-badge-success'
+                                        : ($s_lower === 'pending' ? 'asc-badge-warning'
+                                        : (in_array($s_lower, ['cancelled','rejected']) ? 'asc-badge-danger'
+                                        : 'asc-badge-neutral'));
+                                ?>
+                                <tr>
+                                    <td class="mono fw-semibold"><?php echo e(date('g:i A', strtotime($s['start_time']))); ?></td>
+                                    <td>
+                                        <?php echo e($s['sport_name'] ?: 'Session'); ?>
+                                        <span class="asc-tbl-sub"><?php echo e($s['member_first'] . ' ' . $s['member_last']); ?></span>
+                                    </td>
+                                    <td>
+                                        <?php echo e($s['facility_name'] ?: '—'); ?>
+                                        <span class="asc-tbl-sub"><?php echo e($s['coach_name']); ?></span>
+                                    </td>
+                                    <td><span class="asc-badge <?php echo $badge; ?>"><?php echo e($s['status']); ?></span></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <?php if ($coach_has_avail): ?>
+            <div class="asc-card mt-3">
+                <div class="asc-card-head">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-whistle asc-card-head-icon"></i>
+                        <h4 class="asc-card-title mb-0">Coach Availability</h4>
+                    </div>
+                    <span class="text-muted small"><?php echo (int) $coaches_today_count; ?>/<?php echo (int) $coaches_total; ?> scheduled</span>
+                </div>
+                <div class="asc-table-wrap">
+                    <table class="asc-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            // One row per coach (a coach may have several availability slots today)
+                            $displayed_coaches = [];
+                            foreach ($coach_day_view as $c):
+                                $cid = $c['coach_id'];
+                                if (isset($displayed_coaches[$cid])) { continue; }
+                                $displayed_coaches[$cid] = true;
+                                $is_booked = isset($today_booked_coach_ids[$cid]);
+                            ?>
+                            <tr>
+                                <td>
+                                    <?php echo e($c['first_name'] . ' ' . $c['last_name']); ?>
+                                    <span class="asc-tbl-sub"><?php echo e($c['specialization']); ?></span>
+                                </td>
+                                <td>
+                                    <span class="asc-status-pill <?php echo $is_booked ? 'pill-warning' : 'pill-ok'; ?>">
+                                        <span class="dot"></span> <?php echo $is_booked ? 'In Session' : 'Available'; ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                            <?php if (empty($coach_day_view)): ?>
+                            <tr>
+                                <td colspan="2">
+                                    <div class="asc-empty"><i class="fas fa-calendar-xmark"></i><p>No coaches scheduled for today.</p></div>
+                                </td>
+                            </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
-    <?php endif; ?>
 
     <!-- Resource utilization -->
     <div class="asc-card mb-2">
         <div class="asc-card-head">
             <h4 class="asc-card-title">Most Booked Sports</h4>
+            <span class="text-muted small">Share of all bookings</span>
         </div>
         <div class="card-body p-4">
             <?php if (empty($popular_sports)): ?>
                 <div class="asc-empty"><i class="fas fa-chart-simple"></i><p>No utilization data available.</p></div>
             <?php else: ?>
-                <?php
-                $max_count = 0;
-                foreach ($popular_sports as $sport) {
-                    if ($sport['bookings_count'] > $max_count) $max_count = $sport['bookings_count'];
-                }
-                ?>
+                <?php $is_first_sport = true; ?>
                 <div class="row g-3">
-                    <?php foreach ($popular_sports as $sport):
-                        $percentage = ($max_count > 0) ? round($sport['bookings_count'] / $max_count * 100) : 0;
+                    <?php foreach (array_slice($popular_sports, 0, 4) as $sport):
+                        $share = (int) round(($sport['bookings_count'] / $total_bookings_all) * 100);
+                        $icon = asc_sport_icon($sport['name']);
+                        $fillClass = $is_first_sport ? 'asc-fill-green' : '';
+                        $is_first_sport = false;
                     ?>
-                    <div class="col-6 col-md-3 col-xl-3">
-                        <div class="asc-sport-tile">
-                            <p class="asc-sport-name" title="<?php echo e($sport['name']); ?>"><?php echo e($sport['name']); ?></p>
-                            <div class="asc-progress-track mb-2"><div class="asc-progress-fill" style="width:<?php echo $percentage; ?>%;"></div></div>
-                            <p class="asc-sport-count"><?php echo number_format((int) $sport['bookings_count']); ?> sessions</p>
+                    <div class="col-6 col-md-3">
+                        <div class="asc-sport-util">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="asc-sport-icon"><i class="fas <?php echo $icon; ?>"></i></span>
+                                <div class="min-w-0">
+                                    <p class="asc-sport-name mb-0" title="<?php echo e($sport['name']); ?>"><?php echo e($sport['name']); ?></p>
+                                    <p class="asc-sport-pct mb-0"><?php echo (int) $share; ?>% Utilized</p>
+                                </div>
+                            </div>
+                            <div class="asc-progress-track">
+                                <div class="asc-progress-fill <?php echo $fillClass; ?>" style="width:<?php echo (int) $share; ?>%;"></div>
+                            </div>
                         </div>
                     </div>
                     <?php endforeach; ?>

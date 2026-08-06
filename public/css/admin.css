@@ -1516,25 +1516,31 @@ body.theme-dark .asc-analysis-action i { color: #a5b4fc; }
 
 /* ============ REVENUE TREND CHART ============ */
 
-.asc-rev-chart {
-    display: flex;
-    align-items: flex-end;
-    gap: .75rem;
-    margin-top: 1.25rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid rgba(255,255,255,.08);
+.asc-rev-plot {
+    position: relative;
+    height: 92px;
+    margin-top: .4rem;
 }
-.asc-rev-col {
+.asc-rev-plot .asc-rev-chart {
+    display: flex;
+    align-items: stretch;
+    gap: .75rem;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+.asc-rev-plot .asc-rev-col {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
     align-items: center;
-    gap: .3rem;
 }
 .asc-rev-bar-track {
     width: 100%;
-    height: 88px;
+    height: 100%;
     display: flex;
     align-items: flex-end;
     background: rgba(255,255,255,.05);
@@ -1548,8 +1554,42 @@ body.theme-dark .asc-analysis-action i { color: #a5b4fc; }
     border-radius: 6px 6px 0 0;
     transition: height .4s ease;
 }
-.asc-rev-col:hover .asc-rev-bar-fill {
+.asc-rev-plot .asc-rev-col:hover .asc-rev-bar-fill {
     background: linear-gradient(180deg, #c7d2fe, #818cf8);
+}
+.asc-rev-line {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+}
+.asc-rev-line polyline {
+    fill: none;
+    stroke: #34d399;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+.asc-rev-line circle {
+    fill: #34d399;
+}
+.asc-rev-labels {
+    display: flex;
+    gap: .75rem;
+    margin-top: .45rem;
+    padding-top: .5rem;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+.asc-rev-labels .asc-rev-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .1rem;
 }
 .asc-rev-label {
     font-size: .62rem;
@@ -1588,4 +1628,281 @@ body.theme-dark .asc-analysis-action i { color: #a5b4fc; }
 }
 .asc-profiler-badge i {
     color: #fbbf24;
+}
+
+/* ============ CONSOLE OVERVIEW (REFERENCE REDESIGN) ============ */
+
+/* Subtitle date line under the greeting */
+.asc-page-sub-date {
+    color: var(--asc-faint);
+    font-size: .82rem;
+    margin: .15rem 0 0;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+.asc-page-sub-date i {
+    font-size: .72rem;
+}
+
+/* ── Row 1: status cards (AI review / performance / payment health) ── */
+.asc-status-card {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    background: var(--asc-surface);
+    border: 1px solid var(--asc-line);
+    border-radius: var(--asc-radius);
+    padding: 1.1rem 1.15rem;
+    box-shadow: var(--asc-shadow);
+    height: 100%;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+.asc-status-card:hover {
+    box-shadow: var(--asc-shadow-lg);
+    transform: translateY(-2px);
+}
+.asc-status-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+.asc-status-body {
+    flex: 1;
+    min-width: 0;
+}
+.asc-status-title {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--asc-ink);
+    margin: 0 0 .15rem;
+    letter-spacing: -.01em;
+}
+.asc-status-sub {
+    font-size: .8rem;
+    color: var(--asc-muted);
+    margin: 0;
+    line-height: 1.45;
+}
+.asc-status-sub strong {
+    color: var(--asc-ink);
+    font-weight: 700;
+}
+.asc-status-action {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Status pills (Check / Secure / Available) with dot indicator */
+.asc-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    padding: .35rem .75rem;
+    border-radius: 999px;
+    text-decoration: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+    transition: filter .15s ease, transform .15s ease;
+}
+.asc-status-pill:hover {
+    filter: brightness(.97);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+.asc-status-pill .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+.asc-status-pill.pill-ok,
+.asc-status-pill.pill-secure {
+    background: var(--asc-success-bg);
+    color: var(--asc-success-ink);
+}
+.asc-status-pill.pill-warning {
+    background: var(--asc-warning-bg);
+    color: var(--asc-warning-ink);
+}
+
+/* ── Row 2: colored metric cards ── */
+.asc-stat-card.asc-stat-gold {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    border-color: transparent;
+}
+.asc-stat-card.asc-stat-green {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    border-color: transparent;
+}
+.asc-stat-card.asc-stat-blue {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    border-color: transparent;
+}
+.asc-stat-card.asc-stat-gold .asc-stat-label,
+.asc-stat-card.asc-stat-green .asc-stat-label,
+.asc-stat-card.asc-stat-blue .asc-stat-label {
+    color: rgba(255, 255, 255, .8);
+}
+.asc-stat-card.asc-stat-gold .asc-stat-value,
+.asc-stat-card.asc-stat-green .asc-stat-value,
+.asc-stat-card.asc-stat-blue .asc-stat-value {
+    color: #fff;
+}
+.asc-stat-card.asc-stat-gold .asc-stat-note,
+.asc-stat-card.asc-stat-green .asc-stat-note,
+.asc-stat-card.asc-stat-blue .asc-stat-note {
+    color: rgba(255, 255, 255, .82);
+}
+.asc-stat-card.asc-stat-gold:hover,
+.asc-stat-card.asc-stat-green:hover,
+.asc-stat-card.asc-stat-blue:hover {
+    box-shadow: 0 16px 40px rgba(15, 23, 42, .22);
+}
+.asc-icon-glass {
+    background: rgba(255, 255, 255, .2);
+    color: #fff;
+}
+
+/* Green up-note on the white members card */
+.asc-note-up {
+    color: var(--asc-success-ink) !important;
+    font-weight: 600;
+}
+.asc-note-up i {
+    font-size: .68rem;
+}
+
+/* ── Table cell subtext (facility sport, coach name, etc.) ── */
+.asc-tbl-sub {
+    display: block;
+    font-size: .72rem;
+    color: var(--asc-faint);
+    font-weight: 500;
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+/* ── Financial overview dark panel ── */
+.asc-finance-panel {
+    padding: 1.4rem 1.5rem 1.3rem;
+}
+.asc-finance-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.01em;
+    margin: 0;
+}
+.asc-finance-sub {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(226, 232, 240, .55);
+    margin: 0 0 .2rem;
+}
+.asc-kpi-amber {
+    color: #fbbf24 !important;
+}
+
+/* ── Sport utilization tiles (Most Booked Sports) ── */
+.asc-sport-util {
+    border: 1px solid var(--asc-line);
+    border-radius: var(--asc-radius-sm);
+    padding: 1rem 1.1rem;
+    background: var(--asc-surface-2);
+    height: 100%;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.asc-sport-util:hover {
+    border-color: var(--asc-brand-100);
+    box-shadow: var(--asc-shadow);
+    transform: translateY(-1px);
+}
+.asc-sport-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--asc-brand-50);
+    color: var(--asc-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+    flex-shrink: 0;
+}
+.asc-sport-pct {
+    font-size: .74rem;
+    color: var(--asc-faint);
+    font-weight: 600;
+}
+.asc-progress-fill.asc-fill-green {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+.min-w-0 {
+    min-width: 0;
+}
+
+/* Dark mode: keep colored metric cards + status cards coherent */
+body.theme-dark .asc-stat-card:not(.asc-stat-gold):not(.asc-stat-green):not(.asc-stat-blue) {
+    background: #1e293b;
+    border-color: #334155;
+}
+body.theme-dark .asc-stat-card.asc-stat-gold {
+    background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+}
+body.theme-dark .asc-stat-card.asc-stat-green {
+    background: linear-gradient(135deg, #059669 0%, #065f46 100%);
+}
+body.theme-dark .asc-stat-card.asc-stat-blue {
+    background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+}
+body.theme-dark .asc-status-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+body.theme-dark .asc-status-title { color: #f1f5f9; }
+body.theme-dark .asc-status-sub strong { color: #f1f5f9; }
+body.theme-dark .asc-sport-util {
+    background: #172032;
+    border-color: #334155;
+}
+body.theme-dark .asc-sport-util:hover {
+    border-color: var(--asc-brand);
+}
+body.theme-dark .asc-sport-icon {
+    background: rgba(99, 102, 241, .16);
+    color: #a5b4fc;
+}
+body.theme-dark .asc-sport-name { color: #e2e8f0; }
+body.theme-dark .asc-sport-pct { color: #94a3b8; }
+body.theme-dark .asc-tbl-sub { color: #64748b; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .asc-status-card:hover,
+    .asc-sport-util:hover,
+    .asc-status-pill:hover {
+        transform: none;
+    }
+}
+
+/* Responsive: stack status cards vertically on small screens */
+@media (max-width: 575.98px) {
+    .asc-status-card {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .asc-status-action {
+        margin-left: auto;
+    }
 }

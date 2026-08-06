@@ -1,9 +1,9 @@
 # Apex Sports Club — Production Readiness Review (PRR)
 
-**Last Audit:** August 5, 2026  
-**Status:** ⚠️ PASS-WITH-RISKS (3 Critical items closed, 5 High items closed)  
+**Last Audit:** August 6, 2026  
+**Status:** ⚠️ PASS-WITH-RISKS — all 4 operational blockers now closed (backup/restore, load test, env parity, staged deploy job); remaining criteria are CI run count + human sign-off  
 **Next Review:** After any architectural or payment-system change  
-**Latest:** Full v2.0 re-audit in [AUDIT_REPORT.md](AUDIT_REPORT.md) — remaining sign-off blockers are operational (backup restore, load tests, env parity, staged deploy)
+**Latest:** Dashboard console overview rebuilt to the reference design; `bin/load_test.sh` evidence captured (p95 132–288 ms @ 50 concurrent); `APP_ENV` + per-env `.env.*` overlays + committed `.env.example`; feature-flagged `deploy` job added to CI
 
 ---
 
@@ -105,21 +105,21 @@
 ### PASS status requires:
 - [ ] All ❌ items moved to ⚠️ or ✅ with documented mitigation
 - [ ] No Critical or High OWASP findings
-- [ ] Load test completed: p95 < 2s at 50 concurrent users
-- [ ] Backup/restore tested and documented
-- [ ] Environment parity: dev/staging/prod with env-var-based config
-- [ ] CI pipeline green for 7 consecutive runs
-- [ ] PRR checklist signed off by lead developer
+- [x] Load test completed: p95 < 2s at 50 concurrent users — **evidence:** `output/load_test/report_20260806_230148.md` (homepage p95 176 ms, login 288 ms, registration 132 ms; 0 failed)
+- [x] Backup/restore tested and documented — **evidence:** `bin/backup.sh` + `bin/restore.sh`; live drill restored 120 tables into a scratch DB with exact row-count parity
+- [x] Environment parity: dev/staging/prod with env-var-based config — **evidence:** `APP_ENV` + `.env.{env}` overlay loader in `config/api_config.php`, committed `.env.example`
+- [ ] CI pipeline green for 7 consecutive runs — *operational, pending repo activity*
+- [ ] PRR checklist signed off by lead developer — *human step*
 
 ### Current blockers to PASS:
 1. ✅ ~~Payment callback idempotency + webhook signature verification~~ (Resolved)
 2. ✅ ~~Public login rate limiting~~ (Resolved)
 3. ✅ ~~CSRF on registration~~ (Resolved)
-4. ❌ No environment-specific config (config in PHP files, not env vars)
-5. ❌ No backup restore verification
-6. ❌ No performance/load testing data
-7. ❌ No staged CI/CD pipeline to production
+4. ✅ ~~No environment-specific config~~ (Resolved — `APP_ENV` + per-env `.env.*` overlays + `.env.example`)
+5. ✅ ~~No backup restore verification~~ (Resolved — `bin/backup.sh`/`bin/restore.sh`, drill verified)
+6. ✅ ~~No performance/load testing data~~ (Resolved — `bin/load_test.sh`, p95 132–288 ms @ 50 concurrent)
+7. ✅ ~~No staged CI/CD pipeline to production~~ (Resolved — feature-flagged `deploy` job in `.github/workflows/ci.yml`)
 
 ---
 
-*Last updated: August 4, 2026*
+*Last updated: August 6, 2026*
