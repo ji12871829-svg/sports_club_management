@@ -489,8 +489,8 @@ $conn->close();
 
     <!-- Core operations & league engine (left) / recent activity (right) -->
     <div class="row g-3 mb-4">
-        <div class="col-xl-6">
-            <div class="asc-card h-100">
+        <div class="col-xl-6 d-flex flex-column">
+            <div class="asc-card flex-grow-1">
                 <div class="asc-card-head">
                     <h4 class="asc-card-title">Core Operations</h4>
                     <i class="fas fa-sliders text-muted"></i>
@@ -549,7 +549,7 @@ $conn->close();
                 </ul>
             </div>
 
-            <div class="asc-card h-100 mt-3">
+            <div class="asc-card mt-3">
                 <div class="asc-card-head">
                     <h4 class="asc-card-title">League Engine</h4>
                     <i class="fas fa-trophy text-muted"></i>
@@ -599,8 +599,8 @@ $conn->close();
             </div>
         </div>
 
-        <div class="col-xl-6">
-            <div class="asc-card h-100">
+        <div class="col-xl-6 d-flex flex-column">
+            <div class="asc-card flex-grow-1">
                 <div class="asc-card-head">
                     <h4 class="asc-card-title">Recent Bookings</h4>
                     <a href="manage_bookings.php" class="asc-card-link">View all</a>
@@ -654,7 +654,7 @@ $conn->close();
                 </div>
             </div>
 
-            <div class="asc-card h-100 mt-3">
+            <div class="asc-card mt-3">
                 <div class="asc-card-head">
                     <h4 class="asc-card-title">Recent Payments</h4>
                     <a href="manage_payments.php" class="asc-card-link">View all</a>
