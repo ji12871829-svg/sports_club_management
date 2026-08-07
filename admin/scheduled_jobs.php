@@ -29,6 +29,8 @@ $jobs = [
         'name'     => 'Session Cleanup',
         'desc'     => 'Prunes stale admin sessions (7 days idle) and login attempts (24 h) so the auth tables stay bounded.',
         'schedule' => 'Daily 03:00',
+        'win'      => '/SC DAILY /ST 03:00',
+        'cron'     => '0 3 * * *',
         'icon'     => 'fa-broom',
         'color'    => '#0e7490',
     ],
@@ -36,6 +38,8 @@ $jobs = [
         'name'          => 'Security Digest',
         'desc'          => 'Emails every admin a daily report of unacknowledged security events, new-device logins, revoked sessions and failed logins.',
         'schedule'      => 'Daily 08:00',
+        'win'           => '/SC DAILY /ST 08:00',
+        'cron'          => '0 8 * * *',
         'icon'          => 'fa-shield-halved',
         'color'         => '#b91c1c',
         'manual_bypass' => true,
@@ -44,6 +48,8 @@ $jobs = [
         'name'          => 'Membership Renewals',
         'desc'          => 'Processes due renewals, applies lapses and queues the renewal reminder emails.',
         'schedule'      => 'Daily 06:00',
+        'win'           => '/SC DAILY /ST 06:00',
+        'cron'          => '0 6 * * *',
         'icon'          => 'fa-calendar-check',
         'color'         => '#1d5c8f',
         'header_secret' => true,
@@ -53,6 +59,8 @@ $jobs = [
         'name'     => 'Late Payment Reminders',
         'desc'     => 'Sends WhatsApp + email reminders for overdue memberships and unpaid damage-report fines.',
         'schedule' => 'Daily 09:00',
+        'win'      => '/SC DAILY /ST 09:00',
+        'cron'     => '0 9 * * *',
         'icon'     => 'fa-bell',
         'color'    => '#b45309',
     ],
@@ -60,6 +68,8 @@ $jobs = [
         'name'         => 'Database Backup',
         'desc'         => 'Creates a mysqldump into backups/db/ and keeps the last 14 files.',
         'schedule'     => 'Daily 02:00',
+        'win'          => '/SC DAILY /ST 02:00',
+        'cron'         => '0 2 * * *',
         'icon'         => 'fa-database',
         'color'        => '#0f172a',
         'needs_secret' => true,
@@ -69,6 +79,8 @@ $jobs = [
         'name'         => 'Achievements',
         'desc'         => 'Recomputes and awards member achievement badges.',
         'schedule'     => 'Hourly',
+        'win'          => '/SC HOURLY',
+        'cron'         => '0 * * * *',
         'icon'         => 'fa-trophy',
         'color'        => '#a16207',
         'needs_secret' => true,
@@ -77,6 +89,8 @@ $jobs = [
         'name'          => 'AI Booking Review',
         'desc'          => 'Reviews recent bookings with AI according to the strictness settings on the AI Cron Settings page.',
         'schedule'      => 'Hourly',
+        'win'           => '/SC HOURLY /ST 00:05',
+        'cron'          => '5 * * * *',
         'icon'          => 'fa-robot',
         'color'         => '#7c3aed',
         'manual_bypass' => true,
@@ -85,6 +99,8 @@ $jobs = [
         'name'            => 'Attendance Alerts',
         'desc'            => 'Flags members with 3+ consecutive absences and sends the alerts.',
         'schedule'        => 'Daily 18:00',
+        'win'             => '/SC DAILY /ST 18:00',
+        'cron'            => '0 18 * * *',
         'icon'            => 'fa-clipboard-check',
         'color'           => '#0369a1',
         'needs_secret'    => true,
@@ -94,6 +110,8 @@ $jobs = [
         'name'         => 'Email Campaigns',
         'desc'         => 'Worker for the queued campaign email sender.',
         'schedule'     => 'Every 15 min',
+        'win'          => '/SC MINUTE /MO 15',
+        'cron'         => '*/15 * * * *',
         'icon'         => 'fa-envelope-open-text',
         'color'        => '#be185d',
         'needs_secret' => true,
@@ -102,6 +120,8 @@ $jobs = [
         'name'            => 'Fine Escalation',
         'desc'            => 'Escalates overdue member fines one stage per cycle.',
         'schedule'        => 'Daily 10:00',
+        'win'             => '/SC DAILY /ST 10:00',
+        'cron'            => '0 10 * * *',
         'icon'            => 'fa-money-bill-wave',
         'color'           => '#c2410c',
         'needs_secret'    => true,
@@ -152,6 +172,64 @@ function job_prep_run(array $meta): array
 }
 
 /**
+ * Windows Task Scheduler task name for a cron file (must match the naming
+ * used by the generated install commands so detection lines up).
+ */
+function scheduled_task_name(string $file): string
+{
+    return 'Apex_' . basename($file, '.php');
+}
+
+/**
+ * Query Windows Task Scheduler for installed Apex tasks. Returns an array of
+ * task names, or null when the scheduler could not be queried (non-Windows,
+ * proc_open unavailable, or schtasks failed). Uses proc_open (not exec) so
+ * the call stays inside the CI security gate.
+ */
+function detect_scheduled_tasks(): ?array
+{
+    if (PHP_OS_FAMILY !== 'Windows' || !function_exists('proc_open')) {
+        return null;
+    }
+    $descriptors = [
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = @proc_open('schtasks /Query /FO CSV /NH', $descriptors, $pipes);
+    if (!is_resource($proc)) {
+        return null;
+    }
+    // Never let a hanging scheduler block the page.
+    stream_set_timeout($pipes[1], 5);
+    stream_set_timeout($pipes[2], 5);
+    $out = (string) stream_get_contents($pipes[1]);
+    $err = (string) stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    proc_close($proc);
+
+    if (trim($out) === '') {
+        // Empty output means the query itself failed (permissions/bitness),
+        // not that no tasks exist.
+        return null;
+    }
+
+    $names = [];
+    foreach (explode("\n", $out) as $line) {
+        $line = trim($line);
+        if ($line === '') {
+            continue;
+        }
+        $fields = str_getcsv($line);
+        if (!empty($fields[0]) && strpos($fields[0], 'Apex_') === 0) {
+            $names[] = $fields[0];
+        }
+    }
+
+    return array_values(array_unique($names));
+}
+
+/**
  * Latest mtime of files matching a glob, as a human label ('' when none).
  */
 function job_last_run(string $glob): string
@@ -187,6 +265,8 @@ $message = '';
 $error = '';
 $runOutput = '';
 $showOutput = false;
+$installed = null;        // null = schedule not checked yet; array = task names
+$scheduleChecked = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'run_job') {
     if (!csrf_verify($_POST['csrf_token'] ?? '', 'scheduled_jobs_csrf')) {
@@ -241,8 +321,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'run_j
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'check_schedule') {
+    if (!csrf_verify($_POST['csrf_token'] ?? '', 'scheduled_jobs_csrf')) {
+        $error = 'Security check failed. Please refresh and try again.';
+    } else {
+        $scheduleChecked = true;
+        $installed = detect_scheduled_tasks();
+        if ($installed === null) {
+            $error = 'Could not query the Windows Task Scheduler. Run <code>schtasks /Query /FO CSV /NH</code> from a terminal to verify manually.';
+        } else {
+            $message = 'Checked the scheduler — <strong>' . count($installed) . '</strong> Apex task(s) found. Detection matches the <code>Apex_&lt;job&gt;</code> naming convention used by the install commands.';
+        }
+    }
+}
+
 $phpCli = resolve_php_cli_path();
 $baseDir = dirname(__DIR__);
+
+// Bulk install-command bundles (for the one-click copy buttons).
+$winLines = [];
+$cronLines = [];
+foreach ($jobs as $file => $meta) {
+    $task = scheduled_task_name($file);
+    $winLines[] = 'schtasks /Create /F /TN "' . $task . '" /TR "\\"' . $phpCli . '\\" \\"' . $baseDir . '/cron/' . $file . '\\"" ' . $meta['win'];
+    $cronLines[] = $meta['cron'] . ' php /path/to/club/cron/' . $file . '   # ' . $meta['name'];
+}
+$winBundle = implode("\r\n", $winLines);
+$cronBundle = implode("\n", $cronLines);
 ?>
 
 <div class="container-fluid py-4">
@@ -278,6 +383,47 @@ $baseDir = dirname(__DIR__);
         </div>
     <?php endif; ?>
 
+    <!-- Scheduler setup -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-calendar-plus me-2" style="color:#1d5c8f;"></i>
+                <strong>Scheduler setup</strong>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <button type="button" class="btn btn-sm" style="background:#1d5c8f;color:#fff;" id="copyWinBtn">
+                    <i class="fas fa-copy me-1"></i>Copy all Windows commands
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="copyCronBtn">
+                    <i class="fas fa-copy me-1"></i>Copy Linux crontab
+                </button>
+                <form method="post" class="d-inline">
+                    <?php echo csrf_field('scheduled_jobs_csrf'); ?>
+                    <input type="hidden" name="action" value="check_schedule">
+                    <button type="submit" class="btn btn-sm btn-outline-primary" id="checkBtn">
+                        <i class="fas fa-magnifying-glass me-1"></i>Check installed tasks
+                    </button>
+                </form>
+                <span class="small text-muted">
+                    <?php if (PHP_OS_FAMILY === 'Windows'): ?>
+                        Queries <code>schtasks</code> and marks each job below as Scheduled / Not scheduled.
+                    <?php else: ?>
+                        Not running on Windows — schedule status stays “—” and task detection is unavailable.
+                    <?php endif; ?>
+                </span>
+            </div>
+            <pre id="winCommands" class="d-none"><?php echo e($winBundle); ?></pre>
+            <pre id="cronCommands" class="d-none"><?php echo e($cronBundle); ?></pre>
+            <div class="small text-secondary mt-2" style="line-height:1.7;">
+                <i class="fas fa-list me-1 text-muted"></i>
+                Paste the Windows commands into a <strong>Task Scheduler</strong> (or a <code>.bat</code> run once as administrator), or add the crontab lines to
+                <code>crontab -e</code> on Linux. Task names follow the <code>Apex_&lt;job&gt;</code> convention so the scheduler check can detect them.
+            </div>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white border-0 py-3">
             <div class="d-flex align-items-center">
@@ -293,6 +439,7 @@ $baseDir = dirname(__DIR__);
                         <tr>
                             <th class="ps-4 py-3">Job</th>
                             <th class="py-3">Schedule</th>
+                            <th class="py-3">Scheduler</th>
                             <th class="py-3 d-none d-md-table-cell">What it does</th>
                             <th class="py-3 d-none d-lg-table-cell">Recent activity</th>
                             <th class="py-3 text-end pe-4">Actions</th>
@@ -301,6 +448,16 @@ $baseDir = dirname(__DIR__);
                     <tbody>
                         <?php foreach ($jobs as $file => $meta):
                             $lastRun = !empty($meta['log_glob']) ? job_last_run($meta['log_glob']) : '';
+                            $task = scheduled_task_name($file);
+                            if (!$scheduleChecked) {
+                                $status = '<span class="text-muted opacity-50">—</span>';
+                            } elseif ($installed === null) {
+                                $status = '<span class="badge" style="background:#f1f5f9;color:#64748b;" title="The scheduler could not be queried">Unknown</span>';
+                            } elseif (in_array($task, $installed, true)) {
+                                $status = '<span class="badge" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;"><i class="fas fa-check me-1"></i>Scheduled</span>';
+                            } else {
+                                $status = '<span class="badge" style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;" title="Run the install command to schedule this job">Not scheduled</span>';
+                            }
                         ?>
                             <tr>
                                 <td class="ps-4 py-3">
@@ -317,6 +474,7 @@ $baseDir = dirname(__DIR__);
                                 <td class="py-3">
                                     <span class="badge" style="background:#f1f5f9;color:#334155;font-weight:500;"><?php echo e($meta['schedule']); ?></span>
                                 </td>
+                                <td class="py-3"><?php echo $status; ?></td>
                                 <td class="py-3 d-none d-md-table-cell" style="max-width:340px;">
                                     <span class="small text-secondary"><?php echo e($meta['desc']); ?></span>
                                 </td>
@@ -339,7 +497,7 @@ $baseDir = dirname(__DIR__);
                                 </td>
                             </tr>
                             <tr class="d-none d-md-table-row">
-                                <td colspan="5" class="p-0 border-0">
+                                <td colspan="6" class="p-0 border-0">
                                     <div class="collapse" id="cmd-<?php echo md5($file); ?>">
                                         <div class="px-4 py-3 bg-light border-top">
                                             <div class="row g-3">
@@ -391,5 +549,47 @@ $baseDir = dirname(__DIR__);
         </div>
     </div>
 </div>
+
+<script>
+// Copy-to-clipboard for the bulk command bundles.
+(function () {
+    function copyText(text, btn, okLabel) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function () {
+                flash(btn, okLabel);
+            });
+            return;
+        }
+        // Fallback for non-secure contexts.
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            flash(btn, okLabel);
+        } catch (e) {}
+        document.body.removeChild(ta);
+    }
+    function flash(btn, okLabel) {
+        if (!btn) return;
+        var original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>' + okLabel;
+        setTimeout(function () { btn.innerHTML = original; }, 1600);
+    }
+    var winBtn = document.getElementById('copyWinBtn');
+    var cronBtn = document.getElementById('copyCronBtn');
+    var winPre = document.getElementById('winCommands');
+    var cronPre = document.getElementById('cronCommands');
+    if (winBtn && winPre) {
+        winBtn.addEventListener('click', function () { copyText(winPre.textContent, winBtn, 'Copied!'); });
+    }
+    if (cronBtn && cronPre) {
+        cronBtn.addEventListener('click', function () { copyText(cronPre.textContent, cronBtn, 'Copied!'); });
+    }
+})();
+</script>
 
 <?php include_once '../includes/footer.php'; ?>

@@ -35,12 +35,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Too many invalid attempts. Please wait about ' . $mins . ' minute' . ($mins === 1 ? '' : 's') . ' before trying again.';
             } elseif (admin_device_challenge_verify($code)) {
                 clear_login_attempts($conn, 'device:' . $email);
+                if (!function_exists('log_security_event')) {
+                    require_once '../includes/security_events.php';
+                }
+                if (function_exists('log_security_event')) {
+                    log_security_event('device_challenge_verified', 'info', 'Device verified for admin #' . (int) ($pending['admin_id'] ?? 0), 'admin:' . (int) ($pending['admin_id'] ?? 0));
+                }
                 admin_device_challenge_complete($conn, (int) ($pending['admin_id'] ?? 0), $email);
                 $conn->close();
                 header('Location: admin_dashboard.php');
                 exit;
             } else {
                 register_login_attempt($conn, 'device:' . $email);
+                if (!function_exists('log_security_event')) {
+                    require_once '../includes/security_events.php';
+                }
+                if (function_exists('log_security_event')) {
+                    log_security_event('device_challenge_failed', 'warning', 'Invalid challenge code for ' . $email, 'admin:' . (int) ($pending['admin_id'] ?? 0));
+                }
                 $error = 'That code is invalid or expired. Return to the login page to try again.';
                 unset($_SESSION['admin_device_pending']);
             }

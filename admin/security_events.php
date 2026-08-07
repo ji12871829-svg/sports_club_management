@@ -138,7 +138,7 @@ $sev_badge = [
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
             <h1 class="h4 fw-bold mb-1"><i class="fas fa-shield-halved me-2 text-danger"></i>Security Events</h1>
-            <p class="text-muted mb-0 small">Rate-limit hits, CSRF rejections, webhook/callback failures and auth lockouts. Acknowledged events are excluded from the daily digest.</p>
+            <p class="text-muted mb-0 small">Rate-limit hits, CSRF rejections, webhook/callback failures, auth lockouts and unknown-device challenge activity. Acknowledged events are excluded from the daily digest.</p>
         </div>
         <a href="slow_pages.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-gauge-high me-1"></i>Slow Pages</a>
     </div>
@@ -158,8 +158,23 @@ $sev_badge = [
             'csrf_reject'     => ['CSRF Rejections', 'fa-shield', 'text-danger'],
             'callback_reject' => ['Callback Failures', 'fa-money-bill-transfer', 'text-primary'],
             'auth_lockout'    => ['Auth Lockouts', 'fa-user-lock', 'text-success'],
+            'device_challenge' => ['Device Challenges', 'fa-mobile-screen-button', 'text-info'],
         ];
+        // The Device Challenges card sums the three challenge event types via
+        // its own query — the grouped $summary above only carries the four
+        // pre-initialized keys, so intersect-based counting would read 0.
+        $challengeCount = 0;
+        $rCh = $conn->query(
+            "SELECT COUNT(*) FROM security_events
+             WHERE event_type IN ('device_challenge_issued','device_challenge_failed','device_challenge_verified')
+               AND acknowledged = 0 AND created_at >= NOW() - INTERVAL 24 HOUR"
+        );
+        if ($rCh) {
+            $challengeCount = (int) ($rCh->fetch_row()[0] ?? 0);
+            $rCh->free();
+        }
         foreach ($cards as $key => [$label, $icon, $color]):
+            $cardValue = $key === 'device_challenge' ? $challengeCount : (int) ($summary[$key] ?? 0);
         ?>
         <div class="col-6 col-xl-3">
             <div class="card border-0 shadow-sm h-100">
@@ -167,7 +182,7 @@ $sev_badge = [
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <div class="small text-muted text-uppercase fw-semibold"><?php echo $label; ?></div>
-                            <div class="fs-4 fw-bold"><?php echo number_format($summary[$key]); ?></div>
+                            <div class="fs-4 fw-bold"><?php echo number_format($cardValue); ?></div>
                             <div class="small text-muted">unacknowledged, last 24h</div>
                         </div>
                         <i class="fas <?php echo $icon; ?> fs-2 <?php echo $color; ?> opacity-50"></i>

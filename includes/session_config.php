@@ -509,6 +509,16 @@ function admin_device_challenge_start(mysqli $conn, int $admin_id, string $email
         log_activity($conn, 'Device challenge issued for new device login', 'Auth', $admin_id, 'IP ' . $ip . ' Device ' . $device);
     }
 
+    // Surface the challenge in the security-events register so admins can
+    // spot repeated challenge activity for an account.
+    if (!function_exists('log_security_event')) {
+        require_once __DIR__ . '/security_events.php';
+    }
+    if (function_exists('log_security_event')) {
+        $GLOBALS['conn'] = $conn; // the helper reads the global connection
+        log_security_event('device_challenge_issued', 'info', 'Challenge emailed for admin #' . $admin_id . ' on ' . $device . ' (IP ' . $ip . ')', 'admin:' . $admin_id);
+    }
+
     return true;
 }
 

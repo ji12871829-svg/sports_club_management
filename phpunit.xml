@@ -33,6 +33,9 @@
         <testsuite name="SessionSecurity">
             <file>tests/SessionSecurityTest.php</file>
         </testsuite>
+        <testsuite name="DeviceChallenge">
+            <file>tests/DeviceChallengeTest.php</file>
+        </testsuite>
     </testsuites>
     <coverage>
         <include>
