@@ -87,6 +87,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 $_SESSION['admin_loggedin'] = true;
                                 $_SESSION['admin_id'] = $admin_id;
                                 $_SESSION['admin_email'] = $db_email;
+                                $_SESSION['admin_last_activity'] = time();
+                                admin_auth_epoch_store($conn, (int) $admin_id);
 
                                 require_once '../includes/activity_log.php';
                                 log_activity($conn, 'Admin logged in', 'Auth', $admin_id, 'Login from ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));

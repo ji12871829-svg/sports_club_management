@@ -115,6 +115,33 @@ $admin_role = asc_get_user_role($conn, 'admin', $admin_id);
 $can_manage_roles = asc_has_permission($conn, 'roles.manage', 'admin', $admin_id);
 $all_roles = $can_manage_roles ? asc_get_all_roles($conn) : [];
 
+// Handle force-logout of all other sessions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'force_logout_others') {
+    if (!csrf_verify($_POST['csrf_token'] ?? '', 'admin_profile_csrf')) {
+        $error = 'Security check failed. Please refresh and try again.';
+    } elseif (!$admin) {
+        $error = 'Admin account not found.';
+    } else {
+        if (admin_auth_epoch_column_exists($conn)) {
+            $stmt = $conn->prepare('UPDATE admins SET auth_epoch = auth_epoch + 1 WHERE admin_id = ?');
+            $stmt->bind_param('i', $admin_id);
+            if ($stmt->execute()) {
+                $stmt->close();
+                // Re-store the current session's epoch so THIS session survives.
+                admin_auth_epoch_store($conn, $admin_id);
+                $message = 'All other sessions have been logged out. This session stays active.';
+                require_once "../includes/activity_log.php";
+                log_activity($conn, 'Admin logged out all other sessions', 'Auth', $admin_id);
+            } else {
+                $stmt->close();
+                $error = 'Failed to log out other sessions. Please try again.';
+            }
+        } else {
+            $error = 'Run migration 062_admin_auth_epoch.sql to enable this feature.';
+        }
+    }
+}
+
 // Handle role change
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_role') {
     if (!csrf_verify($_POST['csrf_token'] ?? '', 'admin_profile_csrf')) {
@@ -429,6 +456,16 @@ $conn->close();
                     <label class="form-check-label" for="show_password_fields" style="font-size: 0.85rem;">Show passwords</label>
                 </div>
 
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" class="btn-corporate-outline" id="generatePasswordBtn">
+                        <i class="fas fa-dice"></i> Generate Strong Password
+                    </button>
+                    <button type="button" class="btn-corporate-outline" id="copyGeneratedPwBtn" style="display:none;">
+                        <i class="fas fa-copy"></i> Copy Password
+                    </button>
+                    <span id="generatedPwHint" class="align-self-center text-muted" style="font-size: 0.8rem;"></span>
+                </div>
+
                 <button type="submit" class="btn-corporate-primary">
                     <i class="fas fa-key"></i> Change Password
                 </button>
@@ -489,6 +526,13 @@ $conn->close();
                 <a href="activity_log.php" class="btn-corporate-outline">
                     <i class="fas fa-clock-rotate-left"></i> View Activity Log
                 </a>
+                <form method="post" class="d-inline" onsubmit="return confirm('Log out every other active admin session? This session stays active.');">
+                    <?php echo csrf_field('admin_profile_csrf'); ?>
+                    <input type="hidden" name="action" value="force_logout_others">
+                    <button type="submit" class="btn-corporate-outline" style="border-color: #fca5a5; color: #b91c1c;">
+                        <i class="fas fa-user-shield"></i> Log Out Other Sessions
+                    </button>
+                </form>
                 <a href="admin_dashboard.php" class="btn-corporate-outline">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
@@ -513,6 +557,75 @@ $conn->close();
         const el = document.getElementById('email_password');
         if (el) el.type = this.checked ? 'text' : 'password';
     });
+
+    // ── Generate Strong Password + Copy to Clipboard ────────────────────────
+    (function() {
+        const genBtn = document.getElementById('generatePasswordBtn');
+        const copyBtn = document.getElementById('copyGeneratedPwBtn');
+        const hint = document.getElementById('generatedPwHint');
+        let generated = '';
+
+        function generatePassword(len) {
+            const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+            const lower = 'abcdefghijkmnpqrstuvwxyz';
+            const digits = '23456789';
+            const symbols = '!@#$%^&*';
+            const all = upper + lower + digits + symbols;
+            const rand = (max) => Math.floor(Math.random() * max);
+            let pw = [
+                upper[rand(upper.length)],
+                lower[rand(lower.length)],
+                digits[rand(digits.length)],
+                symbols[rand(symbols.length)],
+            ];
+            for (let i = pw.length; i < len; i++) pw.push(all[rand(all.length)]);
+            // shuffle
+            for (let i = pw.length - 1; i > 0; i--) {
+                const j = rand(i + 1);
+                [pw[i], pw[j]] = [pw[j], pw[i]];
+            }
+            return pw.join('');
+        }
+
+        if (genBtn) genBtn.addEventListener('click', function() {
+            generated = generatePassword(16);
+            const nw = document.getElementById('new_password');
+            const cf = document.getElementById('confirm_password');
+            if (nw) nw.value = generated;
+            if (cf) cf.value = generated;
+            if (hint) hint.textContent = 'Generated password filled in below — copy it now, it won\'t be shown again.';
+            if (copyBtn) copyBtn.style.display = 'inline-flex';
+        });
+
+        if (copyBtn) copyBtn.addEventListener('click', function() {
+            if (!generated) return;
+            const ok = function() {
+                if (copyBtn) {
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Password';
+                    }, 1800);
+                }
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(generated).then(ok).catch(function() { fallbackCopy(generated, ok); });
+            } else {
+                fallbackCopy(generated, ok);
+            }
+        });
+
+        function fallbackCopy(text, done) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+            done();
+        }
+    })();
 </script>
 
 <?php include_once("../includes/footer.php"); ?>
