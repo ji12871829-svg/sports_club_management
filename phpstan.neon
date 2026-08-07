@@ -1,0 +1,18 @@
+parameters:
+    level: 1
+    paths:
+        - includes
+        - config
+        - callbacks
+        - scripts
+        - cron
+    tmpDir: .phpstan-cache
+    parallel:
+        maximumNumberOfProcesses: 4
+
+    # The legacy codebase ships with pre-existing findings; they are recorded
+    # in phpstan-baseline.neon so CI fails only on NEW issues.
+    # Memory limit is passed on the CLI (--memory-limit=1G).
+
+includes:
+    - phpstan-baseline.neon

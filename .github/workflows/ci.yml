@@ -85,6 +85,60 @@ jobs:
           composer make-sbom 2>/dev/null && cp -f composer.sbom.json sbom.json || echo "::warning::SBOM generation skipped (cyclonedx plugin unavailable)"
 
   # ----------------------------------------------------------------
+  # Job 1c: Static analysis gates (PHPStan + php-cs-fixer)
+  # ----------------------------------------------------------------
+  # PHPStan runs at level 1 against the core paths with a committed
+  # baseline (phpstan-baseline.neon) so legacy findings never block CI;
+  # only NEW issues fail the build. php-cs-fixer runs in dry-run mode on
+  # the PHP files changed in this push/PR only — legacy files are never
+  # reformatted wholesale while new code is held to the PSR-12 style.
+  static-analysis:
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need full history for the changed-files diff
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, mysqli, pdo_mysql, xml, gd, zip
+          tools: composer:v2
+
+      - name: Install dependencies (incl. dev tools)
+        run: composer install --no-interaction --no-progress --prefer-dist --ignore-platform-reqs
+
+      - name: PHPStan (baselined — new issues only fail)
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+        # Note: phpstan-baseline.neon records pre-existing findings (level 1,
+        # core paths). reportUnmatchedIgnoredErrors defaults to true, so the
+        # build also fails when a future fix resolves a baselined error —
+        # regenerate the baseline with `vendor/bin/phpstan analyse --generate-baseline`
+        # after cleaning one up (never delete baseline entries blindly).
+
+      - name: Collect changed PHP files
+        id: changed
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$BASE" ]; then BASE="HEAD~1"; fi
+          FILES=$(git diff --name-only "${BASE}"...HEAD -- '*.php' 2>/dev/null || true)
+          FILES=$(echo "$FILES" | grep -v '^vendor/' | grep -v '^\.freebuff/' || true)
+          echo "files=${FILES}" >> "$GITHUB_OUTPUT"
+          echo "Changed PHP files:"; echo "${FILES}" | sed '/^$/d'
+
+      - name: php-cs-fixer dry-run on changed files
+        run: |
+          CHANGED="${{ steps.changed.outputs.files }}"
+          if [ -z "$CHANGED" ]; then
+            echo "No changed PHP files — style gate skipped."
+            exit 0
+          fi
+          vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php \
+            --path-mode=intersection --dry-run --diff --using-cache=no $CHANGED
+
+  # ----------------------------------------------------------------
   # Job 2: PHPUnit tests
   # ----------------------------------------------------------------
   test:

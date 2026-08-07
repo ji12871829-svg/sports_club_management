@@ -27,6 +27,10 @@ function asc_session_start(): void
         }
     }
 
+    // Optional Redis-backed session store (env-gated; falls back to files).
+    require_once __DIR__ . '/redis_session.php';
+    redis_session_init();
+
     session_start();
 }
 

@@ -31,3 +31,6 @@ dev/
 
 # Operator-provided GeoLite database (never commit a ~50MB mmdb)
 data/*.mmdb
+
+# PHPStan cache
+.phpstan-cache/

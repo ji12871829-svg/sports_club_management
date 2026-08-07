@@ -1,0 +1,187 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Function emailTicketConfirmation not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: callbacks/mpesa_callback.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 20
+			path: callbacks/mpesa_callback.php
+
+		-
+			message: '#^Variable \$femail might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: callbacks/mpesa_callback.php
+
+		-
+			message: '#^Variable \$fname might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: callbacks/mpesa_callback.php
+
+		-
+			message: '#^Variable \$member_email might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: callbacks/mpesa_callback.php
+
+		-
+			message: '#^Variable \$member_fname might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: callbacks/mpesa_callback.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: callbacks/paystack_callback.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: cron/cron_achievements.php
+
+		-
+			message: '#^Function emailAIReviewSummary not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: cron/cron_ai_booking_review.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: cron/cron_ai_booking_review.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: cron/cron_attendance_alert.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: cron/cron_email_campaigns.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: cron/cron_fine_escalation.php
+
+		-
+			message: '#^Constant APP_URL not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: cron/cron_late_payment_reminders.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: cron/cron_late_payment_reminders.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: cron/cron_membership_renewal.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: cron/cron_security_alert.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: cron/cron_session_cleanup.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/admin_auth.php
+
+		-
+			message: '#^Variable \$dbEpoch might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/admin_auth.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/admin_header.php
+
+		-
+			message: '#^Variable \$_POST in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/csrf.php
+
+		-
+			message: '#^Function sendEmailDetailed not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/email_campaigns.php
+
+		-
+			message: '#^Function emailPasswordReset not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/password_reset.php
+
+		-
+			message: '#^Undefined variable\: \$count$#'
+			identifier: variable.undefined
+			count: 8
+			path: includes/rate_limiter.php
+
+		-
+			message: '#^Undefined variable\: \$email$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/rate_limiter.php
+
+		-
+			message: '#^Variable \$fixtures_by_sport might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/ticket_fixture_list.php
+
+		-
+			message: '#^Variable \$query might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/wearable_integration.php
+
+		-
+			message: '#^File begins with UTF\-8 BOM character\. This may cause problems when running the code in the web browser\.$#'
+			identifier: whitespace.bom
+			count: 1
+			path: scripts/generate_full_roster_migration.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: scripts/migrate_features.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: scripts/repair_auth_and_performance.php
