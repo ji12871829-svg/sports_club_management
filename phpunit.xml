@@ -30,6 +30,9 @@
         <testsuite name="DuplicateMembership">
             <file>tests/DuplicateMembershipTest.php</file>
         </testsuite>
+        <testsuite name="SessionSecurity">
+            <file>tests/SessionSecurityTest.php</file>
+        </testsuite>
     </testsuites>
     <coverage>
         <include>

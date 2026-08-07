@@ -92,6 +92,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 $_SESSION['admin_last_activity'] = time();
                                 admin_auth_epoch_store($conn, (int) $admin_id);
                                 admin_sessions_record($conn, (int) $admin_id);
+                                admin_sessions_alert_new_device($conn, (int) $admin_id, $db_email);
 
                                 require_once '../includes/activity_log.php';
                                 log_activity($conn, 'Admin logged in', 'Auth', $admin_id, 'Login from ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));

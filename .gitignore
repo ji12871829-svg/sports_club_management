@@ -28,3 +28,6 @@ uploads/*
 
 # Dev scratch scripts
 dev/
+
+# Operator-provided GeoLite database (never commit a ~50MB mmdb)
+data/*.mmdb

@@ -421,6 +421,7 @@ $conn->close();
                             <tr style="color:#64748b;font-size:0.75rem;text-transform:uppercase;letter-spacing:.04em;">
                                 <th>Device</th>
                                 <th>IP Address</th>
+                                <th>Location</th>
                                 <th>Last Activity</th>
                                 <th>Age</th>
                                 <th></th>
@@ -430,12 +431,16 @@ $conn->close();
                             <?php foreach ($active_sessions as $s): ?>
                                 <tr>
                                     <td>
-                                        <?php echo e(admin_session_ua_label($s['user_agent'] ?? '')); ?>
+                                        <?php echo e(($s['user_agent'] ?? '') !== '' ? $s['user_agent'] : 'Unknown device'); ?>
                                         <?php if (!empty($s['is_current'])): ?>
                                             <span class="badge bg-success ms-1" style="font-size:0.65rem;"><i class="fas fa-check-circle me-1"></i>This device</span>
                                         <?php endif; ?>
                                     </td>
                                     <td><code><?php echo e($s['ip_address'] ?? '—'); ?></code></td>
+                                    <td>
+                                        <i class="fas fa-map-pin me-1 text-muted" style="font-size:0.7rem;"></i>
+                                        <?php echo e(admin_session_geo_hint((string) ($s['ip_address'] ?? ''))); ?>
+                                    </td>
                                     <td>
                                         <?php echo e(admin_session_time_ago($s['last_activity'] ?? '')); ?>
                                     </td>

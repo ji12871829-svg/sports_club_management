@@ -74,7 +74,9 @@ function admin_sessions_record(mysqli $conn, int $admin_id): void
         return;
     }
     $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-    $ua = substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255);
+    // Store the normalized device label (OS · browser) rather than the raw
+    // UA string, so new-device detection survives browser upgrades.
+    $device = admin_session_ua_label((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
     $token = admin_session_token();
     $stmt = $conn->prepare(
         'INSERT INTO admin_sessions (admin_id, session_token, ip_address, user_agent)
@@ -82,7 +84,7 @@ function admin_sessions_record(mysqli $conn, int $admin_id): void
          ON DUPLICATE KEY UPDATE last_activity = CURRENT_TIMESTAMP, ip_address = VALUES(ip_address), user_agent = VALUES(user_agent)'
     );
     if ($stmt) {
-        $stmt->bind_param('isss', $admin_id, $token, $ip, $ua);
+        $stmt->bind_param('isss', $admin_id, $token, $ip, $device);
         $stmt->execute();
         $stmt->close();
     }
@@ -259,6 +261,148 @@ function admin_session_age(string $ts): string
     $hours = (int) floor(($diff % 86400) / 3600);
 
     return $days . 'd ' . $hours . 'h';
+}
+
+/**
+ * Best-effort geographic hint for an IP address.
+ *
+ * Tries a local MaxMind GeoLite2 database (GeoIp2\Database\Reader from the
+ * geoip2/geoip2 composer package against a bundled .mmdb file) first. Falls
+ * back to labelling private/reserved ranges as "Local network" so no
+ * external API call is ever made and the panel degrades gracefully.
+ *
+ * @param string $ip          IPv4/IPv6 address
+ * @param string $mmdbPath    Optional path to a GeoLite2-Country.mmdb file
+ */
+function admin_session_geo_hint(string $ip, string $mmdbPath = ''): string
+{
+    $ip = trim($ip);
+    if ($ip === '') {
+        return 'Unknown';
+    }
+
+    // 1) Local / private / reserved ranges — no lookup needed.
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        return 'Local network';
+    }
+    if ($ip === '::1' || $ip === '127.0.0.1') {
+        return 'Local network';
+    }
+
+    // 2) Optional local GeoLite2 mmdb (only if the reader class is installed
+    //    AND a database file is provided/exists — never make network calls).
+    if ($mmdbPath === '') {
+        $mmdbPath = (string) (getenv('ASC_GEOIP_DB') ?: (__DIR__ . '/../data/GeoLite2-Country.mmdb'));
+    }
+    if (class_exists('GeoIp2\Database\Reader') && is_file($mmdbPath)) {
+        try {
+            $reader = new GeoIp2\Database\Reader($mmdbPath);
+            $record = $reader->country($ip);
+            $country = $record->country->name;
+
+            return is_string($country) && $country !== '' ? $country : 'Unknown';
+        } catch (\Throwable $e) {
+            // Unreadable DB or address not in range — fall through.
+        }
+    }
+
+    return '—';
+}
+
+/**
+ * Returns true when the current device (IP + user agent) has never been seen
+ * for this admin before AND the account has prior session history (so the
+ * very first login after enabling tracking is not flagged).
+ */
+function admin_sessions_is_new_device(mysqli $conn, int $admin_id): bool
+{
+    if (!admin_sessions_schema_ready($conn)) {
+        return false;
+    }
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    // Normalize the device key to OS + browser family so a browser upgrade
+    // (which changes the UA string) doesn't masquerade as a new device.
+    $device = admin_session_ua_label((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
+    $token = admin_session_token();
+
+    // Total sessions (excluding the just-inserted current one).
+    $totalStmt = $conn->prepare('SELECT COUNT(*) FROM admin_sessions WHERE admin_id = ? AND session_token <> ?');
+    if (!$totalStmt) {
+        return false;
+    }
+    $totalStmt->bind_param('is', $admin_id, $token);
+    $totalStmt->execute();
+    $totalStmt->bind_result($totalOther);
+    $totalStmt->fetch();
+    $totalStmt->close();
+
+    if ($totalOther < 1) {
+        return false; // first-ever recorded session, not a "new device"
+    }
+
+    // Has this exact device (IP + device label) appeared before?
+    $seenStmt = $conn->prepare('SELECT COUNT(*) FROM admin_sessions WHERE admin_id = ? AND ip_address = ? AND user_agent = ? AND session_token <> ?');
+    if (!$seenStmt) {
+        return false;
+    }
+    $seenStmt->bind_param('isss', $admin_id, $ip, $device, $token);
+    $seenStmt->execute();
+    $seenStmt->bind_result($seenBefore);
+    $seenStmt->fetch();
+    $seenStmt->close();
+
+    return $seenBefore < 1;
+}
+
+/**
+ * Sends a "new device signed in" security email to the admin account holder
+ * and records an activity-log entry. Best-effort: never throws.
+ */
+function admin_sessions_alert_new_device(mysqli $conn, int $admin_id, string $admin_email): void
+{
+    if (!admin_sessions_is_new_device($conn, $admin_id)) {
+        return;
+    }
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $ua = substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255);
+    $device = admin_session_ua_label($ua);
+    $geo = admin_session_geo_hint($ip);
+
+    try {
+        if (!function_exists('log_activity')) {
+            require_once __DIR__ . '/activity_log.php';
+        }
+        if (function_exists('log_activity')) {
+            log_activity($conn, 'New device admin login detected', 'Auth', $admin_id, 'IP ' . $ip . ' Device ' . $device);
+        }
+
+        if (!function_exists('sendEmail')) {
+            require_once __DIR__ . '/send_email.php';
+        }
+        if (!function_exists('sendEmail')) {
+            return;
+        }
+
+        $subject = '🔐 New device signed in to your Apex admin account';
+        $body = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">'
+            . '<div style="background:#1d5c8f;padding:20px 24px;"><h1 style="color:#fff;margin:0;font-size:17px;">New device sign-in detected</h1></div>'
+            . '<div style="padding:24px;">'
+            . '<p style="font-size:14px;color:#334155;">Your Apex Sports Club <strong>admin</strong> account was just used to sign in from a device we haven\'t seen before:</p>'
+            . '<table style="width:100%;border-collapse:collapse;margin-top:12px;">'
+            . '<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">Date &amp; time</td><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;">' . date('d M Y, H:i') . '</td></tr>'
+            . '<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">IP address</td><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;"><code>' . htmlspecialchars($ip) . '</code></td></tr>'
+            . '<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">Location</td><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;">' . htmlspecialchars($geo) . '</td></tr>'
+            . '<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">Device</td><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;">' . htmlspecialchars($device) . '</td></tr>'
+            . '</table>'
+            . '<p style="font-size:13px;color:#334155;margin-top:16px;">If this was you, you can ignore this email. If you don\'t recognise the sign-in, <strong>change your password immediately</strong> from the admin profile page and review your active sessions.</p>'
+            . '</div>'
+            . '<div style="background:#f8fafc;padding:12px 24px;color:#94a3b8;font-size:12px;">Apex Sports Club — Admin Security</div>'
+            . '</div>';
+        sendEmail($admin_email, 'Club Admin', $subject, $body);
+    } catch (\Throwable $e) {
+        error_log('[admin_sessions] new-device alert failed: ' . $e->getMessage());
+    }
 }
 
 /**
