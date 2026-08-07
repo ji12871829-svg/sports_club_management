@@ -149,7 +149,7 @@ function send_attendance_alert(mysqli $conn, int $memberId, int $consecutiveMiss
 <p>We've noticed you've missed your last <strong>{$consecutiveMisses} training sessions</strong> at Apex Sports Club.</p>
 <p>We hope everything is okay! Regular training is key to reaching your goals, and the team misses having you around.</p>
 <p>If there's anything stopping you from attending — an injury, scheduling conflict, or something else — please reach out and we'll do our best to help.</p>
-<p><a href='#' style='background:#4f46e5;color:#fff;padding:.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:700;'>Book Your Next Session</a></p>
+<p><a href='#' style='background:#14497a;color:#fff;padding:.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:700;'>Book Your Next Session</a></p>
 <p style='color:#64748b;font-size:.9rem;'>Your attendance streak matters. Let's get back on track together!</p>
 <p>— The Apex Sports Club Team</p>
 ";
