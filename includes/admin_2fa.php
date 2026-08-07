@@ -155,6 +155,7 @@ function admin_2fa_complete_login(mysqli $conn, int $admin_id, string $email): v
     $_SESSION['admin_2fa_verified_at'] = time();
     $_SESSION['admin_last_activity'] = time();
     admin_auth_epoch_store($conn, $admin_id);
+    admin_sessions_record($conn, $admin_id);
 
     require_once __DIR__ . '/activity_log.php';
     log_activity($conn, 'Admin logged in (2FA verified)', 'Auth', $admin_id, 'Login from ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));

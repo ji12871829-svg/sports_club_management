@@ -17,17 +17,33 @@ declare(strict_types=1);
  * skips schema-dependent cases (e.g. NOT NULL columns) on some databases.
  */
 
-$phpunitBin = __DIR__ . '/../vendor/bin/phpunit';
 $config = __DIR__ . '/../phpunit.xml';
 
-if (!is_file($phpunitBin)) {
-    fwrite(STDERR, "phpunit binary not found: {$phpunitBin}\n");
+// Prefer the composer-installed binary, fall back to phpunit on PATH
+// (GitHub Actions installs it via shivammathur/setup-php, not vendor/bin).
+$phpunitBin = __DIR__ . '/../vendor/bin/phpunit';
+$binary = null;
+if (is_file($phpunitBin)) {
+    $binary = escapeshellarg($phpunitBin);
+} else {
+    // command -v (POSIX shells) / where (Windows cmd) both resolve PATH.
+    $lookup = PHP_OS_FAMILY === 'Windows' ? 'where phpunit 2>NUL' : 'command -v phpunit 2>/dev/null';
+    $which = trim((string) shell_exec($lookup));
+    // `where` may return multiple lines; take the first.
+    $which = trim(explode("\n", $which)[0] ?? '');
+    if ($which !== '') {
+        $binary = escapeshellarg($which);
+    }
+}
+
+if ($binary === null) {
+    fwrite(STDERR, "phpunit binary not found (checked vendor/bin and PATH)\n");
     exit(1);
 }
 
 $args = array_slice($argv, 1);
 $cmd = escapeshellarg(PHP_BINARY)
-    . ' ' . escapeshellarg($phpunitBin)
+    . ' ' . $binary
     . ' --configuration ' . escapeshellarg($config)
     . ' --colors=never --testdox';
 

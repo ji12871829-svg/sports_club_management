@@ -22,6 +22,7 @@ $pending = $_SESSION['admin_2fa_pending'];
 $admin_id = (int) $pending['admin_id'];
 $email = (string) $pending['email'];
 $error = '';
+$lockout_seconds = 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify($_POST['csrf_token'] ?? '', 'admin_2fa_csrf')) {
@@ -29,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $rate = check_login_attempts($conn, '2fa:' . $email);
         if (!$rate['allowed']) {
-            $error = 'Too many attempts. Please wait 15 minutes or use a recovery code later.';
+            $lockout_seconds = (int) ($rate['retry_after'] ?? 900);
+            $error = 'Too many attempts. Please wait for the countdown before trying again.';
         } else {
             $code = trim($_POST['code'] ?? '');
             $admin = admin_2fa_fetch($conn, $admin_id);
@@ -94,7 +96,42 @@ $conn->close();
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger small"><?php echo e($error); ?></div>
+                        <div class="alert alert-danger small"><?php echo e($error); ?>
+                            <?php if ($lockout_seconds > 0): ?>
+                                <div class="mt-1" id="lockoutCountdownWrap">
+                                    <i class="fas fa-hourglass-half me-1"></i>Retry in <strong id="lockoutCountdown">--:--</strong>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($lockout_seconds > 0): ?>
+                    <script>
+                        (function() {
+                            var lockoutSeconds = <?php echo (int) $lockout_seconds; ?>;
+                            var form = document.querySelector('form');
+                            var counter = document.getElementById('lockoutCountdown');
+                            var btn = form ? form.querySelector('button[type="submit"]') : null;
+                            if (btn) btn.disabled = true;
+                            var render = function() {
+                                var m = Math.floor(lockoutSeconds / 60);
+                                var s = lockoutSeconds % 60;
+                                if (counter) counter.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+                            };
+                            render(); // paint immediately, no 1s "--:--" flash
+                            var timer = setInterval(function() {
+                                lockoutSeconds--;
+                                if (lockoutSeconds <= 0) {
+                                    clearInterval(timer);
+                                    if (btn) btn.disabled = false;
+                                    var wrap = document.getElementById('lockoutCountdownWrap');
+                                    if (wrap) wrap.innerHTML = '<i class="fas fa-check-circle me-1"></i>You can try again now.';
+                                    return;
+                                }
+                                render();
+                            }, 1000);
+                        })();
+                    </script>
                     <?php endif; ?>
 
                     <form method="post" autocomplete="off">

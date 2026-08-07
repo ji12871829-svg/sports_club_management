@@ -131,7 +131,7 @@ jobs:
           DB_NAME: sports_club_db_test
 
       - name: Run PHPUnit
-        run: phpunit --configuration=phpunit.xml
+        run: php scripts/run_tests.php
         env:
           MYSQL_HOST: 127.0.0.1
           MYSQL_PORT: 3306

@@ -60,4 +60,19 @@ if (isset($_SESSION['admin_id'], $_SESSION['admin_auth_epoch'])) {
             $stmt->close();
         }
     }
+
+    // Per-session revoke check: a session individually revoked from the
+    // Active Sessions panel is forced out on its next request.
+    if (admin_sessions_is_revoked($conn, (int) $_SESSION['admin_id'])) {
+        require_once __DIR__ . '/activity_log.php';
+        log_activity($conn, 'Admin session revoked (individually)', 'Auth', (int) $_SESSION['admin_id']);
+        $_SESSION = [];
+        session_destroy();
+        header('Location: admin_login.php');
+        exit;
+    }
+
+    // Refresh last_activity (throttled to once per minute) so the Active
+    // Sessions panel shows accurate recency.
+    admin_sessions_touch($conn, (int) $_SESSION['admin_id']);
 }

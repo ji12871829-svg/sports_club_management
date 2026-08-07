@@ -25,6 +25,7 @@ require_once '../includes/rate_limiter.php';
 
 $email = $password = "";
 $email_err = $password_err = $login_err = "";
+$lockout_seconds = 0;
 
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
@@ -51,7 +52,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         if (empty($email_err)) {
             $rate_check = check_login_attempts($conn, $email);
             if (!$rate_check['allowed']) {
-                $login_err = 'Too many failed login attempts. Please try again in 15 minutes.';
+                $lockout_seconds = (int) ($rate_check['retry_after'] ?? 900);
+                $login_err = 'Too many failed login attempts. Please try again later.';
             }
         }
 
@@ -89,6 +91,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 $_SESSION['admin_email'] = $db_email;
                                 $_SESSION['admin_last_activity'] = time();
                                 admin_auth_epoch_store($conn, (int) $admin_id);
+                                admin_sessions_record($conn, (int) $admin_id);
 
                                 require_once '../includes/activity_log.php';
                                 log_activity($conn, 'Admin logged in', 'Auth', $admin_id, 'Login from ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
@@ -413,10 +416,16 @@ body {
             <p class="subheading">Sign in to access the administrator dashboard.</p>
 
             <?php if(!empty($login_err)): ?>
-                <div class="alert-modern"><?php echo $login_err; ?></div>
+                <div class="alert-modern"><?php echo $login_err; ?>
+                    <?php if ($lockout_seconds > 0): ?>
+                        <div class="mt-1" id="lockoutCountdownWrap" style="font-size: 0.85rem;">
+                            <i class="fas fa-hourglass-half me-1"></i>Retry in <strong id="lockoutCountdown">--:--</strong>
+                        </div>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
 
-            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" id="loginForm">
                 <?php echo csrf_field('admin_login_csrf'); ?>
 
                 <div class="form-group">
@@ -453,5 +462,34 @@ body {
     </div>
 </div>
 
+<script>
+    // ── Login lockout countdown ────────────────────────────────────────
+    (function() {
+        var lockoutSeconds = <?php echo (int) $lockout_seconds; ?>;
+        var form = document.getElementById('loginForm');
+        var counter = document.getElementById('lockoutCountdown');
+        var wrap = document.getElementById('lockoutCountdownWrap');
+        if (lockoutSeconds > 0) {
+            var btn = form ? form.querySelector('button[type="submit"]') : null;
+            if (btn) btn.disabled = true;
+            var render = function() {
+                var m = Math.floor(lockoutSeconds / 60);
+                var s = lockoutSeconds % 60;
+                if (counter) counter.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+            };
+            render(); // paint immediately, no 1s "--:--" flash
+            var timer = setInterval(function() {
+                lockoutSeconds--;
+                if (lockoutSeconds <= 0) {
+                    clearInterval(timer);
+                    if (btn) btn.disabled = false;
+                    if (wrap) wrap.innerHTML = '<i class="fas fa-check-circle me-1"></i>You can try again now.';
+                    return;
+                }
+                render();
+            }, 1000);
+        }
+    })();
+</script>
 </body>
 </html>

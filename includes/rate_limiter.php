@@ -83,7 +83,30 @@ function check_login_attempts(mysqli $conn, string $email): array
             // digest (at most one per account per minute under a brute-force
             // flood, so the telemetry never amplifies the DB load).
             log_security_event_throttled('auth_lockout', 'warning', 'Login rate limit reached for account', $email);
-            return ['allowed' => false, 'remaining' => 0];
+
+            // Compute how many seconds remain until the oldest counted attempt
+            // drops out of the 15-minute window and the lockout lifts.
+            // The math stays in MySQL (TIMESTAMPDIFF) so PHP/MySQL timezone
+            // differences never distort the countdown.
+            $retryAfter = 900;
+            $minStmt = safe_prepare($conn, "SELECT COALESCE(
+                TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(MIN(attempted_at), INTERVAL 15 MINUTE)),
+                900
+            ) FROM login_attempts WHERE (email = ? OR ip_address = ?) AND action_type = 'login' AND attempted_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
+            if ($minStmt) {
+                $minStmt->bind_param("ss", $email, $ip);
+                $minStmt->execute();
+                $minStmt->bind_result($retryAfter);
+                $minStmt->fetch();
+                $minStmt->close();
+                if (!is_numeric($retryAfter) || (int) $retryAfter < 1) {
+                    $retryAfter = 900;
+                } else {
+                    $retryAfter = (int) $retryAfter;
+                }
+            }
+
+            return ['allowed' => false, 'remaining' => 0, 'retry_after' => $retryAfter];
         }
         return ['allowed' => true, 'remaining' => 5 - $count];
     }

@@ -142,6 +142,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'force
     }
 }
 
+// Handle per-session revoke from the Active Sessions panel
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'revoke_session') {
+    if (!csrf_verify($_POST['csrf_token'] ?? '', 'admin_profile_csrf')) {
+        $error = 'Security check failed. Please refresh and try again.';
+    } elseif (!$admin) {
+        $error = 'Admin account not found.';
+    } else {
+        $sessionId = (int) ($_POST['session_id'] ?? 0);
+        if ($sessionId < 1) {
+            $error = 'Invalid session.';
+        } elseif (admin_sessions_revoke($conn, $admin_id, $sessionId)) {
+            $message = 'Session revoked. The device will be signed out on its next request.';
+            require_once "../includes/activity_log.php";
+            log_activity($conn, 'Admin revoked a specific session', 'Auth', $admin_id);
+        } else {
+            $error = 'Could not revoke that session. It may already be inactive.';
+        }
+    }
+}
+
 // Handle role change
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_role') {
     if (!csrf_verify($_POST['csrf_token'] ?? '', 'admin_profile_csrf')) {
@@ -179,6 +199,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chang
 }
 
 $twofa_enabled = admin_2fa_schema_ready($conn) && admin_2fa_is_enabled(admin_2fa_fetch($conn, $admin_id));
+
+// Fetch active sessions before the connection closes (rendered further down).
+$active_sessions = admin_sessions_list($conn, $admin_id);
 
 $conn->close();
 ?>
@@ -383,6 +406,66 @@ $conn->close();
         </div>
     </div>
 
+    <!-- Active Sessions -->
+    <div class="corporate-block-wrapper mb-4">
+        <div class="corporate-block-header">
+            <i class="fas fa-desktop text-primary"></i> Active Sessions
+        </div>
+        <div class="corporate-block-body">
+            <?php if (empty($active_sessions)): ?>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">No active sessions recorded. <span class="text-muted" style="font-size: 0.8rem;">(Run migration 063 to enable session tracking.)</span></p>
+            <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0" style="font-size: 0.88rem;">
+                        <thead>
+                            <tr style="color:#64748b;font-size:0.75rem;text-transform:uppercase;letter-spacing:.04em;">
+                                <th>Device</th>
+                                <th>IP Address</th>
+                                <th>Last Activity</th>
+                                <th>Age</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($active_sessions as $s): ?>
+                                <tr>
+                                    <td>
+                                        <?php echo e(admin_session_ua_label($s['user_agent'] ?? '')); ?>
+                                        <?php if (!empty($s['is_current'])): ?>
+                                            <span class="badge bg-success ms-1" style="font-size:0.65rem;"><i class="fas fa-check-circle me-1"></i>This device</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><code><?php echo e($s['ip_address'] ?? '—'); ?></code></td>
+                                    <td>
+                                        <?php echo e(admin_session_time_ago($s['last_activity'] ?? '')); ?>
+                                    </td>
+                                    <td><?php echo e(admin_session_age($s['created_at'] ?? '')); ?></td>
+                                    <td class="text-end">
+                                        <?php if (empty($s['is_current'])): ?>
+                                            <form method="post" class="d-inline" onsubmit="return confirm('Sign out this device?');">
+                                                <?php echo csrf_field('admin_profile_csrf'); ?>
+                                                <input type="hidden" name="action" value="revoke_session">
+                                                <input type="hidden" name="session_id" value="<?php echo (int) $s['id']; ?>">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:0.78rem;">
+                                                    <i class="fas fa-sign-out-alt me-1"></i>Sign Out
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <span class="text-muted" style="font-size:0.78rem;">Current</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
+                    <i class="fas fa-info-circle me-1"></i> Session tracking refreshes every minute. To sign out everything at once, use <strong>Log Out Other Sessions</strong> below.
+                </p>
+            <?php endif; ?>
+        </div>
+    </div>
+
     <!-- Update Email -->
     <div class="corporate-block-wrapper mb-4">
         <div class="corporate-block-header">
@@ -566,12 +649,21 @@ $conn->close();
         let generated = '';
 
         function generatePassword(len) {
+            // Cryptographically strong randomness via Web Crypto (crypto.getRandomValues),
+            // with a Math.random fallback only for non-secure contexts.
             const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
             const lower = 'abcdefghijkmnpqrstuvwxyz';
             const digits = '23456789';
             const symbols = '!@#$%^&*';
             const all = upper + lower + digits + symbols;
-            const rand = (max) => Math.floor(Math.random() * max);
+            const rand = (max) => {
+                if (window.crypto && crypto.getRandomValues) {
+                    const buf = new Uint32Array(1);
+                    crypto.getRandomValues(buf);
+                    return buf[0] % max;
+                }
+                return Math.floor(Math.random() * max);
+            };
             let pw = [
                 upper[rand(upper.length)],
                 lower[rand(lower.length)],
@@ -579,7 +671,7 @@ $conn->close();
                 symbols[rand(symbols.length)],
             ];
             for (let i = pw.length; i < len; i++) pw.push(all[rand(all.length)]);
-            // shuffle
+            // Fisher-Yates shuffle
             for (let i = pw.length - 1; i > 0; i--) {
                 const j = rand(i + 1);
                 [pw[i], pw[j]] = [pw[j], pw[i]];
