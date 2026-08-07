@@ -123,7 +123,8 @@ jobs:
         run: |
           BASE="${{ github.event.pull_request.base.sha }}"
           if [ -z "$BASE" ]; then BASE="HEAD~1"; fi
-          FILES=$(git diff --name-only "${BASE}"...HEAD -- '*.php' 2>/dev/null || true)
+          # --diff-filter=d excludes deleted files (php-cs-fixer cannot read them).
+          FILES=$(git diff --diff-filter=d --name-only "${BASE}"...HEAD -- '*.php' 2>/dev/null || true)
           FILES=$(echo "$FILES" | grep -v '^vendor/' | grep -v '^\.freebuff/' || true)
           echo "files=${FILES}" >> "$GITHUB_OUTPUT"
           echo "Changed PHP files:"; echo "${FILES}" | sed '/^$/d'

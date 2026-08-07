@@ -25,6 +25,11 @@
     "scripts": {
         "test": "phpunit",
         "test:coverage": "phpunit --coverage-html coverage",
-        "test:summary": "php scripts/run_tests.php"
+        "test:summary": "php scripts/run_tests.php",
+        "lint:stan": "phpstan analyse --no-progress --memory-limit=1G",
+        "lint:stan:baseline": "phpstan analyse --no-progress --memory-limit=1G --generate-baseline",
+        "lint:style": "bash scripts/lint_changed.sh",
+        "lint": ["@lint:stan", "@lint:style"],
+        "check": ["@lint", "@test:summary"]
     }
 }

@@ -175,6 +175,47 @@ Change this password before using the system beyond local testing.
 - Set production Paystack callback URLs to your live domain.
 - Replace default admin credentials before deployment.
 
+## Quality Gates (dev + CI)
+
+The repo ships with the same static-analysis gates CI enforces, runnable
+locally via Composer:
+
+```bash
+composer lint:stan         # PHPStan level 1 — fails only on NEW issues (baselined)
+composer lint:stan:baseline# regenerate the baseline after fixing a legacy issue
+composer lint:style        # php-cs-fixer dry-run on changed PHP files only
+composer lint              # both of the above
+composer check             # lint + the full PHPUnit suite
+composer test              # PHPUnit
+```
+
+- PHPStan analyses `includes/ config/ callbacks/ scripts/ cron/ admin/ public/`.
+  Pre-existing findings are recorded in `phpstan-baseline.neon` so CI never
+  breaks on legacy code — only newly introduced issues fail. After fixing a
+  baselined issue, regenerate with `composer lint:stan:baseline`
+  (which is `phpstan analyse --generate-baseline`).
+- php-cs-fixer (`.php-cs-fixer.dist.php`) holds changed files to PSR-12 +
+  short arrays; legacy files are never reformatted wholesale.
+- The GitHub Actions pipeline (`.github/workflows/ci.yml`) runs lint,
+  security scans (gitleaks + Semgrep), the full PHPUnit suite against
+  MariaDB 10.11, static analysis, migration dry-run, and smoke tests.
+
+### Optional: Redis-backed sessions
+
+By default sessions use PHP's files handler. To move them to Redis (useful
+for multiple web servers behind a load balancer), set in `.env`:
+
+```
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_SESSION_DB=0
+REDIS_SESSION_TTL=
+```
+
+If Redis is unreachable at boot the app silently falls back to files, so
+this is safe to enable before Redis is provisioned.
+
 ## Deployment Notes
 
 GitHub stores the source code, but it does not host PHP/MySQL apps directly. To make the app live, deploy it to PHP hosting such as cPanel hosting, a VPS, or another PHP-capable platform.

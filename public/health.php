@@ -1,4 +1,5 @@
 <?php
+
 /**
  * public/health.php
  * JSON health check endpoint — returns system status for CI/monitoring.
@@ -83,6 +84,73 @@ $results['uploads'] = runCheck('uploads', 'filesystem', function () {
     ];
 });
 
+// ── 2b. Backup directory (DR readiness) ─────────────────────────────
+$results['backups'] = runCheck('backups', 'filesystem', function () {
+    $backupDir = __DIR__ . '/../backups/db';
+    if (!is_dir($backupDir)) {
+        if (!mkdir($backupDir, 0775, true) && !is_dir($backupDir)) {
+            throw new \RuntimeException('Backup directory does not exist and could not be created');
+        }
+    }
+    if (!is_writable($backupDir)) {
+        throw new \RuntimeException('Backup directory is not writable');
+    }
+    $files = glob($backupDir . DIRECTORY_SEPARATOR . 'backup_*.sql') ?: [];
+    $files = array_filter($files, 'is_readable');
+    $newest = null;
+    if ($files) {
+        usort($files, static fn ($a, $b) => @filemtime($b) <=> @filemtime($a));
+        $newest = basename($files[0]);
+    }
+    return [
+        'path'       => realpath($backupDir),
+        'writable'   => true,
+        'free_bytes' => disk_free_space($backupDir) ?: 0,
+        'backup_count' => count($files),
+        'newest_backup' => $newest,
+    ];
+});
+
+// ── 2c. Redis session store ─────────────────────────────────────────
+// When REDIS_HOST is configured the operator WANTS Redis — a silent fallback
+// to files is exactly what monitoring should alert on, so configured-but-
+// unreachable reports fail (degrading the endpoint) while unconfigured is a
+// clean informational pass. AUTH is issued before PING when REDIS_PASSWORD
+// is set (mirrors AscRedisSessionHandler::connect()) so password-protected
+// servers are not falsely reported as down.
+$results['redis_sessions'] = runCheck('redis_sessions', 'sessions', function () {
+    $host = getenv('REDIS_HOST');
+    if ($host === false || trim($host) === '') {
+        return ['configured' => false, 'mode' => 'files'];
+    }
+    $port     = (int) (getenv('REDIS_PORT') ?: 6379);
+    $password = (string) (getenv('REDIS_PASSWORD') ?: '');
+    $errno = 0;
+    $errstr = '';
+    $ctx = stream_context_create(['socket' => ['timeout' => 1]]);
+    $socket = @stream_socket_client('tcp://' . trim($host) . ':' . $port, $errno, $errstr, 1, STREAM_CLIENT_CONNECT, $ctx);
+    if (!is_resource($socket)) {
+        throw new \RuntimeException('Redis configured but unreachable at ' . trim($host) . ':' . $port);
+    }
+    stream_set_timeout($socket, 1);
+    if ($password !== '') {
+        $authCmd = "*2\r\n\$4\r\nAUTH\r\n\$" . strlen($password) . "\r\n" . $password . "\r\n";
+        @fwrite($socket, $authCmd);
+        @fgets($socket); // consume AUTH reply; an error surfaces on the PING below
+    }
+    @fwrite($socket, "*1\r\n\$4\r\nPING\r\n");
+    $reply = @fgets($socket);
+    @fclose($socket);
+    if ($reply === false || stripos((string) $reply, 'PONG') === false) {
+        throw new \RuntimeException('Redis PING failed' . ($reply !== false ? ': ' . trim((string) $reply) : ''));
+    }
+    return [
+        'configured' => true,
+        'reachable'  => true,
+        'mode'       => 'redis',
+    ];
+});
+
 // ── 3. PHP extensions ───────────────────────────────────────────────
 $results['php_extensions'] = runCheck('php_extensions', 'config', function () {
     $required = ['mysqli', 'mbstring', 'pdo_mysql', 'xml', 'gd', 'zip', 'json', 'curl'];
@@ -161,7 +229,9 @@ $results['payment_config'] = runCheck('payment_config', 'config', function () {
         $problems[] = 'MPESA_CALLBACK_URL is empty';
     } else {
         $cbError = function_exists('mpesa_callback_url_error') ? mpesa_callback_url_error($mpesaCb) : null;
-        if ($cbError !== null) $problems[] = $cbError;
+        if ($cbError !== null) {
+            $problems[] = $cbError;
+        }
     }
 
     // Paystack: the callback is a browser redirect (the user's own browser
@@ -173,8 +243,12 @@ $results['payment_config'] = runCheck('payment_config', 'config', function () {
         $problems[] = 'PAYSTACK_CALLBACK_URL is still a placeholder domain';
     }
 
-    if ($mpesaKey === '' || $mpesaKey === 'test') $problems[] = 'MPESA_CONSUMER_KEY is not configured';
-    if ($paystackKey === '' || $paystackKey === 'sk_test_local') $problems[] = 'PAYSTACK_SECRET_KEY is not configured';
+    if ($mpesaKey === '' || $mpesaKey === 'test') {
+        $problems[] = 'MPESA_CONSUMER_KEY is not configured';
+    }
+    if ($paystackKey === '' || $paystackKey === 'sk_test_local') {
+        $problems[] = 'PAYSTACK_SECRET_KEY is not configured';
+    }
 
     if (!empty($problems)) {
         throw new \RuntimeException(implode('; ', $problems));
@@ -206,8 +280,10 @@ $results['migration_version'] = runCheck('migration_version', 'database', functi
 
 // ── 7. Rate-limit state (last 5 min of login_attempts) ──────────────
 $results['rate_limit_state'] = runCheck('rate_limit_state', 'database', function () use ($conn) {
-    $r = $conn->query("SELECT action_type, COUNT(*) c FROM login_attempts WHERE attempted_at > NOW() - INTERVAL 5 MINUTE GROUP BY action_type ORDER BY c DESC LIMIT 5");
-    if (!$r) return ['counts' => []];
+    $r = $conn->query('SELECT action_type, COUNT(*) c FROM login_attempts WHERE attempted_at > NOW() - INTERVAL 5 MINUTE GROUP BY action_type ORDER BY c DESC LIMIT 5');
+    if (!$r) {
+        return ['counts' => []];
+    }
     $counts = [];
     while ($row = $r->fetch_assoc()) {
         $counts[$row['action_type']] = (int) $row['c'];
@@ -218,8 +294,10 @@ $results['rate_limit_state'] = runCheck('rate_limit_state', 'database', function
 
 // ── 8. Last 10 security events ──────────────────────────────────────
 $results['last_security_events'] = runCheck('last_security_events', 'database', function () use ($conn) {
-    $r = $conn->query("SELECT event_type, severity, details, created_at FROM security_events ORDER BY id DESC LIMIT 10");
-    if (!$r) return ['events' => []];
+    $r = $conn->query('SELECT event_type, severity, details, created_at FROM security_events ORDER BY id DESC LIMIT 10');
+    if (!$r) {
+        return ['events' => []];
+    }
     $events = $r->fetch_all(MYSQLI_ASSOC);
     $r->free();
     return ['recent_events' => $events];
@@ -227,8 +305,10 @@ $results['last_security_events'] = runCheck('last_security_events', 'database', 
 
 // ── 10. Slow pages (last 7 days) ────────────────────────────────────
 $results['slow_pages'] = runCheck('slow_pages', 'database', function () use ($conn) {
-    $r = $conn->query("SELECT COUNT(*) FROM page_timings WHERE created_at >= NOW() - INTERVAL 7 DAY");
-    if (!$r) return ['count_7day' => 0];
+    $r = $conn->query('SELECT COUNT(*) FROM page_timings WHERE created_at >= NOW() - INTERVAL 7 DAY');
+    if (!$r) {
+        return ['count_7day' => 0];
+    }
     $c = (int) $r->fetch_row()[0];
     $r->free();
     return ['count_7day' => $c];

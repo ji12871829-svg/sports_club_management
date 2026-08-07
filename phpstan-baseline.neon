@@ -1,6 +1,504 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/activity_log.php
+
+		-
+			message: '#^Variable \$total_rows might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/activity_log.php
+
+		-
+			message: '#^Variable \$admin_pwd_hash might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/admin_dashboard.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 32
+			path: admin/admin_dashboard.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/admin_header.php
+
+		-
+			message: '#^Variable \$admin_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/admin_login.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 16
+			path: admin/admin_login.php
+
+		-
+			message: '#^Variable \$param_email might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/admin_login.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 23
+			path: admin/admin_profile.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: admin/admin_setup_2fa.php
+
+		-
+			message: '#^Variable \$hash might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/admin_setup_2fa.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/admin_verify_2fa.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/admin_verify_device.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/ai_match_reports.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/ai_predictions.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/ai_review_log.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: admin/ai_smart_scheduling.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/ajax_search.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/booking_overview.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/bulk_email.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 21
+			path: admin/churn_prediction.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/coach_session_notes.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/cron_ai_settings.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/event_checklist.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/export_fixtures.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/export_payments.php
+
+		-
+			message: '#^Variable \$apiReady might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/gemini_hub.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/gemini_hub.php
+
+		-
+			message: '#^Variable \$statusLabel might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/gemini_hub.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: admin/live_score_control.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/manage_announcements.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_attendance.php
+
+		-
+			message: '#^Function emailAIReviewSummary not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/manage_bookings.php
+
+		-
+			message: '#^Function emailCronDetailedSummary not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/manage_bookings.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 26
+			path: admin/manage_bookings.php
+
+		-
+			message: '#^Variable \$db_custom_prompt might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/manage_bookings.php
+
+		-
+			message: '#^Variable \$db_custom_temp might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/manage_bookings.php
+
+		-
+			message: '#^Variable \$db_strictness might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/manage_bookings.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/manage_coach_availability.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_coaches.php
+
+		-
+			message: '#^Variable \$phone_number_err in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/manage_coaches.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: admin/manage_damage_reports.php
+
+		-
+			message: '#^Variable \$qty_err in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/manage_damage_reports.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_equipment.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/manage_equipment_borrow.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/manage_expenses.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_facilities.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: admin/manage_fixtures.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/manage_forum.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/manage_gallery.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/manage_injuries.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: admin/manage_leagues.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/manage_lineups.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/manage_maintenance.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_match_events.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 14
+			path: admin/manage_members.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_payments.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: admin/manage_polls.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_promo_codes.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/manage_refunds.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 19
+			path: admin/manage_roles.php
+
+		-
+			message: '#^Variable \$edit_role_perm_ids on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: admin/manage_roles.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: admin/manage_sponsors.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_sports.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/manage_standings.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/manage_tickets.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/manage_volunteers.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/manage_waiting_list.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: admin/membership_reminders.php
+
+		-
+			message: '#^Variable \$action might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/membership_reminders.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/membership_reminders.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/notifications.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/payments_overview.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: admin/revenue_dashboard.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/scheduled_jobs.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/season_wizard.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/security_events.php
+
+		-
+			message: '#^Variable \$total_rows might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/security_events.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/slow_pages.php
+
+		-
+			message: '#^Constant CLUB_WHATSAPP_GREETING not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: admin/system_health.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/system_health.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/todo_list.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/upload_storage.php
+
+		-
 			message: '#^Function emailTicketConfirmation not found\.$#'
 			identifier: function.notFound
 			count: 1
@@ -167,6 +665,606 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: includes/wearable_integration.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: public/activity_feed.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: public/ai_booking_suggestions.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/ai_match_insights.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: public/ai_player_summary.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/api/live_scores.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: public/api/standings.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: public/auto_renewal_settings.php
+
+		-
+			message: '#^Variable \$clash might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/book_training.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: public/book_training.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: public/booking.php
+
+		-
+			message: '#^Variable \$overlap_count might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/booking.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/booking_calendar.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/change_password.php
+
+		-
+			message: '#^Variable \$current_hash in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: public/change_password.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/churn_wellness_dashboard.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: public/dashboard.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: public/data_export.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: public/delete_account.php
+
+		-
+			message: '#^Variable \$hashed_password might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/delete_account.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/digital_membership_card.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/edit_profile.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: public/equipment_borrow.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: public/fan_tickets.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/fitness_dashboard.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: public/fixture_detail.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: public/forgot_password.php
+
+		-
+			message: '#^Variable \$error in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: public/forgot_password.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: public/forum.php
+
+		-
+			message: '#^Variable \$replies might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/forum.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/gallery.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/gear_marketplace.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/governance_voting.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/green_goals.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/head_to_head.php
+
+		-
+			message: '#^Anonymous function has an unused use \$conn\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: public/health.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: public/health.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/highlight_reels.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/join_waiting_list.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: public/login.php
+
+		-
+			message: '#^Variable \$first_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/login.php
+
+		-
+			message: '#^Variable \$hashed_password might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/login.php
+
+		-
+			message: '#^Variable \$last_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/login.php
+
+		-
+			message: '#^Variable \$member_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/login.php
+
+		-
+			message: '#^Variable \$param_email might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/login.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: public/manage_refunds.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: public/member_directory.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: public/member_profile.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/membership_card.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: public/memberships.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: public/motm_vote.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: public/my_achievements.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/my_tickets.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/parent_portal.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: public/pause_membership.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/payment_receipt.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: public/payments.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/player_stats.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: public/polls.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/rate_coach.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: public/referee.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: public/referral.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/referral_loyalty.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: public/register.php
+
+		-
+			message: '#^Variable \$param_address might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/register.php
+
+		-
+			message: '#^Variable \$param_email might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/register.php
+
+		-
+			message: '#^Variable \$param_first_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/register.php
+
+		-
+			message: '#^Variable \$param_last_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/register.php
+
+		-
+			message: '#^Variable \$param_password might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/register.php
+
+		-
+			message: '#^Variable \$param_phone_number might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/register.php
+
+		-
+			message: '#^Function emailRegistrationOtp not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: public/register_verify.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: public/register_verify.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: public/renew_membership.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: public/report_damage.php
+
+		-
+			message: '#^Variable \$qty_err in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: public/report_damage.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: public/reset_password.php
+
+		-
+			message: '#^Variable \$error in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: public/reset_password.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: public/season_archive.php
+
+		-
+			message: '#^Variable \$seasons in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: public/season_archive.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/smart_access_management.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/sponsors.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/squad.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/tactics_card.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: public/team_registration.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 13
+			path: public/tickets.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: public/top_scorers.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: public/update_profile.php
+
+		-
+			message: '#^Variable \$param_address might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/update_profile.php
+
+		-
+			message: '#^Variable \$param_email might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/update_profile.php
+
+		-
+			message: '#^Variable \$param_first_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/update_profile.php
+
+		-
+			message: '#^Variable \$param_last_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/update_profile.php
+
+		-
+			message: '#^Variable \$param_phone_number might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: public/update_profile.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/verify_membership.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: public/verify_ticket.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/view_bookings.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/view_coaches.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/view_facilities.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: public/view_fixtures.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/view_sports.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: public/volunteer_opportunities.php
+
+		-
+			message: '#^Variable \$conn might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: public/volunteer_signup.php
 
 		-
 			message: '#^File begins with UTF\-8 BOM character\. This may cause problems when running the code in the web browser\.$#'

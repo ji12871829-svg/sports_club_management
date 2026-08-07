@@ -1,4 +1,5 @@
 <?php
+
 /**
  * public/api/live_scores.php
  * Lightweight JSON endpoint polled by view_fixtures.php every 15 seconds.

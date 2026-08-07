@@ -6,6 +6,8 @@ parameters:
         - callbacks
         - scripts
         - cron
+        - admin
+        - public
     tmpDir: .phpstan-cache
     parallel:
         maximumNumberOfProcesses: 4

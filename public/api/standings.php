@@ -1,4 +1,5 @@
 <?php
+
 /**
  * public/api/standings.php
  * JSON standings for a league — polled by view_fixtures.php.
