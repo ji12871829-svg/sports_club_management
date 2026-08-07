@@ -24,8 +24,16 @@ $apply = in_array('--apply', $argv, true);
 $dryRun = in_array('--dry-run', $argv, true) || !$apply;
 
 $memberPassword = getenv('ASC_REPAIR_MEMBER_PASSWORD') ?: 'Member@2026!';
-$adminPassword = getenv('ASC_REPAIR_ADMIN_PASSWORD') ?: 'Admin1234#';
 $adminEmail = getenv('ASC_REPAIR_ADMIN_EMAIL') ?: 'admin@sportsclub.com';
+
+// The seeded default admin hash (keep in sync with migrations/001_create_core_schema.sql).
+// Resetting to the exact seed hash keeps the dashboard's default-password warning accurate.
+$adminSeedHash = '$2y$10$il4H07F6RK.rk5WWov1A0e22OaK8EaFurLSI42NJstSagUVVLdaPa';
+$adminHash = $adminSeedHash;
+$adminPasswordOverride = getenv('ASC_REPAIR_ADMIN_PASSWORD');
+if ($adminPasswordOverride !== false && $adminPasswordOverride !== '') {
+    $adminHash = password_hash($adminPasswordOverride, PASSWORD_DEFAULT);
+}
 
 function table_exists(mysqli $conn, string $table): bool
 {
@@ -219,7 +227,7 @@ function repair_seed_email_domains(mysqli $conn, bool $apply): array
     ];
 }
 
-function ensure_admin_password(mysqli $conn, string $email, string $password, bool $apply): string
+function ensure_admin_password(mysqli $conn, string $email, string $hash, bool $apply): string
 {
     if (!table_exists($conn, 'admins')) {
         return 'skipped missing admins table';
@@ -236,7 +244,6 @@ function ensure_admin_password(mysqli $conn, string $email, string $password, bo
         return $found ? "would reset admin {$email}" : "would create admin {$email}";
     }
 
-    $hash = password_hash($password, PASSWORD_DEFAULT);
     if ($found) {
         $stmt = $conn->prepare('UPDATE admins SET password = ? WHERE admin_id = ?');
         $stmt->bind_param('si', $hash, $adminId);
@@ -258,7 +265,7 @@ $summary = [
     'mode' => $dryRun ? 'dry-run' : 'apply',
     'member_password' => $memberPassword,
     'admin_email' => $adminEmail,
-    'admin_password' => $adminPassword,
+    'admin_password_source' => $adminPasswordOverride !== false && $adminPasswordOverride !== '' ? 'env-var' : 'seed-hash',
     'actions' => [],
 ];
 
@@ -270,7 +277,7 @@ $invalidMemberIds = count_invalid_member_hashes($conn);
 $summary['invalid_member_hashes_before'] = count($invalidMemberIds);
 $summary['members_repaired'] = repair_invalid_member_hashes($conn, $invalidMemberIds, $memberPassword, $apply);
 $summary['seed_email_domain_repair'] = repair_seed_email_domains($conn, $apply);
-$summary['actions'][] = ensure_admin_password($conn, $adminEmail, $adminPassword, $apply);
+$summary['actions'][] = ensure_admin_password($conn, $adminEmail, $adminHash, $apply);
 
 $indexTargets = [
     ['bookings', 'idx_bookings_status_date', ['status', 'booking_date']],

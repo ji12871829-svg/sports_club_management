@@ -161,7 +161,8 @@ The seed database creates a default admin account:
 
 ```text
 Email: admin@sportsclub.com
-Password: Admin1234#
+Password: See the seeded bcrypt hash in `migrations/001_create_core_schema.sql`.
+Set `ASC_REPAIR_ADMIN_PASSWORD` to override when running the repair script.
 ```
 
 Change this password before using the system beyond local testing.

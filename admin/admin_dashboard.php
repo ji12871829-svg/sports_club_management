@@ -55,7 +55,7 @@ if (isset($_SESSION["admin_id"])) {
         $stmt_pwd->bind_result($admin_pwd_hash);
         if ($stmt_pwd->fetch()) {
             // Keep in sync with the seed hash in migrations/001_create_core_schema.sql
-            if ($admin_pwd_hash === '$2y$10$i2eAHCjiK5J5RMDmjUdzmOUDdGMMRbCYYL2TUOn3jOjdQ9WFve50O') {
+            if ($admin_pwd_hash === '$2y$10$il4H07F6RK.rk5WWov1A0e22OaK8EaFurLSI42NJstSagUVVLdaPa') {
                 $show_default_password_warning = true;
             }
         }
