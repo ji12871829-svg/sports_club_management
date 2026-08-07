@@ -1,4 +1,5 @@
 <?php
+
 /**
  * includes/security_events.php
  * Structured security-event logging for alerting / probe detection.
@@ -16,7 +17,7 @@
 
 if (!function_exists('log_security_event')) {
 
-    /** @var bool|null Cached "does the security_events table exist?" */
+    /** @var bool|null $__asc_secevents_ready Cached "does the security_events table exist?" */
     $GLOBALS['__asc_secevents_ready'] = null;
 
     /**
@@ -41,7 +42,9 @@ if (!function_exists('log_security_event')) {
             if ($GLOBALS['__asc_secevents_ready'] === null) {
                 $res = $conn->query("SHOW TABLES LIKE 'security_events'");
                 $GLOBALS['__asc_secevents_ready'] = $res && $res->num_rows > 0;
-                if ($res) { $res->free(); }
+                if ($res) {
+                    $res->free();
+                }
             }
             if (!$GLOBALS['__asc_secevents_ready']) {
                 error_log('[security_event] ' . $eventType . ': ' . $details);
@@ -51,11 +54,15 @@ if (!function_exists('log_security_event')) {
             $severity = in_array($severity, ['info', 'warning', 'critical'], true) ? $severity : 'warning';
             $details  = mb_substr((string) $details, 0, 500, 'UTF-8');
             $ip       = $_SERVER['REMOTE_ADDR'] ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
-            if (is_string($ip)) { $ip = mb_substr($ip, 0, 45); } else { $ip = ''; }
+            if (is_string($ip)) {
+                $ip = mb_substr($ip, 0, 45);
+            } else {
+                $ip = '';
+            }
 
             $stmt = $conn->prepare(
-                "INSERT INTO security_events (event_type, severity, ip_address, actor, details)
-                 VALUES (?, ?, ?, ?, ?)"
+                'INSERT INTO security_events (event_type, severity, ip_address, actor, details)
+                 VALUES (?, ?, ?, ?, ?)'
             );
             if ($stmt) {
                 $stmt->bind_param('sssss', $eventType, $severity, $ip, $actor, $details);
@@ -105,12 +112,12 @@ if (!function_exists('log_security_event')) {
             // written BEFORE the network call so a send failure still counts
             // against the window (no alert storm on a flaky Brevo).
             $log = $conn->prepare(
-                "INSERT INTO security_alert_log (alert_type)
+                'INSERT INTO security_alert_log (alert_type)
                  SELECT ? FROM DUAL
                  WHERE NOT EXISTS (
                      SELECT 1 FROM security_alert_log
                      WHERE alert_type = ? AND sent_at > NOW() - INTERVAL 15 MINUTE
-                 )"
+                 )'
             );
             if (!$log) {
                 return;
@@ -164,7 +171,9 @@ if (!function_exists('log_security_event')) {
             if ($GLOBALS['__asc_secevents_ready'] === null) {
                 $res = $conn->query("SHOW TABLES LIKE 'security_events'");
                 $GLOBALS['__asc_secevents_ready'] = $res && $res->num_rows > 0;
-                if ($res) { $res->free(); }
+                if ($res) {
+                    $res->free();
+                }
             }
             if (!$GLOBALS['__asc_secevents_ready']) {
                 error_log('[security_event] ' . $eventType . ': ' . $details);
@@ -172,9 +181,9 @@ if (!function_exists('log_security_event')) {
             }
 
             $chk = $conn->prepare(
-                "SELECT COUNT(*) FROM security_events
+                'SELECT COUNT(*) FROM security_events
                  WHERE event_type = ? AND (actor = ? OR (actor IS NULL AND ? IS NULL))
-                   AND created_at > NOW() - INTERVAL 60 SECOND"
+                   AND created_at > NOW() - INTERVAL 60 SECOND'
             );
             if ($chk) {
                 $chk->bind_param('sss', $eventType, $actor, $actor);
@@ -206,12 +215,12 @@ if (!function_exists('log_security_event')) {
         try {
             $notes = mb_substr(trim((string) $notes), 0, 500, 'UTF-8');
             $stmt = $conn->prepare(
-                "UPDATE security_events
+                'UPDATE security_events
                  SET acknowledged = 1,
                      acknowledged_by = ?,
                      acknowledged_at = NOW(),
                      notes = ?
-                 WHERE id = ?"
+                 WHERE id = ?'
             );
             if (!$stmt) {
                 return ['ok' => false, 'error' => 'Database prepare failed: ' . $conn->error];
@@ -240,9 +249,11 @@ if (!function_exists('log_security_event')) {
     {
         try {
             $stmt = $conn->prepare(
-                "SELECT COUNT(*) FROM security_events WHERE event_type = ? AND created_at >= ?"
+                'SELECT COUNT(*) FROM security_events WHERE event_type = ? AND created_at >= ?'
             );
-            if (!$stmt) { return 0; }
+            if (!$stmt) {
+                return 0;
+            }
             $stmt->bind_param('ss', $eventType, $since);
             $stmt->execute();
             $stmt->bind_result($count);

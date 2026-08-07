@@ -36,6 +36,9 @@
         <testsuite name="DeviceChallenge">
             <file>tests/DeviceChallengeTest.php</file>
         </testsuite>
+        <testsuite name="HealthEndpoint">
+            <file>tests/HealthEndpointTest.php</file>
+        </testsuite>
     </testsuites>
     <coverage>
         <include>

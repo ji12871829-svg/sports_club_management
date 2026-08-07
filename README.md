@@ -189,10 +189,10 @@ composer check             # lint + the full PHPUnit suite
 composer test              # PHPUnit
 ```
 
-- PHPStan analyses `includes/ config/ callbacks/ scripts/ cron/ admin/ public/`.
-  Pre-existing findings are recorded in `phpstan-baseline.neon` so CI never
-  breaks on legacy code — only newly introduced issues fail. After fixing a
-  baselined issue, regenerate with `composer lint:stan:baseline`
+- PHPStan analyses `includes/ config/ callbacks/ scripts/ cron/ admin/ public/`
+  at level 2. Pre-existing findings are recorded in `phpstan-baseline.neon` so
+  CI never breaks on legacy code — only newly introduced issues fail. After
+  fixing a baselined issue, regenerate with `composer lint:stan:baseline`
   (which is `phpstan analyse --generate-baseline`).
 - php-cs-fixer (`.php-cs-fixer.dist.php`) holds changed files to PSR-12 +
   short arrays; legacy files are never reformatted wholesale.

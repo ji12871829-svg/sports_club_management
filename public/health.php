@@ -17,6 +17,23 @@
  *   }
  */
 
+// ── Optional access token (Layer 8: least privilege on monitoring) ──
+// When HEALTH_TOKEN is set in .env the endpoint is locked down: requests must
+// present the token via `Authorization: Bearer <token>`, `X-Health-Token`,
+// or `?token=`. Load balancers and uptime monitors can be configured with a
+// header; CI passes it explicitly. When unset the endpoint stays open for
+// local dev and simple setups (backward compatible).
+require_once __DIR__ . '/../includes/health_token.php';
+
+$healthToken = getenv('HEALTH_TOKEN');
+if ($healthToken !== false && trim($healthToken) !== '' && !health_token_authorized(trim($healthToken))) {
+    http_response_code(401);
+    header('Content-Type: application/json');
+    header('WWW-Authenticate: Bearer');
+    echo json_encode(['status' => 'unauthorized', 'error' => 'A valid HEALTH_TOKEN is required.']);
+    exit;
+}
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
@@ -117,38 +134,11 @@ $results['backups'] = runCheck('backups', 'filesystem', function () {
 // unreachable reports fail (degrading the endpoint) while unconfigured is a
 // clean informational pass. AUTH is issued before PING when REDIS_PASSWORD
 // is set (mirrors AscRedisSessionHandler::connect()) so password-protected
-// servers are not falsely reported as down.
-$results['redis_sessions'] = runCheck('redis_sessions', 'sessions', function () {
-    $host = getenv('REDIS_HOST');
-    if ($host === false || trim($host) === '') {
-        return ['configured' => false, 'mode' => 'files'];
-    }
-    $port     = (int) (getenv('REDIS_PORT') ?: 6379);
-    $password = (string) (getenv('REDIS_PASSWORD') ?: '');
-    $errno = 0;
-    $errstr = '';
-    $ctx = stream_context_create(['socket' => ['timeout' => 1]]);
-    $socket = @stream_socket_client('tcp://' . trim($host) . ':' . $port, $errno, $errstr, 1, STREAM_CLIENT_CONNECT, $ctx);
-    if (!is_resource($socket)) {
-        throw new \RuntimeException('Redis configured but unreachable at ' . trim($host) . ':' . $port);
-    }
-    stream_set_timeout($socket, 1);
-    if ($password !== '') {
-        $authCmd = "*2\r\n\$4\r\nAUTH\r\n\$" . strlen($password) . "\r\n" . $password . "\r\n";
-        @fwrite($socket, $authCmd);
-        @fgets($socket); // consume AUTH reply; an error surfaces on the PING below
-    }
-    @fwrite($socket, "*1\r\n\$4\r\nPING\r\n");
-    $reply = @fgets($socket);
-    @fclose($socket);
-    if ($reply === false || stripos((string) $reply, 'PONG') === false) {
-        throw new \RuntimeException('Redis PING failed' . ($reply !== false ? ': ' . trim((string) $reply) : ''));
-    }
-    return [
-        'configured' => true,
-        'reachable'  => true,
-        'mode'       => 'redis',
-    ];
+// servers are not falsely reported as down. The probe lives in
+// includes/health_redis.php so the unit tests exercise the real logic.
+require_once __DIR__ . '/../includes/health_redis.php';
+$results['redis_sessions'] = runCheck('redis_sessions', 'sessions', static function () {
+    return health_redis_probe();
 });
 
 // ── 3. PHP extensions ───────────────────────────────────────────────

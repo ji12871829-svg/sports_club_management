@@ -131,6 +131,17 @@ $EDITOR .env   # set real DB creds + payment keys + APP_ENV=production
 4. **Verify manually**: open `https://apex.example.com/public/health.php`
    and confirm `"status": "ok"`; log into the admin panel.
 
+### Health endpoint access token
+
+If `HEALTH_TOKEN` is set in `.env`, `health.php` returns `401` unless the
+request carries the token via `Authorization: Bearer <token>`, the
+`X-Health-Token` header, or `?token=`. Configure your load balancer / uptime
+monitor to send the header (never put secrets in URLs). The CI deploy job's
+post-deploy health check sends the header automatically when `DEPLOY_BASE_URL`
+is set; leave `HEALTH_TOKEN` empty to keep the endpoint open for simple
+setups. This prevents the endpoint's metadata (table lists, disk free space,
+backup filenames, Redis state) from being readable by anonymous clients.
+
 ### Rollback
 
 The rsync `--delete` mirrors the repo, so reverting is a normal `git

@@ -305,6 +305,8 @@ jobs:
           cp .env.example .env
           # MariaDB service uses root/root and binds IPv4; .env.example has empty password + localhost
           sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/; s/^DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+          # Lock the health endpoint down for the smoke run so the token path is exercised.
+          printf '\nHEALTH_TOKEN=ci-smoke-token\n' >> .env
           php -S 127.0.0.1:8080 -t public/ > /dev/null 2>&1 &
           sleep 3
 
@@ -322,7 +324,14 @@ jobs:
 
       - name: Smoke test health endpoint
         run: |
-          curl -s http://127.0.0.1:8080/health.php | grep -q '"status": "ok"'
+          # HEALTH_TOKEN was written into .env by the server-start step, so the
+          # token-gated path is exercised too (sent via header, not query string).
+          curl -s -H "X-Health-Token: ci-smoke-token" http://127.0.0.1:8080/health.php | grep -q '"status": "ok"'
+          # Unauthorized requests must be rejected (401, not 200).
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/health.php)
+          if [ "$code" != "401" ]; then
+            echo "health.php returned ${code} without a token (expected 401)"; exit 1;
+          fi
 
   # ----------------------------------------------------------------
   # Job 5: Security smoke harness against a live/staging deployment
@@ -421,9 +430,14 @@ jobs:
       - name: Post-deploy health check (optional)
         env:
           DEPLOY_BASE_URL: ${{ vars.DEPLOY_BASE_URL || secrets.DEPLOY_BASE_URL }}
+          DEPLOY_HEALTH_TOKEN: ${{ secrets.DEPLOY_HEALTH_TOKEN }}
         run: |
           if [ -n "${DEPLOY_BASE_URL}" ]; then
-            curl -fsS "${DEPLOY_BASE_URL%/}/health.php" | grep -q '"status": "ok"' || { echo "Health check failed against ${DEPLOY_BASE_URL}"; exit 1; }
+            CURL_ARGS=()
+            if [ -n "${DEPLOY_HEALTH_TOKEN}" ]; then
+              CURL_ARGS=(-H "X-Health-Token: ${DEPLOY_HEALTH_TOKEN}")
+            fi
+            curl -fsS "${CURL_ARGS[@]}" "${DEPLOY_BASE_URL%/}/health.php" | grep -q '"status": "ok"' || { echo "Health check failed against ${DEPLOY_BASE_URL}"; exit 1; }
             echo "Health check passed: ${DEPLOY_BASE_URL}/health.php"
           else
             echo "DEPLOY_BASE_URL not set — skipping post-deploy health check."
