@@ -86,6 +86,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 }
 
                                 session_regenerate_id(true);
+
+                                // Unknown-device challenge: a never-seen device
+                                // without 2FA must confirm an emailed code before
+                                // the session is fully authorized.
+                                if (admin_device_challenge_start($conn, (int) $admin_id, $db_email)) {
+                                    $stmt->close();
+                                    $conn->close();
+                                    header('location: admin_verify_device.php');
+                                    exit;
+                                }
+
                                 $_SESSION['admin_loggedin'] = true;
                                 $_SESSION['admin_id'] = $admin_id;
                                 $_SESSION['admin_email'] = $db_email;

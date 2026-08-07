@@ -87,6 +87,7 @@ if ($__admin_id > 0 && !in_array($current_page, ['admin_login.php','admin_logout
         'activity_log.php' => 'logs.view',
         'security_events.php' => 'logs.view',
         'backup_database.php' => 'backup.create',
+        'scheduled_jobs.php' => 'settings.edit',
         'manage_roles.php' => 'roles.manage',
         'manage_gallery.php' => 'announcements.manage',
         'gemini_hub.php' => 'settings.edit',
@@ -589,6 +590,7 @@ function toggleTheme() {
                         <li><a class="dropdown-item <?php echo $current_page === 'activity_log.php' ? 'active-item' : ''; ?>" href="activity_log.php"><i class="fas fa-clock-rotate-left"></i>Activity Log</a></li>
                         <li><a class="dropdown-item <?php echo $current_page === 'security_events.php' ? 'active-item' : ''; ?>" href="security_events.php"><i class="fas fa-shield-halved"></i>Security Events <span class="badge bg-danger ms-1" style="font-size:0.55rem;">SEC</span></a></li>
                         <li><a class="dropdown-item <?php echo $current_page === 'backup_database.php' ? 'active-item' : ''; ?>" href="backup_database.php"><i class="fas fa-database"></i>Backup Database</a></li>
+                        <li><a class="dropdown-item <?php echo $current_page === 'scheduled_jobs.php' ? 'active-item' : ''; ?>" href="scheduled_jobs.php"><i class="fas fa-clock-rotate-left"></i>Scheduled Jobs</a></li>
                         <li><a class="dropdown-item <?php echo $current_page === 'system_health.php' ? 'active-item' : ''; ?>" href="system_health.php"><i class="fas fa-heartbeat"></i>System Health</a></li>
                         <li><a class="dropdown-item <?php echo $current_page === 'slow_pages.php' ? 'active-item' : ''; ?>" href="slow_pages.php"><i class="fas fa-gauge-high"></i>Slow Pages <span class="badge bg-info ms-1" style="font-size:0.55rem;">PROF</span></a></li>
                         <li><a class="dropdown-item <?php echo $current_page === 'upload_storage.php' ? 'active-item' : ''; ?>" href="upload_storage.php"><i class="fas fa-cloud-arrow-up"></i>Object Storage</a></li>
@@ -657,6 +659,7 @@ $breadcrumb_labels = [
     'export_fixtures.php' => 'Export Fixtures',
     'export_payments.php' => 'Export Payments',
     'backup_database.php' => 'Backup',
+    'scheduled_jobs.php' => 'Scheduled Jobs',
     'system_health.php' => 'System Health',
     'slow_pages.php' => 'Slow Pages',
     'upload_storage.php' => 'Object Storage',

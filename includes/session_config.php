@@ -406,6 +406,172 @@ function admin_sessions_alert_new_device(mysqli $conn, int $admin_id, string $ad
 }
 
 /**
+ * Whether the unknown-device email-code challenge is enabled. Gate via env
+ * (default ON). Set ASC_DEVICE_CHALLENGE=0 to disable.
+ */
+function admin_device_challenge_enabled(): bool
+{
+    return getenv('ASC_DEVICE_CHALLENGE') !== '0';
+}
+
+/**
+ * Returns true when this login should require the emailed code challenge:
+ * feature on + genuinely new device + admin has NOT configured 2FA (2FA is
+ * already a strong second factor, so a challenge on top is redundant).
+ */
+function admin_device_challenge_needed(mysqli $conn, int $admin_id): bool
+{
+    if (!admin_device_challenge_enabled() || !admin_sessions_schema_ready($conn)) {
+        return false;
+    }
+    if (admin_sessions_is_new_device($conn, $admin_id) === false) {
+        return false;
+    }
+    // Skip when the account already has 2FA (TOTP is the challenge).
+    if (!function_exists('admin_2fa_is_enabled')) {
+        require_once __DIR__ . '/admin_2fa.php';
+    }
+    if (function_exists('admin_2fa_fetch')) {
+        $admin = admin_2fa_fetch($conn, $admin_id);
+        if ($admin && admin_2fa_is_enabled($admin)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Starts the unknown-device challenge: emails a 6-digit code and puts the
+ * login into a pending state awaiting verification. Returns true when the
+ * challenge was started (caller should redirect to admin_verify_device.php),
+ * false when the login may proceed normally. Never throws — a code-delivery
+ * failure fails OPEN so the admin is never locked out of their account.
+ */
+function admin_device_challenge_start(mysqli $conn, int $admin_id, string $email): bool
+{
+    if (!admin_device_challenge_needed($conn, $admin_id)) {
+        return false;
+    }
+
+    $code = (string) random_int(100000, 999999);
+    $_SESSION['admin_device_pending'] = [
+        'admin_id' => $admin_id,
+        'email'    => $email,
+        'code_hash' => hash('sha256', $code),
+        'expires'  => time() + 600, // 10 minutes
+    ];
+    unset($_SESSION['admin_loggedin'], $_SESSION['admin_id'], $_SESSION['admin_email']);
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $device = admin_session_ua_label((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
+
+    try {
+        if (!function_exists('sendEmail')) {
+            require_once __DIR__ . '/send_email.php';
+        }
+        if (function_exists('sendEmail')) {
+            $subject = '🔐 Confirm this sign-in — Apex Sports Club';
+            $body = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">'
+                . '<div style="background:#0f172a;padding:20px 24px;"><h1 style="color:#fff;margin:0;font-size:17px;">Confirm this sign-in</h1></div>'
+                . '<div style="padding:24px;">'
+                . '<p style="font-size:14px;color:#334155;">A sign-in to your <strong>Apex admin</strong> account was detected from a device we haven\'t seen before:</p>'
+                . '<p style="font-family:monospace;font-size:15px;font-weight:700;color:#1d5c8f;letter-spacing:4px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center;">' . $code . '</p>'
+                . '<table style="width:100%;border-collapse:collapse;margin-top:12px;">'
+                . '<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">Device</td><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;">' . htmlspecialchars($device) . '</td></tr>'
+                . '<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">IP address</td><td style="padding:8px 12px;border:1px solid #e2e8f0;font-size:13px;"><code>' . htmlspecialchars($ip) . '</code></td></tr>'
+                . '</table>'
+                . '<p style="font-size:13px;color:#334155;margin-top:16px;">Enter this code on the confirmation screen. It expires in 10 minutes. If this wasn\'t you, change your password immediately.</p>'
+                . '</div>'
+                . '<div style="background:#f8fafc;padding:12px 24px;color:#94a3b8;font-size:12px;">Apex Sports Club — Admin Security</div>'
+                . '</div>';
+            $ok = sendEmail($email, 'Club Admin', $subject, $body);
+            if (!$ok) {
+                // Fail OPEN: if the code could not be delivered, do not lock
+                // the admin out of their own account.
+                unset($_SESSION['admin_device_pending']);
+                error_log('[admin_device_challenge] email delivery failed — challenge skipped');
+
+                return false;
+            }
+        }
+    } catch (\Throwable $e) {
+        unset($_SESSION['admin_device_pending']);
+        error_log('[admin_device_challenge] failed: ' . $e->getMessage());
+
+        return false;
+    }
+
+    if (!function_exists('log_activity')) {
+        require_once __DIR__ . '/activity_log.php';
+    }
+    if (function_exists('log_activity')) {
+        log_activity($conn, 'Device challenge issued for new device login', 'Auth', $admin_id, 'IP ' . $ip . ' Device ' . $device);
+    }
+
+    return true;
+}
+
+/**
+ * Whether a device challenge is currently awaiting verification.
+ */
+function admin_device_pending_valid(): bool
+{
+    if (empty($_SESSION['admin_device_pending']) || !is_array($_SESSION['admin_device_pending'])) {
+        return false;
+    }
+    $pending = $_SESSION['admin_device_pending'];
+    if (empty($pending['admin_id']) || empty($pending['code_hash']) || empty($pending['expires']) || time() > (int) $pending['expires']) {
+        unset($_SESSION['admin_device_pending']);
+
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Verifies a submitted code against the pending challenge.
+ */
+function admin_device_challenge_verify(string $code): bool
+{
+    if (!admin_device_pending_valid()) {
+        return false;
+    }
+    $pending = $_SESSION['admin_device_pending'];
+    if (hash_equals($pending['code_hash'], hash('sha256', trim($code)))) {
+        unset($_SESSION['admin_device_pending']);
+
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Finalizes login after a successful device challenge (mirrors the 2FA
+ * completion: regenerate id, restore session identity, record activity).
+ */
+function admin_device_challenge_complete(mysqli $conn, int $admin_id, string $email): void
+{
+    session_regenerate_id(true);
+    unset($_SESSION['admin_device_pending']);
+    $_SESSION['admin_loggedin'] = true;
+    $_SESSION['admin_id'] = $admin_id;
+    $_SESSION['admin_email'] = $email;
+    $_SESSION['admin_last_activity'] = time();
+    admin_auth_epoch_store($conn, $admin_id);
+    admin_sessions_record($conn, $admin_id);
+
+    if (!function_exists('log_activity')) {
+        require_once __DIR__ . '/activity_log.php';
+    }
+    if (function_exists('log_activity')) {
+        log_activity($conn, 'Admin logged in (device verified)', 'Auth', $admin_id, 'Login from ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+    }
+}
+
+/**
  * Whether the admins table has the auth_epoch column (migration 062).
  */
 function admin_auth_epoch_column_exists(mysqli $conn): bool

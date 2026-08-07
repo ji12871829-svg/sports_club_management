@@ -80,6 +80,7 @@ class MpesaCallbackCycleTest extends TestCase
             }
             $fields = ['first_name' => "'Mpesa'", 'last_name' => "'Test'", 'email' => "'mpesa.test@example.com'"];
             if (isset($mcols['phone_number'])) $fields['phone_number'] = "'254700000001'";
+            if (isset($mcols['password'])) $fields['password'] = "'" . password_hash('testpass123', PASSWORD_DEFAULT) . "'";
             $cols = array_keys($fields);
             $vals = array_values($fields);
             self::$conn->query(

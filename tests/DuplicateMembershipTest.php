@@ -67,6 +67,7 @@ class DuplicateMembershipTest extends TestCase
             }
             $fields = ['first_name' => "'Dup'", 'last_name' => "'Test'", 'email' => "'dup.test@example.com'"];
             if (isset($mcols['phone_number'])) $fields['phone_number'] = "'254700000002'";
+            if (isset($mcols['password'])) $fields['password'] = "'" . password_hash('testpass123', PASSWORD_DEFAULT) . "'";
             self::$conn->query(
                 "INSERT INTO members (member_id, " . implode(', ', array_keys($fields)) . ")
                  VALUES (" . self::TEST_MEMBER . ", " . implode(', ', array_values($fields)) . ")"

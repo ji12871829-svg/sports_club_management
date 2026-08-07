@@ -16,8 +16,17 @@ if (admin_2fa_pending_valid()) {
     return;
 }
 
+// Mid-login: password OK on a new device, awaiting emailed code
+if (admin_device_pending_valid()) {
+    if (basename($_SERVER['SCRIPT_NAME'] ?? '') !== 'admin_verify_device.php') {
+        header('Location: admin_verify_device.php');
+        exit;
+    }
+    return;
+}
+
 if (!isset($_SESSION['admin_loggedin']) || $_SESSION['admin_loggedin'] !== true) {
-    if (!admin_2fa_is_public_page()) {
+    if (!admin_2fa_is_public_page() && basename($_SERVER['SCRIPT_NAME'] ?? '') !== 'admin_verify_device.php') {
         header('Location: admin_login.php');
         exit;
     }
