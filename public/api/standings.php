@@ -6,8 +6,17 @@
  */
 require_once '../../config/db_connect.php';
 require_once __DIR__ . '/../../includes/cache.php';
+require_once __DIR__ . '/../../includes/rate_limiter.php';
 
 header('Content-Type: application/json');
+
+// Public, unauthenticated endpoint — cap each source IP so it cannot be
+// hammered.
+if (!rate_limit_check(client_rate_key('api_standings'), 60, 60)) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many requests. Please slow down.']);
+    exit;
+}
 
 $league_id = (int) ($_GET['league_id'] ?? 0);
 

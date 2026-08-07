@@ -51,11 +51,20 @@
         Header set Expires "0"
     </FilesMatch>
 
-    # Security headers
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
-    Header set X-XSS-Protection "1; mode=block"
-    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    # Security headers — "always" so 4xx/5xx responses (custom 404 page,
+    # CSRF 403s) carry the same headers as successful pages.
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # HSTS — browsers only honour it over HTTPS, so it is safe to set always.
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    # CSP — relaxed enough for the app (CDN assets + inline styles/scripts,
+    # OSM map tiles, QuickChart QR images) while still blocking unknown
+    # script origins, plugins, framing and form-action hijacking.
+    # NOTE: script-src keeps 'unsafe-inline' because pages use inline
+    # handlers; moving to nonces/hashes is the future hardening path.
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://quickchart.io https://*.tile.openstreetmap.org https://www.openstreetmap.org; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; frame-src 'self'"
 </IfModule>
 
 # ── Prevent directory listing ──────────────────────────────────────

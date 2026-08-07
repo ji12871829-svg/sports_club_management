@@ -7,8 +7,18 @@
  */
 require_once '../../config/db_connect.php';
 require_once __DIR__ . '/../../includes/cache.php';
+require_once __DIR__ . '/../../includes/rate_limiter.php';
 
 header('Content-Type: application/json');
+
+// Public, unauthenticated endpoint — cap each source IP so it cannot be
+// hammered. The fixture page polls every 15 s (≈4 req/min), so 60/min
+// leaves ample headroom while still stopping abuse.
+if (!rate_limit_check(client_rate_key('api_live_scores'), 60, 60)) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many requests. Please slow down.']);
+    exit;
+}
 
 // 15-second cache to reduce DB hits from polling
 $cacheKey = 'live_scores:today';

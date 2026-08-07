@@ -150,5 +150,26 @@ bin/load_test.sh            # p95 < 2 s @ 50 concurrent against local Apache
 
 ---
 
+## 7. Security headers on Nginx
+
+The root `.htaccess` ships the security headers (CSP, HSTS, nosniff, XFO,
+Referrer-Policy, Permissions-Policy), but **`.htaccess` only applies under
+Apache**. If the production target runs Nginx, set the same headers in the
+server block so the response headers match between environments:
+
+```nginx
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://quickchart.io https://*.tile.openstreetmap.org https://www.openstreetmap.org; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; frame-src 'self'" always;
+```
+
+Keep the CSP values identical to `.htaccess` — any drift creates a confusing
+"works locally, breaks in prod" class of bug.
+
+---
+
 *See [AUDIT_REPORT.md](AUDIT_REPORT.md) §9 for the blocker this closes and
 [PRR.md](PRR.md) for the sign-off criteria.*

@@ -1,0 +1,6 @@
+# Apex Sports Club — Security Contact
+# Update the Contact address to a monitored mailbox before going live.
+Contact: mailto:security@apexsportsclub.example
+Expires: 2027-08-07T00:00:00Z
+Preferred-Languages: en
+Policy: https://apexsportsclub.example/security
