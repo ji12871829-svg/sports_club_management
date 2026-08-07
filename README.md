@@ -161,7 +161,7 @@ The seed database creates a default admin account:
 
 ```text
 Email: admin@sportsclub.com
-Password: admin123
+Password: Admin1234#
 ```
 
 Change this password before using the system beyond local testing.

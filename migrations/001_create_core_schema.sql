@@ -143,12 +143,13 @@ CREATE TABLE IF NOT EXISTS `admins` (
     `password` VARCHAR(255) NOT NULL
 );
 
--- Default Admin User (admin@sportsclub.com / admin123)
+-- Default Admin User (admin@sportsclub.com / Admin1234#)
+-- NOTE: Keep this hash in sync with the default-password warning in admin/admin_dashboard.php.
 -- WARNING: This is a default credential. You MUST change this password upon deployment.
 INSERT INTO `admins` (`email`, `password`)
 VALUES (
     'admin@sportsclub.com',
-    '$2y$10$9r0GXFEDBp8KwQfbU12DDeD6AWv5LT6lipr7IqAIAlC4wIYVGdIzq' -- Hashed password for 'admin123'
+    '$2y$10$i2eAHCjiK5J5RMDmjUdzmOUDdGMMRbCYYL2TUOn3jOjdQ9WFve50O' -- Hashed password for 'Admin1234#'
 );
 
 -- Table for tracking failed login attempts (Rate Limiting)

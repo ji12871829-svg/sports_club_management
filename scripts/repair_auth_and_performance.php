@@ -24,7 +24,7 @@ $apply = in_array('--apply', $argv, true);
 $dryRun = in_array('--dry-run', $argv, true) || !$apply;
 
 $memberPassword = getenv('ASC_REPAIR_MEMBER_PASSWORD') ?: 'Member@2026!';
-$adminPassword = getenv('ASC_REPAIR_ADMIN_PASSWORD') ?: 'Admin@2026!';
+$adminPassword = getenv('ASC_REPAIR_ADMIN_PASSWORD') ?: 'Admin1234#';
 $adminEmail = getenv('ASC_REPAIR_ADMIN_EMAIL') ?: 'admin@sportsclub.com';
 
 function table_exists(mysqli $conn, string $table): bool
